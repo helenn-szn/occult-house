@@ -190,7 +190,7 @@ function preload(id){if(MESH[id])return MESH[id].ready;const R=ROOMS[id];const m
   MESH[id]={m,ready:waitInit(m)};return MESH[id].ready;}
 async function showRoom(id,spawn){
   await preload(id);
-  for(const k in MESH)MESH[k].m.visible=(k===id);roomId=id;VISITED[id]=true;
+  for(const k in MESH)MESH[k].m.visible=(k===id);roomId=id;VISITED[id]=true;try{spark.setDirty();}catch(_){}
   const R=ROOMS[id];glowSdf.position.set(...R.glow.p);glowSdf.radius=R.glow.r;glowBase=R.glow.c;
   if(R.kill){killSdf.position.set(...R.kill.p);killSdf.radius=R.kill.r;}
   const sp=spawn||R.spawn;cam.position.set(sp.x,1.2,sp.z);yaw=sp.yaw;pitch=-.05;
@@ -262,7 +262,7 @@ new GLTFLoader().load('assets/curator.glb',g=>{const m=g.scene;m.position.y=.9;
   for(const c of g.animations){
     if(c.name==='walk'){for(const tr of c.tracks){if(/Hips\.position$/.test(tr.name)){const v=tr.values;for(let k=0;k<v.length;k+=3){v[k]=v[0];v[k+2]=v[2];}}}}
     CUR.act[c.name]=CUR.mixer.clipAction(c);}
-  makeGhost(g,'hall',new THREE.Vector3(-1.15,0,.95));makeGhost(g,'doll',new THREE.Vector3(-1.9,0,.15));
+  makeGhost(g,'hall',new THREE.Vector3(-1.15,0,.95));makeGhost(g,'doll',new THREE.Vector3(-1.9,0,.15));makeFollower(g);
   play('idle',0);CUR.loaded=true;curator.visible=roomId==='hall'&&CUR.present;},undefined,()=>{CUR.loaded=true;});
 function play(name,fade=.35){const a=CUR.act[name];if(!a||CUR.cur===a)return;a.reset().setEffectiveWeight(1).play();if(CUR.cur)CUR.cur.crossFadeTo(a,fade,false);CUR.cur=a;}
 
@@ -291,7 +291,7 @@ function whisper(dur=2.2,vol=.14){if(!AC)return;const t=AC.currentTime,n=noise()
   const pan=AC.createStereoPanner?AC.createStereoPanner():null;n.connect(b1);b1.connect(b2);b2.connect(am);am.connect(g);if(pan){pan.pan.value=Math.random()*1.6-.8;g.connect(pan);pan.connect(master);}else g.connect(master);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.4);g.gain.linearRampToValueAtTime(vol*.7,t+dur-.5);g.gain.linearRampToValueAtTime(0,t+dur);n.start(t);lfo.start(t);n.stop(t+dur+.1);lfo.stop(t+dur+.1);}
 function thud(){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(30,t+.6);o.connect(g);g.connect(master);env(g,t,.005,.9,.9);o.start(t);o.stop(t+1);}
-function stinger(){if(!AC)return;const t=AC.currentTime,lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=2600;lp.connect(g);g.connect(master);env(g,t,.015,.42,1.8);
+function stinger(v=.42){if(!AC)return;const t=AC.currentTime,lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=2600;lp.connect(g);g.connect(master);env(g,t,.015,v,1.8);
   [110,116.5,155.6,233.1,246.9,329.6,349.2].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,t);o.frequency.linearRampToValueAtTime(f*.94,t+1.8);o.connect(lp);o.start(t);o.stop(t+2);});
   const n=noise(),hg=AC.createGain();n.connect(hg);hg.connect(master);env(hg,t,.005,.5,.35);n.start(t);n.stop(t+.5);}
 
@@ -364,7 +364,7 @@ function shutter(){if(!AC)return;const t=AC.currentTime,n=noise(),hp=AC.createBi
 function glitchSound(){if(!AC)return;const t=AC.currentTime,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=.7;lfo.type='square';lfo.frequency.value=17;lg.gain.value=.5;lfo.connect(lg);lg.connect(g.gain);
   n.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(.5,t);g.gain.linearRampToValueAtTime(0,t+1.4);n.start(t);lfo.start(t);n.stop(t+1.5);lfo.stop(t+1.5);}
 function camUI(){$('vf').style.display=CAM.up?'block':'none';$('shots').textContent=CAM.broken?'':'EXP '+CAM.shots;$('crack').style.display=(CAM.up||CAM.brokenShow)?'block':'none';$('cross').style.display=CAM.up?'none':'block';}
-function raiseCam(){if(!CAM.has||CAM.broken||!INTRO.done||switching||mapOpen||E.phase!=='idle')return;CAM.up=!CAM.up;camUI();
+function raiseCam(){if(!CAM.has||CAM.broken||CAM.seq||!INTRO.done||switching||mapOpen||E.phase!=='idle')return;CAM.up=!CAM.up;camUI();
   if(CAM.up&&!CAM.used){CAM.used=true;$('r3').classList.add('broken');E.broken++;drawMap();whisper(1.8,.14);setTimeout(()=>note('Rule broken: no cameras.',3500),400);}
   if(CAM.up)note('Click or Space to take a photo. C to lower the camera.',3500);}
 function takePhoto(){if(!CAM.up||CAM.broken||CAM.cool>0)return;CAM.cool=.7;CAM.shots--;shutter();CAM.flash=1;$('camflash').style.opacity=1;
@@ -372,13 +372,50 @@ function takePhoto(){if(!CAM.up||CAM.broken||CAM.cool>0)return;CAM.cool=.7;CAM.s
   if(f){const k=(8-CAM.shots)/8;const to=new THREE.Vector3(cam.position.x,0,cam.position.z);const dir=to.clone().sub(f.home);const L=dir.length();f.holder.position.copy(f.home).addScaledVector(dir.normalize(),Math.max(0,L-.7)*k);}
   if(CAM.shots===4)setTimeout(()=>whisper(2,.16),500);
   if(CAM.shots<=0)setTimeout(breakCam,700);camUI();}
-function breakCam(){CAM.broken=true;CAM.lastRoom=roomId;glitchSound();CAM.brokenShow=true;crackDraw(14);$('vf').classList.add('dead');
-  setTimeout(()=>{CAM.up=false;camUI();$('vf').classList.remove('dead');note('The camera is broken. What it saw is still here.',5000);
-    setTimeout(()=>{CAM.brokenShow=false;camUI();},1600);},1300);}
+/* the consequence: on the last photo the figure comes through the lens; you wake in the hall,
+   the curator is waiting, and from then on the figure follows you through the house */
+async function speakSeq(lines){for(const L of lines){$('sub').innerHTML='<i>MR. AMBROSE VANE</i>'+L;$('sub').style.opacity=1;play('talk');
+  let ended=false;const spoke=say(L,()=>{ended=true;});const d=lineDur(L),t0=performance.now();
+  while(true){const el=(performance.now()-t0)/1000;if(spoke?((ended&&el>1.2)||el>d*2.2):el>d)break;await sleep(100);}
+  play('idle',.5);await sleep(450);}$('sub').style.opacity=0;}
+async function breakCam(){CAM.broken=true;CAM.seq=true;CAM.lunge=true;CAM.lastRoom=roomId;
+  const f=GHOST_FIG[roomId];
+  if(f){cam.getWorldDirection(tmpV);tmpV.y=0;tmpV.normalize();f.holder.position.set(cam.position.x+tmpV.x*.45,cam.position.y-1.72,cam.position.z+tmpV.z*.45);f.holder.rotation.y=Math.atan2(-tmpV.x,-tmpV.z);}
+  stinger();glitchSound();flash=.9;CAM.brokenShow=true;crackDraw(16);$('vf').classList.add('dead');
+  await sleep(800);
+  const F=$('fade');F.style.transition='opacity .12s';F.style.opacity=1;thud();
+  CAM.up=false;CAM.lunge=false;CAM.brokenShow=false;$('vf').classList.remove('dead');camUI();if(f)f.holder.position.copy(f.home);
+  switching=true;await sleep(900);whisper(2.6,.2);await sleep(1500);
+  CUR.present=true;CUR.fade=0;CUR.leaving=false;curator.position.copy(CUR_HOME);
+  await showRoom('hall',{x:-.15,z:.05,yaw:Math.atan2(-(CUR_HOME.x+.15),-(CUR_HOME.z-.05))});pitch=-.12;
+  curator.rotation.y=Math.atan2(cam.position.x-CUR_HOME.x,cam.position.z-CUR_HOME.z);play('idle',0);
+  await sleep(500);
+  F.style.transition='opacity 1.4s ease-out';F.style.opacity=0;await sleep(1500);
+  await speakSeq(['I said no cameras.','It has seen you now. It will follow you through this house, and it does not like to be looked at.']);
+  CUR.leaving=true;CUR.leaveT=0;play('walk',.4);switching=false;CAM.seq=false;
+  HAUNT.on=true;HAUNT.next=18;note('The camera is gone. Something is following you.',5000);drawMap();}
+/* the follower: it waits behind you; look at it and it is gone, for now */
+const HAUNT={on:false,next:0,showing:false,t:0};let follower=null;const followMat=ghostMat.clone();
+function makeFollower(gltf){const g=SkeletonUtils.clone(gltf.scene);g.position.y=.9;g.traverse(o=>{if(o.isMesh){o.material=followMat;o.frustumCulled=false;o.renderOrder=999;}});
+  follower=new THREE.Group();follower.add(g);follower.visible=false;scene.add(follower);const mx=new THREE.AnimationMixer(g);const c=gltf.animations.find(c=>c.name==='idle');if(c)mx.clipAction(c).play();ghostMixers.push(mx);}
+function updateHaunt(dt){if(!HAUNT.on||!follower)return;
+  if(switching||CAM.seq||E.phase!=='idle'||mapOpen||INTRO.on){follower.visible=false;HAUNT.showing=false;return;}
+  if(!HAUNT.showing){HAUNT.next-=dt;if(HAUNT.next>0)return;
+    cam.getWorldDirection(tmpV);tmpV.y=0;tmpV.normalize();const c=clampToRoom(cam.position.x-tmpV.x*1.4,cam.position.z-tmpV.z*1.4);
+    follower.position.set(c[0],0,c[1]);follower.visible=true;HAUNT.showing=true;HAUNT.t=0;whisper(1.8,.09);return;}
+  HAUNT.t+=dt;follower.rotation.y=Math.atan2(cam.position.x-follower.position.x,cam.position.z-follower.position.z);
+  followMat.opacity=.26+Math.sin(performance.now()/110)*.04;
+  tmpV.set(follower.position.x,1.6,follower.position.z);cam.getWorldDirection(tmpV2);const dist=Math.hypot(follower.position.x-cam.position.x,follower.position.z-cam.position.z);
+  const seen=tmpV2.dot(tmpV.sub(cam.position).normalize())>.8;
+  if(!seen&&HAUNT.t>12){const k=Math.min(1,.35*dt/Math.max(dist,.01));follower.position.x+=(cam.position.x-follower.position.x)*k;follower.position.z+=(cam.position.z-follower.position.z)*k;}
+  if(seen||dist<.55){follower.visible=false;HAUNT.showing=false;HAUNT.next=30+Math.random()*30;
+    if(seen){stinger(.22);flash=.45;dark01=.12;}else{whisper(1.4,.16);}}}
 function updateCam(dt){if(CAM.cool>0)CAM.cool-=dt;CAM.flash=Math.max(0,CAM.flash-dt*3);$('camflash').style.opacity=CAM.flash;
   ghostMixers.forEach(m=>m.update(dt));
-  for(const k of ['hall','doll']){const stays=CAM.broken&&CAM.lastRoom===k;GHOST[k].visible=roomId===k&&(CAM.up||stays);}
-  ghostMat.opacity=CAM.up?.3+Math.sin(performance.now()/90)*.05:.16;
+  for(const k of ['hall','doll'])GHOST[k].visible=roomId===k&&(CAM.up||CAM.lunge);
+  if(roomId!=='doll'){flash=Math.max(0,flash-dt*1.4);$('flash').style.opacity=flash;}
+  updateHaunt(dt);
+  ghostMat.opacity=CAM.lunge?.6:CAM.up?.3+Math.sin(performance.now()/90)*.05:.16;
   if(GHOST_FIG[roomId]&&GHOST[roomId].visible){const h=GHOST_FIG[roomId].holder;let d=Math.atan2(cam.position.x-h.position.x,cam.position.z-h.position.z)-h.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));h.rotation.y+=d*Math.min(1,dt*4);}}
 
 /* ================= the Curator's welcome ================= */
@@ -488,7 +525,7 @@ let awayFor=0,ready=false;
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
   if(!roomId){renderer.render(scene,cam);return;}
-  const frozen=E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||(INTRO.on&&INTRO.i<LINES.length-1);
+  const frozen=E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
   let mv=0;
   if(started&&!frozen){
     let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x;
@@ -526,7 +563,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={E,INTRO,CUR,CAM,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={E,INTRO,CUR,CAM,HAUNT,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
