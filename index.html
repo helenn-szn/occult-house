@@ -416,10 +416,9 @@ function advance(){if(INTRO.on){try{speechSynthesis.cancel();}catch(_){}nextLine
 const MAPROOMS=[
   {id:'hall',label:'Front Hall',x:270,y:220,w:170,h:110},
   {id:'doll',label:'Doll Room',x:450,y:220,w:150,h:110},
-  {id:null,label:'Portrait Gallery',x:270,y:110,w:170,h:100},
+  {id:null,label:'Portrait Gallery',x:270,y:110,w:330,h:100},
   {id:null,label:'Card Parlour',x:90,y:220,w:170,h:110},
   {id:null,label:'Antiquities Study',x:90,y:110,w:170,h:100},
-  {id:null,label:'Screening Room',x:450,y:110,w:150,h:100},
   {id:null,label:'Cellar Monitors',x:90,y:20,w:170,h:80},
   {id:null,label:'The Passage',x:270,y:20,w:330,h:80}];
 function drawMap(){const svg=$('mapSvg');let h='<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#8a7a5c" stroke-width="1.4"/></pattern></defs>';
