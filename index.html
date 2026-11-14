@@ -451,7 +451,7 @@ function lockedDoor(which){if(PASS.busy)return;PASS.busy=true;rattle2();breakRul
 async function openDoorIII(){if(switching)return;switching=true;breakRule2();doorCreak();
   note('The door swings open onto darkness.',2200);await sleep(900);
   const F=$('fade');F.style.transition='opacity 1s ease-in';F.style.opacity=1;footsteps();await sleep(1100);thud();whisper(2.4,.16);
-  await preload('nine');await showRoom('nine');await sleep(900);
+  await preload('nine');await showRoom('nine');NINE.t=0;NINE.hint=0;await sleep(900);
   F.style.transition='opacity 1.8s ease-out';F.style.opacity=0;await sleep(1500);switching=false;
   note('Room Nine. Everything is the wrong way round. Find the way out.',6000);}
 async function leaveNine(){if(switching)return;switching=true;
@@ -459,6 +459,17 @@ async function leaveNine(){if(switching)return;switching=true;
   await showRoom('passage',{x:-3.2,z:-.55,yaw:-Math.PI/2});await sleep(500);
   F.style.transition='opacity 1.4s ease-out';F.style.opacity=0;await sleep(1400);switching=false;
   if(!PASS.nineDone){PASS.nineDone=true;note('You are back in the Passage. Door III is shut, and you do not remember closing it.',6000);}}
+/* Room Nine hints: the house nudges you towards the doll if you wander too long */
+const NINE={t:0,hint:0};
+function giggle(pan){if(!AC)return;const t=AC.currentTime,bp=AC.createBiquadFilter(),g=AC.createGain(),pn=AC.createStereoPanner?AC.createStereoPanner():null;bp.type='bandpass';bp.frequency.value=1100;bp.Q.value=3;
+  if(pn){pn.pan.value=pan;bp.connect(g);g.connect(pn);pn.connect(master);}else{bp.connect(g);g.connect(master);}g.gain.value=.35;
+  [0,.16,.3,.46].forEach((d,i)=>{const o=AC.createOscillator(),og=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(820-i*40,t+d);o.frequency.exponentialRampToValueAtTime(560-i*30,t+d+.12);o.connect(og);og.connect(bp);env(og,t+d,.01,.5,.13);o.start(t+d);o.stop(t+d+.18);});}
+function updateNine(dt){if(roomId!=='nine'||switching)return;NINE.t+=dt;
+  const dx=1.4-cam.position.x,dz=-.85-cam.position.z;cam.getWorldDirection(tmpV2);const right=new THREE.Vector3(-tmpV2.z,0,tmpV2.x);const pan=Math.max(-1,Math.min(1,(right.x*dx+right.z*dz)/Math.max(.3,Math.hypot(dx,dz))));
+  if(NINE.hint===0&&NINE.t>18){NINE.hint=1;giggle(pan);note('Somewhere in here, something is giggling. Find what does not belong.',5500);}
+  else if(NINE.hint===1&&NINE.t>40){NINE.hint=2;giggle(pan);note('In the real hall, the guest book stood by the stairs. Something else is sitting there now.',6500);}
+  else if(NINE.hint===2&&NINE.t>65){NINE.hint=3;giggle(pan);note('Look down, at the foot of the stairs.',5000);}
+  else if(NINE.hint>=3&&NINE.t>65+(NINE.hint-2)*20){NINE.hint++;giggle(pan);}}
 const nineGroup=new THREE.Group();nineGroup.visible=false;scene.add(nineGroup);
 
 /* ================= the Curator's welcome ================= */
@@ -581,7 +592,7 @@ renderer.setAnimationLoop(()=>{
   cam.position.y=1.2+(mv?Math.sin(t*8)*.018:0);
   cam.rotation.set(pitch,yaw,0);
   const fl=1+Math.sin(t*9)*.05+Math.sin(t*23.3)*.04+(Math.sin(t*1.3)>.99?-.6:0);
-  if(started){updateIntro(dt);updateCam(dt);if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
+  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
   const spark_=E.phase==='shake'?(Math.random()>.5?2.2:0):1;
   night.visible=S.dark||dark01<1||CAM.up;if(CAM.up)nightSdf.color.setRGB(.42*dark01+.004,.52*dark01+.004,.5*dark01+.004);else{const nc=ROOMS[roomId].night||[.3,.16,.16];nightSdf.color.setRGB((S.dark?nc[0]:1)*dark01+.004,(S.dark?nc[1]:1)*dark01+.002,(S.dark?nc[2]:1)*dark01+.002);}
   glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
@@ -607,7 +618,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
