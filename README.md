@@ -32,7 +32,7 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 
 - W A S D to walk, mouse to look (click to capture the mouse, Esc to release)
 - E to interact, C to raise the camera (click or Space takes a photo), M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
-- On a phone: drag the left side to walk, the right side to look
+- On a phone or tablet (best held sideways): a joystick appears under your left thumb to walk, drag on the right to look, tap to continue or take a photo, and on-screen buttons for using things, the camera and the map
 
 Headphones recommended. All sound is synthesised in the page.
 

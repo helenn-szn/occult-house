@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Occult House</title>
 <meta name="description" content="A walkable haunted museum built with Manycore Aholo: rooms from the Aholo World API, objects from Lux3D.">
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
@@ -26,6 +26,23 @@
   #sub i{font-family:'Special Elite',monospace;font-style:normal;color:#c0392b;font-size:.85rem;letter-spacing:.12em;display:block;margin-bottom:.25em}
   #skip{position:fixed;right:16px;bottom:16px;z-index:4;display:none}
   #prompt{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:3;display:none}
+  #tui{display:none;position:fixed;inset:0;z-index:3;pointer-events:none}
+  #tui.on{display:block}
+  #stickBase{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(230,217,200,.35);background:rgba(10,6,7,.35);pointer-events:none;opacity:.55;transition:opacity .2s}
+  #stickKnob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(192,57,43,.75);border:2px solid rgba(230,217,200,.6)}
+  #stickHint{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.06em;color:rgba(230,217,200,.55);pointer-events:none}
+  #lookHint{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.06em;color:rgba(230,217,200,.55);pointer-events:none;text-align:right}
+  .tbtn{position:fixed;pointer-events:auto;width:64px;height:64px;border-radius:50%;padding:0;font-size:.62rem;letter-spacing:.04em;display:none;align-items:center;justify-content:center;text-align:center;line-height:1.1;background:rgba(10,6,7,.7);border:2px solid #7a1616;touch-action:none}
+  .tbtn.show{display:flex}
+  #tAct{right:max(24px,env(safe-area-inset-right));bottom:calc(120px + env(safe-area-inset-bottom));width:76px;height:76px;border-color:#c0392b;background:rgba(122,22,22,.75);font-size:.7rem}
+  #tShot{right:max(24px,env(safe-area-inset-right));bottom:calc(120px + env(safe-area-inset-bottom));width:84px;height:84px;background:rgba(230,236,232,.85);color:#111;border-color:#fff;font-size:.72rem}
+  #tCam{right:max(112px,calc(env(safe-area-inset-right) + 112px));bottom:calc(52px + env(safe-area-inset-bottom))}
+  #tMap{right:max(24px,env(safe-area-inset-right));bottom:calc(40px + env(safe-area-inset-bottom))}
+  #turn{display:none;position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);z-index:9;background:rgba(3,2,2,.92);border:1px solid #5c1a1a;padding:14px 18px;font-family:'Special Elite',monospace;font-size:.85rem;letter-spacing:.06em;text-align:center;pointer-events:none;max-width:80vw}
+  @media (orientation:portrait){body.touch.playing #turn{display:block}}
+  body.touch #bar button{font-size:.62rem;padding:.4em .6em}
+  body.touch #rules{font-size:.68rem;top:56px}
+  body.touch #prompt{display:none!important}
   #rules{position:fixed;left:18px;top:64px;z-index:3;font-family:'Special Elite',monospace;font-size:.82rem;line-height:1.7;letter-spacing:.04em;color:#e6d9c8;text-shadow:0 1px 3px #000;pointer-events:none}
   #rules div{opacity:0;transform:translateX(-8px);transition:opacity .6s,transform .6s}
   #rules div.show{opacity:.85;transform:none}
@@ -65,6 +82,15 @@
 <div id="note" role="status"></div>
 <div id="sub" aria-live="polite"></div>
 <button id="prompt"></button>
+<div id="tui" aria-hidden="true">
+  <div id="stickBase"><div id="stickKnob"></div></div>
+  <div id="stickHint">DRAG HERE<br>TO WALK</div><div id="lookHint">DRAG TO LOOK<br>TAP TO CONTINUE</div>
+  <button class="tbtn" id="tAct">USE</button>
+  <button class="tbtn" id="tShot">PHOTO</button>
+  <button class="tbtn" id="tCam">CAMERA</button>
+  <button class="tbtn" id="tMap">MAP</button>
+</div>
+<div id="turn">Turn your phone sideways<br>for the best view.</div>
 <button id="skip">Skip</button>
 <div id="rules" aria-label="The rules"><div id="r1">I. Touch nothing.</div><div id="r2">II. Open no door that asks you not to.</div><div id="r3">III. No cameras.</div></div>
 <div id="top"><b>OCCULT HOUSE</b><div id="roomName"></div></div>
@@ -547,13 +573,29 @@ canvas.addEventListener('mousedown',e=>{if(!started||mapOpen)return;if(INTRO.on&
 addEventListener('mouseup',()=>{drag=false;});
 addEventListener('mousemove',e=>{if(!started||mapOpen)return;if(locked){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}else if(drag){yaw+=(e.clientX-lx)*.004;pitch+=(e.clientY-ly)*.004;lx=e.clientX;ly=e.clientY;}pitch=Math.max(-1.2,Math.min(1.2,pitch));});
 let tMove=null,tLook=null,tv={x:0,y:0};
-canvas.addEventListener('touchstart',e=>{for(const t of e.changedTouches){if(t.clientX<innerWidth/2&&!tMove)tMove={id:t.identifier,x:t.clientX,y:t.clientY};else if(!tLook)tLook={id:t.identifier,x:t.clientX,y:t.clientY};}e.preventDefault();},{passive:false});
-canvas.addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(tMove&&t.identifier===tMove.id){tv.x=Math.max(-1,Math.min(1,(t.clientX-tMove.x)/60));tv.y=Math.max(-1,Math.min(1,(t.clientY-tMove.y)/60));}if(tLook&&t.identifier===tLook.id){yaw+=(t.clientX-tLook.x)*.005;pitch+=(t.clientY-tLook.y)*.005;pitch=Math.max(-1.2,Math.min(1.2,pitch));tLook.x=t.clientX;tLook.y=t.clientY;}}e.preventDefault();},{passive:false});
-canvas.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(tMove&&t.identifier===tMove.id){tMove=null;tv.x=tv.y=0;}if(tLook&&t.identifier===tLook.id)tLook=null;}});
+const SB=()=>$('stickBase'),SK=()=>$('stickKnob');
+function stickHome(){const b=SB();b.style.left=(Math.max(90,innerWidth*.14))+'px';b.style.top=(innerHeight-Math.max(110,innerHeight*.24))+'px';SK().style.transform='translate(0,0)';b.style.opacity=.55;}
+canvas.addEventListener('touchstart',e=>{for(const t of e.changedTouches){
+    if(t.clientX<innerWidth*.45&&!tMove){tMove={id:t.identifier,x:t.clientX,y:t.clientY};const b=SB();b.style.left=t.clientX+'px';b.style.top=t.clientY+'px';b.style.opacity=1;$('stickHint').style.display='none';}
+    else if(!tLook){tLook={id:t.identifier,x:t.clientX,y:t.clientY,sx:t.clientX,sy:t.clientY,t0:performance.now()};}}e.preventDefault();},{passive:false});
+canvas.addEventListener('touchmove',e=>{for(const t of e.changedTouches){
+    if(tMove&&t.identifier===tMove.id){let dx=t.clientX-tMove.x,dy=t.clientY-tMove.y;const L=Math.hypot(dx,dy),m=50;if(L>m){dx*=m/L;dy*=m/L;}SK().style.transform=`translate(${dx}px,${dy}px)`;tv.x=dx/m;tv.y=dy/m;}
+    if(tLook&&t.identifier===tLook.id){yaw+=(t.clientX-tLook.x)*.006;pitch+=(t.clientY-tLook.y)*.006;pitch=Math.max(-1.2,Math.min(1.2,pitch));tLook.x=t.clientX;tLook.y=t.clientY;}}e.preventDefault();},{passive:false});
+function touchEnd(e){for(const t of e.changedTouches){
+    if(tMove&&t.identifier===tMove.id){tMove=null;tv.x=tv.y=0;stickHome();}
+    if(tLook&&t.identifier===tLook.id){const tap=performance.now()-tLook.t0<280&&Math.hypot(t.clientX-tLook.sx,t.clientY-tLook.sy)<12;tLook=null;if(tap&&started)tapAction();}}}
+canvas.addEventListener('touchend',touchEnd);canvas.addEventListener('touchcancel',touchEnd);
+/* a tap on the right half does the obvious thing: move the curator along, take a photo, or use what is in front of you */
+function tapAction(){if(mapOpen)return;if(INTRO.on){advance();return;}if(CAM.up){takePhoto();return;}if(current)interact();}
+function bindT(id,fn){const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();fn();},{passive:false});b.addEventListener('click',fn);}
+bindT('tAct',()=>interact());bindT('tShot',()=>takePhoto());bindT('tCam',()=>raiseCam());bindT('tMap',()=>mapOpen?closeMap():openMap());
+function updateTouchUI(){if(!touch||!started)return;const sh=(id,v)=>$(id).classList.toggle('show',!!v);
+  sh('tAct',current&&!CAM.up);if(current)$('tAct').textContent=current.label.toUpperCase();sh('tShot',CAM.up&&!CAM.broken);sh('tCam',CAM.has&&!CAM.broken&&INTRO.done);sh('tMap',INTRO.done&&roomId!=='nine');
+  $('lookHint').innerHTML=INTRO.on?'DRAG TO LOOK<br>TAP TO CONTINUE':'DRAG TO LOOK';}
 $('bCam').onclick=()=>{raiseCam();};$('bLan').onclick=()=>toggle('bLan','lan');$('bDark').onclick=()=>toggle('bDark','dark');
 $('bSnd').onclick=()=>{toggle('bSnd','snd');if(master)master.gain.value=S.snd?1:0;if(!S.snd)try{speechSynthesis.cancel();}catch(_){}};
-const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
-$('keysP').textContent=touch?'Drag the left side to walk, the right side to look.':'W A S D to walk. Click, then move the mouse to look. E to interact, M for the map, C for the camera, Space to hurry the curator along. Esc frees the mouse.';
+const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;if(touch)document.body.classList.add('touch');addEventListener('resize',()=>{if(touch&&!tMove)stickHome();});
+$('keysP').textContent=touch?'Left thumb walks, right thumb looks. Tap to continue, or to use what is in front of you. Best held sideways, with headphones.':'W A S D to walk. Click, then move the mouse to look. E to interact, M for the map, C for the camera, Space to hurry the curator along. Esc frees the mouse.';
 
 /* interactions: doors between rooms, and Marigold's cabinet */
 let current=null;
@@ -566,7 +608,7 @@ function interact(){if(current)current.go();}
 $('prompt').onclick=()=>interact();
 
 $('enter').onclick=()=>{audioOn();$('title').style.display='none';$('waiver').style.display='flex';$('accept').focus();};
-$('accept').onclick=()=>{$('waiver').style.display='none';started=true;$('bar').style.display='flex';$('cross').style.display='block';if(!touch)lock();
+$('accept').onclick=()=>{$('waiver').style.display='none';started=true;if(touch){$('tui').classList.add('on');document.body.classList.add('playing');stickHome();}$('bar').style.display='flex';$('cross').style.display='block';if(!touch)lock();
   curator.visible=CUR.loaded;setTimeout(startIntro,900);};
 
 /* ================= loop ================= */
@@ -615,10 +657,10 @@ renderer.setAnimationLoop(()=>{
     if(awayFor>1.5){const local=cab.worldToLocal(cam.position.clone());dollYaw=Math.max(-1.1,Math.min(1.1,Math.atan2(local.x,local.z)));}
     doll.rotation.y+=(dollYaw-doll.rotation.y)*Math.min(1,dt*(seen?0:3));
   }
-  current=findInteract();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
+  current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
