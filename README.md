@@ -13,6 +13,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 | Panorama edits (lights off, midnight) | Lux3D multimodal to image |
 | Marigold, the rag doll | Lux3D text to 3D (G1) |
 | The player's hand | Lux3D text to 3D (G1) |
+| Mr. Ambrose Vane, the curator | Lux3D text to 3D (G1), humanoid auto-rig, and animation retarget (idle, talking, walk) |
 
 Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) for the Gaussian-splat rooms.
 
@@ -24,12 +25,10 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 - **Marigold**: she sits in a locked cabinet and turns to face you when you look away.
 - **The first rule**: touch her cabinet and the house answers. Knocks, a blackout, an empty cabinet, and something behind you.
 
-The curator is a placeholder figure until his Lux3D model is generated.
-
 ## Controls
 
 - W A S D to walk, mouse to look (click to capture the mouse, Esc to release)
-- E to interact, M for the map, L to switch your light, N to switch night mode
+- E to interact, M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
 - On a phone: drag the left side to walk, the right side to look
 
 Headphones recommended. All sound is synthesised in the page.
@@ -52,6 +51,7 @@ assets/front_hall.spz the Front Hall (compressed Gaussian splats)
 assets/doll_room.spz  the Doll Room (compressed Gaussian splats)
 assets/marigold.glb   Marigold
 assets/hand_right.glb the player's right hand
+assets/curator.glb    the curator, rigged, with idle, talk and walk animations
 ```
 
 All characters, objects and names are invented.
