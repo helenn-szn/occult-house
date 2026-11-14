@@ -174,7 +174,24 @@ const ROOMS={
     spawn:{x:0,z:0,yaw:2.26},
     glow:{p:[-2.93,1.21,-1.03],r:.45,c:[3.2,1.3,1.2]},
     kill:{p:[-1.59,2.04,.19],r:.55},
-    doors:[{to:'doll',p:[.62,-.78],r:.75,label:'Enter the Doll Room',spawn:{x:0,z:0,yaw:Math.PI/2}}]},
+    doors:[{to:'doll',p:[.62,-.78],r:.75,label:'Enter the Doll Room',spawn:{x:0,z:0,yaw:Math.PI/2}},
+           {to:'passage',p:[.62,.85],r:.6,label:'Go down to the Passage',spawn:{x:.3,z:0,yaw:Math.PI/2}}]},
+  passage:{name:'The Passage',url:'assets/passage.spz',floorZ:-1.55,night:[.24,.13,.12],
+    rects:[{x0:-3.45,x1:.9,z0:-1.12,z1:1.12},{x0:-1.45,x1:.35,z0:1,z1:3.3},{x0:.8,x1:2.1,z0:-.95,z1:.35}],
+    spawn:{x:.3,z:0,yaw:Math.PI/2},
+    glow:{p:[-3.3,2.0,0],r:.5,c:[2.4,1.2,1.0]},kill:null,
+    doors:[{to:'hall',p:[1.7,-.3],r:.7,label:'Go back up to the Front Hall',spawn:{x:.35,z:.55,yaw:Math.PI/2+.35}}],
+    spots:[{p:[-4.2,.58],r:1.2,label:'Open door I',act:()=>lockedDoor(1)},
+           {p:[-4.2,0],r:1.2,label:'Open door II',act:()=>lockedDoor(2)},
+           {p:[-4.2,-.6],r:1.2,label:'Open door III',act:()=>openDoorIII()}]},
+  nine:{name:'Room Nine',url:'assets/front_hall.spz',floorZ:-1.33,mirror:true,night:[.34,.07,.07],
+    rects:[{x0:-.62,x1:3.0,z0:-1.0,z1:1.12}],
+    spawn:{x:0,z:0,yaw:-2.26},
+    glow:{p:[2.93,1.21,-1.03],r:.5,c:[3.4,1.1,1.0]},
+    kill:{p:[1.59,2.04,.19],r:.55},
+    doors:[],
+    spots:[{p:[2.95,0],r:.9,label:'Open the front door',act:()=>{doorCreak();setTimeout(()=>{thud();note('It opens onto bare brick. There is no outside.',4000);},700);}},
+           {p:[1.4,-.85],r:.95,label:'Touch Marigold',act:()=>leaveNine()}]},
   doll:{name:'The Doll Room',url:'assets/doll_room.spz',floorZ:-1.18,
     rects:[{x0:-1.35,x1:.45,z0:-2.2,z1:2.6},{x0:-2.95,x1:-1.2,z0:-.75,z1:.75}],
     spawn:{x:0,z:0,yaw:Math.PI/2},
@@ -182,19 +199,19 @@ const ROOMS={
     kill:null,
     doors:[{to:'hall',p:[.45,0],r:.6,label:'Return to the Front Hall',spawn:{x:.35,z:-.55,yaw:Math.PI/2-.35}}]}
 };
-const VISITED={hall:true,doll:false};
+const VISITED={hall:true,doll:false,passage:false,nine:false};
 let roomId=null,switching=false;const MESH={};
 function clampToRoom(x,z){let best=null,bd=1e9;for(const r of ROOMS[roomId].rects){const cx=Math.max(r.x0,Math.min(r.x1,x)),cz=Math.max(r.z0,Math.min(r.z1,z)),d=Math.hypot(cx-x,cz-z);if(d<bd){bd=d;best=[cx,cz];}}return best;}
 function waitInit(m){return new Promise(res=>{const t0=performance.now();(function chk(){if(m.isInitialized||performance.now()-t0>45000)res();else setTimeout(chk,100);})();});}
-function preload(id){if(MESH[id])return MESH[id].ready;const R=ROOMS[id];const m=new SplatMesh({url:R.url});m.rotation.x=-Math.PI/2;m.position.y=-R.floorZ;m.visible=false;scene.add(m);
+function preload(id){if(MESH[id])return MESH[id].ready;const R=ROOMS[id];const m=new SplatMesh({url:R.url});m.rotation.x=-Math.PI/2;m.position.y=-R.floorZ;if(R.mirror)m.scale.set(-1,1,1);m.visible=false;scene.add(m);
   MESH[id]={m,ready:waitInit(m)};return MESH[id].ready;}
 async function showRoom(id,spawn){
   await preload(id);
-  for(const k in MESH)MESH[k].m.visible=(k===id);roomId=id;VISITED[id]=true;try{spark.setDirty();}catch(_){}
+  for(const k in MESH)MESH[k].m.visible=(k===id);roomId=id;VISITED[id]=true;try{spark.setDirty();await spark.update({scene,camera:cam});}catch(_){}
   const R=ROOMS[id];glowSdf.position.set(...R.glow.p);glowSdf.radius=R.glow.r;glowBase=R.glow.c;
   if(R.kill){killSdf.position.set(...R.kill.p);killSdf.radius=R.kill.r;}
   const sp=spawn||R.spawn;cam.position.set(sp.x,1.2,sp.z);yaw=sp.yaw;pitch=-.05;
-  dollGroup.visible=id==='doll';curator.visible=id==='hall'&&CUR.present&&CUR.loaded;
+  dollGroup.visible=id==='doll';nineGroup.visible=id==='nine';$('bMap').disabled=id==='nine';curator.visible=id==='hall'&&CUR.present&&CUR.loaded;
   $('roomName').textContent=R.name;drawMap();
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -246,6 +263,8 @@ let doll=null,dollYaw=0;
 new GLTFLoader().load('assets/marigold.glb',g=>{
   const m=g.scene,bb=new THREE.Box3().setFromObject(m),s=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
   m.traverse(o=>{if(o.isMesh){if(o.material.map)o.material.map.colorSpace=THREE.SRGBColorSpace;o.material.color.setScalar(.9);o.material.roughness=.9;}});
+  {const nd=m.clone(true);const w=new THREE.Group();nd.position.set(-c.x,-bb.min.y,-c.z);w.add(nd);w.scale.setScalar(.6/s.y);w.position.set(1.4,0,-.85);w.rotation.y=Math.atan2(-1.4,.85);nineGroup.add(w);
+   const nl=new THREE.PointLight(0xff3020,.6,1.6,2);nl.position.set(1.3,.9,-.55);nineGroup.add(nl);}
   doll=new THREE.Group();m.position.set(-c.x,-bb.min.y,-c.z);doll.add(m);doll.scale.setScalar(.47/s.y);doll.position.set(0,T,-.03);cab.add(doll);dollHome={p:doll.position.clone(),r:doll.rotation.clone(),s:doll.scale.clone()};
 },undefined,()=>fail('Marigold could not be loaded. Reload the page to try again.'));
 
@@ -262,7 +281,7 @@ new GLTFLoader().load('assets/curator.glb',g=>{const m=g.scene;m.position.y=.9;
   for(const c of g.animations){
     if(c.name==='walk'){for(const tr of c.tracks){if(/Hips\.position$/.test(tr.name)){const v=tr.values;for(let k=0;k<v.length;k+=3){v[k]=v[0];v[k+2]=v[2];}}}}
     CUR.act[c.name]=CUR.mixer.clipAction(c);}
-  makeGhost(g,'hall',new THREE.Vector3(-1.15,0,.95));makeGhost(g,'doll',new THREE.Vector3(-1.9,0,.15));makeFollower(g);
+  makeGhost(g,'hall',new THREE.Vector3(-1.15,0,.95));makeGhost(g,'doll',new THREE.Vector3(-1.9,0,.15));makeFollower(g);{const nineMat=ghostMat.clone();nineMat.opacity=.1;nineMat.side=THREE.FrontSide;nineMat.color.set(0xb08c8c);const ng=SkeletonUtils.clone(g.scene);ng.position.y=.9;ng.traverse(o=>{if(o.isMesh){o.material=nineMat;o.frustumCulled=false;o.renderOrder=999;}});const h=new THREE.Group();h.position.set(1.15,0,.95);h.rotation.y=Math.atan2(-1.15,-.95);h.add(ng);nineGroup.add(h);const mx=new THREE.AnimationMixer(ng);const c=g.animations.find(c=>c.name==='idle');if(c)mx.clipAction(c).play();ghostMixers.push(mx);}
   play('idle',0);CUR.loaded=true;curator.visible=roomId==='hall'&&CUR.present;},undefined,()=>{CUR.loaded=true;});
 function play(name,fade=.35){const a=CUR.act[name];if(!a||CUR.cur===a)return;a.reset().setEffectiveWeight(1).play();if(CUR.cur)CUR.cur.crossFadeTo(a,fade,false);CUR.cur=a;}
 
@@ -341,7 +360,7 @@ function updateEvent(dt,t){
 /* ================= rule III: the camera in your pocket =================
    Raise it with C. Through the lens you see what the eye cannot. Every photo cracks the lens and brings
    what you see closer. After the last shot the camera breaks, and whatever it last saw stays. */
-const CAM={has:false,up:false,shots:8,broken:false,used:false,flash:0,lift:0,lastRoom:null};
+const CAM={has:false,up:false,shots:8,broken:false,used:false,flash:0,lift:0,lastRoom:null,lunge:false,seq:false,cool:0,brokenShow:false};
 const GHOST={hall:new THREE.Group(),doll:new THREE.Group()};scene.add(GHOST.hall,GHOST.doll);GHOST.hall.visible=GHOST.doll.visible=false;
 const ghostMixers=[];const GHOST_FIG={};const ghostMat=new THREE.MeshBasicMaterial({color:0xcfe6ff,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
 function writing(text,w,h){const c=cv(1024,256),g=c.getContext('2d'),r=rnd(text.length*7);g.font='150px "Special Elite", monospace';g.textAlign='center';g.textBaseline='middle';
@@ -412,11 +431,35 @@ function updateHaunt(dt){if(!HAUNT.on||!follower)return;
     if(seen){stinger(.22);flash=.45;dark01=.12;}else{whisper(1.4,.16);}}}
 function updateCam(dt){if(CAM.cool>0)CAM.cool-=dt;CAM.flash=Math.max(0,CAM.flash-dt*3);$('camflash').style.opacity=CAM.flash;
   ghostMixers.forEach(m=>m.update(dt));
-  for(const k of ['hall','doll'])GHOST[k].visible=roomId===k&&(CAM.up||CAM.lunge);
+  for(const k of ['hall','doll'])GHOST[k].visible=!!(roomId===k&&(CAM.up||CAM.lunge));
   if(roomId!=='doll'){flash=Math.max(0,flash-dt*1.4);$('flash').style.opacity=flash;}
   updateHaunt(dt);
   ghostMat.opacity=CAM.lunge?.6:CAM.up?.3+Math.sin(performance.now()/90)*.05:.16;
   if(GHOST_FIG[roomId]&&GHOST[roomId].visible){const h=GHOST_FIG[roomId].holder;let d=Math.atan2(cam.position.x-h.position.x,cam.position.z-h.position.z)-h.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));h.rotation.y+=d*Math.min(1,dt*4);}}
+
+/* ================= rule II: the Passage and its doors ================= */
+const PASS={tried:{},rule2:false};
+function breakRule2(){if(PASS.rule2)return;PASS.rule2=true;$('r2').classList.add('broken');E.broken++;drawMap();setTimeout(()=>note('Rule broken: you opened a door that asked you not to.',4000),2200);}
+function rattle2(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<6;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=900+Math.random()*500;bp.Q.value=6;n.connect(bp);bp.connect(g);g.connect(master);env(g,t+k*.09,.003,.5,.06);n.start(t+k*.09);n.stop(t+k*.09+.12);}}
+function scratch(){if(!AC)return;const t=AC.currentTime+.6,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=2400;bp.Q.value=2;n.connect(bp);bp.connect(g);g.connect(master);
+  g.gain.setValueAtTime(0,t);for(let k=0;k<5;k++){g.gain.linearRampToValueAtTime(.18,t+k*.32+.05);g.gain.linearRampToValueAtTime(0,t+k*.32+.26);}n.start(t);n.stop(t+1.8);}
+function lockedDoor(which){if(PASS.busy)return;PASS.busy=true;rattle2();breakRule2();
+  setTimeout(()=>{knock();scratch();},500);
+  const msg=which===1?'It will not open. Something on the other side is holding the handle.':'Locked. Then, from the other side, three slow knocks answer yours.';
+  setTimeout(()=>{note(msg,4500);PASS.busy=false;},900);}
+/* door III opens, and lets you into Room Nine: the front hall again, the wrong way round */
+async function openDoorIII(){if(switching)return;switching=true;breakRule2();doorCreak();
+  note('The door swings open onto darkness.',2200);await sleep(900);
+  const F=$('fade');F.style.transition='opacity 1s ease-in';F.style.opacity=1;footsteps();await sleep(1100);thud();whisper(2.4,.16);
+  await preload('nine');await showRoom('nine');await sleep(900);
+  F.style.transition='opacity 1.8s ease-out';F.style.opacity=0;await sleep(1500);switching=false;
+  note('Room Nine. Everything is the wrong way round. Find the way out.',6000);}
+async function leaveNine(){if(switching)return;switching=true;
+  stinger(.3);flash=.6;const F=$('fade');F.style.transition='opacity .15s';F.style.opacity=1;await sleep(500);knock();await sleep(1200);
+  await showRoom('passage',{x:-3.2,z:-.55,yaw:-Math.PI/2});await sleep(500);
+  F.style.transition='opacity 1.4s ease-out';F.style.opacity=0;await sleep(1400);switching=false;
+  if(!PASS.nineDone){PASS.nineDone=true;note('You are back in the Passage. Door III is shut, and you do not remember closing it.',6000);}}
+const nineGroup=new THREE.Group();nineGroup.visible=false;scene.add(nineGroup);
 
 /* ================= the Curator's welcome ================= */
 const LINES=[
@@ -457,7 +500,7 @@ const MAPROOMS=[
   {id:null,label:'Card Parlour',x:90,y:220,w:170,h:110},
   {id:null,label:'Antiquities Study',x:90,y:110,w:170,h:100},
   {id:null,label:'Cellar Monitors',x:90,y:20,w:170,h:80},
-  {id:null,label:'The Passage',x:270,y:20,w:330,h:80}];
+  {id:'passage',label:'The Passage',x:270,y:20,w:330,h:80}];
 function drawMap(){const svg=$('mapSvg');let h='<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#8a7a5c" stroke-width="1.4"/></pattern></defs>';
   for(const r of MAPROOMS){const open=!!r.id,here=r.id===roomId;
     h+=`<g class="room ${open?'open':''}" ${open?`tabindex="0" role="button" aria-label="Go to the ${r.label}" data-id="${r.id}"`:''}>`+
@@ -468,7 +511,7 @@ function drawMap(){const svg=$('mapSvg');let h='<defs><pattern id="hatch" width=
   svg.innerHTML=h;svg.querySelectorAll('.room.open').forEach(g=>{const go=()=>{const id=g.dataset.id;if(id!==roomId)travel(id);else closeMap();};g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
   $('mapRules').textContent='Rules broken: '+E.broken+' of 3';}
 let mapOpen=false;
-function openMap(){if(!INTRO.done||switching)return;if(CAM.up){CAM.up=false;camUI();}mapOpen=true;drawMap();$('map').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}
+function openMap(){if(!INTRO.done||switching)return;if(roomId==='nine'){note('The map is blank here.',2500);return;}if(CAM.up){CAM.up=false;camUI();}mapOpen=true;drawMap();$('map').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}
 function closeMap(){mapOpen=false;$('map').style.display='none';}
 $('bMap').onclick=()=>mapOpen?closeMap():openMap();$('mapClose').onclick=closeMap;
 
@@ -505,6 +548,7 @@ $('keysP').textContent=touch?'Drag the left side to walk, the right side to look
 let current=null;
 function findInteract(){if(!started||!INTRO.done||switching||mapOpen||E.phase!=='idle'||CAM.up)return null;
   for(const d of ROOMS[roomId].doors){if(Math.hypot(cam.position.x-d.p[0],cam.position.z-d.p[1])<d.r)return {label:d.label,go:()=>travel(d.to,d.spawn)};}
+  {let best=null,bs=-1;cam.getWorldDirection(tmpV2);for(const sp of (ROOMS[roomId].spots||[])){const dx=sp.p[0]-cam.position.x,dz=sp.p[1]-cam.position.z,d=Math.hypot(dx,dz);if(d<sp.r){const f=(tmpV2.x*dx+tmpV2.z*dz)/Math.max(d,.01);if(f>.55&&f>bs){bs=f;best=sp;}}}if(best)return {label:best.label,go:best.act};}
   if(roomId==='doll'&&canTouch())return {label:'Touch the cabinet',go:startTouch};
   return null;}
 function interact(){if(current)current.go();}
@@ -539,7 +583,7 @@ renderer.setAnimationLoop(()=>{
   const fl=1+Math.sin(t*9)*.05+Math.sin(t*23.3)*.04+(Math.sin(t*1.3)>.99?-.6:0);
   if(started){updateIntro(dt);updateCam(dt);if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
   const spark_=E.phase==='shake'?(Math.random()>.5?2.2:0):1;
-  night.visible=S.dark||dark01<1||CAM.up;if(CAM.up)nightSdf.color.setRGB(.42*dark01+.004,.52*dark01+.004,.5*dark01+.004);else nightSdf.color.setRGB((S.dark?.3:1)*dark01+.004,(S.dark?.16:1)*dark01+.002,(S.dark?.16:1)*dark01+.002);
+  night.visible=S.dark||dark01<1||CAM.up;if(CAM.up)nightSdf.color.setRGB(.42*dark01+.004,.52*dark01+.004,.5*dark01+.004);else{const nc=ROOMS[roomId].night||[.3,.16,.16];nightSdf.color.setRGB((S.dark?nc[0]:1)*dark01+.004,(S.dark?nc[1]:1)*dark01+.002,(S.dark?nc[2]:1)*dark01+.002);}
   glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
   glowSdf.color.setRGB(glowBase[0]*fl*(E.phase==='shake'?spark_:1),glowBase[1],glowBase[2]);
   const lanFl=(E.phase==='gone'?(Math.random()>.93?.3:1):1)*(1+Math.sin(t*13)*.05+Math.sin(t*31)*.03);
@@ -563,7 +607,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={E,INTRO,CUR,CAM,HAUNT,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>

@@ -10,6 +10,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 |---|---|
 | The Front Hall | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
 | The Doll Room | Aholo World API, generated from a text prompt and an edited 360° panorama |
+| The Passage | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
 | Panorama edits (lights off, midnight) | Lux3D multimodal to image |
 | Marigold, the rag doll | Lux3D text to 3D (G1) |
 | The player's hand | Lux3D text to 3D (G1) |
@@ -21,9 +22,10 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 
 - **The welcome**: ring the bell, sign the visitor agreement, and meet the curator, Mr. Ambrose Vane, in the Front Hall. He gives you three rules and a map.
 - **The map**: press M to see the house and travel to any room you have unlocked.
-- **The Front Hall** and **the Doll Room**: walkable splat rooms, darkened in code so only red light and your own light show the way.
+- **The Front Hall**, **the Doll Room** and **the Passage**: walkable splat rooms, darkened in code so only red light and your own light show the way.
 - **Marigold**: she sits in a locked cabinet and turns to face you when you look away.
 - **The first rule**: touch her cabinet and the house answers. Knocks, a blackout, an empty cabinet, and something behind you.
+- **The second rule**: down in the Passage, three doors at the end say DO NOT OPEN. Two will not open, and something answers from the other side. The third lets you into Room Nine: the front hall again, the wrong way round, and the only way out is to find what does not belong.
 - **The third rule**: the curator says no cameras, but there is one in your pocket. Through its lens you see what the eye cannot: figures in the rooms and writing on the walls. Every photo cracks the lens and brings them closer. On the eighth photo the figure comes through the lens. You wake in the Front Hall with the curator standing over you, and from then on the figure follows you through the house, waiting behind you until you turn around.
 
 ## Controls
@@ -50,6 +52,7 @@ Then open the address it prints. Opening `index.html` directly from disk will no
 index.html            the game
 assets/front_hall.spz the Front Hall (compressed Gaussian splats)
 assets/doll_room.spz  the Doll Room (compressed Gaussian splats)
+assets/passage.spz    the Passage (compressed Gaussian splats)
 assets/marigold.glb   Marigold
 assets/hand_right.glb the player's right hand
 assets/curator.glb    the curator, rigged, with idle, talk and walk animations
