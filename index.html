@@ -2,73 +2,129 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Occult House</title>
 <meta name="description" content="A walkable haunted museum built with Manycore Aholo: rooms from the Aholo World API, objects from Lux3D.">
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=EB+Garamond&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/","@sparkjsdev/spark":"https://cdn.jsdelivr.net/npm/@sparkjsdev/spark@2.4.0/dist/spark.module.js"}}</script></head><body>
 <style>
   html,body{margin:0;height:100%;background:#030202;color:#e6d9c8;font-family:'EB Garamond',Georgia,serif;overflow:hidden}
   canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  button{font-family:'Special Elite',monospace;font-size:.8rem;letter-spacing:.06em;background:rgba(10,6,7,.82);color:#e6d9c8;border:1px solid #5c1a1a;padding:.6em 1em;cursor:pointer;border-radius:2px}
+  button.on{background:#7a1616;border-color:#c0392b}
+  button:focus-visible{outline:2px solid #e6d9c8;outline-offset:2px}
   #top{position:fixed;left:18px;top:14px;pointer-events:none;z-index:3;text-shadow:0 1px 3px #000}
   #top b{font-family:'Special Elite',monospace;letter-spacing:.08em;color:#c0392b;font-weight:400;font-size:.95rem}
   #top div{opacity:.8;font-size:1rem;margin-top:2px}
-  #bar{position:fixed;right:14px;top:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:60vw;z-index:3}
+  #bar{position:fixed;right:14px;top:12px;display:none;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:62vw;z-index:3}
   #bar button{font-size:.7rem;padding:.45em .75em}
-  button{font-family:'Special Elite',monospace;font-size:.8rem;letter-spacing:.06em;background:rgba(10,6,7,.82);color:#e6d9c8;border:1px solid #5c1a1a;padding:.6em 1em;cursor:pointer;border-radius:2px}
-  button.on{background:#7a1616;border-color:#c0392b}
-  #msg{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Special Elite',monospace;color:#c0392b;text-align:center;padding:20px;z-index:4;background:#030202;gap:14px}
-  #msg button{font-size:.95rem;padding:.8em 1.6em}
-  #msg p{font-family:'EB Garamond',serif;color:#e6d9c8;opacity:.8;font-size:1.05rem;max-width:520px;margin:0}
-  #cross{position:fixed;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(230,217,200,.55);z-index:2;pointer-events:none}
-  #grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;z-index:1;opacity:.05;mix-blend-mode:screen;animation:gr .5s steps(4) infinite}@keyframes gr{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
-  #note{position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:3;font-family:'Special Elite',monospace;letter-spacing:.08em;color:#d23a2a;font-size:1.15rem;text-align:center;opacity:0;transition:opacity .8s;pointer-events:none;text-shadow:0 0 12px #000,0 0 3px #000;max-width:90vw}
-  #prompt{position:fixed;left:50%;bottom:16%;transform:translateX(-50%);z-index:3;display:none}
-  #flash{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,rgba(150,0,0,.35),rgba(60,0,0,.95));opacity:0}
+  #cross{position:fixed;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(230,217,200,.55);z-index:2;pointer-events:none;display:none}
+  #grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;z-index:1;opacity:.05;mix-blend-mode:screen;animation:gr .5s steps(4) infinite}
+  @keyframes gr{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
   #vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(0,0,0,.75) 100%)}
+  #flash{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,rgba(150,0,0,.35),rgba(60,0,0,.95));opacity:0}
+  #fade{position:fixed;inset:0;z-index:5;background:#000;opacity:0;pointer-events:none;transition:opacity .6s}
+  #note{position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:3;font-family:'Special Elite',monospace;letter-spacing:.08em;color:#d23a2a;font-size:1.15rem;text-align:center;opacity:0;transition:opacity .8s;pointer-events:none;text-shadow:0 0 12px #000,0 0 3px #000;max-width:90vw}
+  #sub{position:fixed;left:50%;bottom:9%;transform:translateX(-50%);z-index:3;max-width:min(760px,90vw);text-align:center;font-size:1.3rem;line-height:1.45;color:#efe4d2;text-shadow:0 0 10px #000,0 0 3px #000,0 2px 2px #000;opacity:0;transition:opacity .4s;pointer-events:none}
+  #sub i{font-family:'Special Elite',monospace;font-style:normal;color:#c0392b;font-size:.85rem;letter-spacing:.12em;display:block;margin-bottom:.25em}
+  #skip{position:fixed;right:16px;bottom:16px;z-index:4;display:none}
+  #prompt{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:3;display:none}
+  #rules{position:fixed;left:18px;top:64px;z-index:3;font-family:'Special Elite',monospace;font-size:.82rem;line-height:1.7;letter-spacing:.04em;color:#e6d9c8;text-shadow:0 1px 3px #000;pointer-events:none}
+  #rules div{opacity:0;transform:translateX(-8px);transition:opacity .6s,transform .6s}
+  #rules div.show{opacity:.85;transform:none}
+  #rules div.broken{color:#d23a2a;text-decoration:line-through}
+  .scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:6;background:#030202;gap:14px}
+  .scr h1{font-family:'Special Elite',monospace;font-weight:400;color:#c0392b;letter-spacing:.14em;font-size:clamp(1.8rem,6vw,3.2rem);margin:0}
+  .scr p{max-width:540px;margin:0;font-size:1.1rem;line-height:1.5;opacity:.85}
+  .scr .small{font-size:.95rem;opacity:.6}
+  .scr button{font-size:.95rem;padding:.8em 1.6em}
+  #waiver{display:none;background:rgba(3,2,2,.96)}
+  #waiver .doc{max-width:600px;width:100%;max-height:72vh;overflow:auto;text-align:left;background:#d8ccb2;color:#1b1410;padding:28px 30px;border:1px solid #6e5a3c;box-shadow:0 10px 50px #000;font-size:1.02rem;line-height:1.55}
+  #waiver .doc h2{font-family:'Special Elite',monospace;font-weight:400;text-align:center;letter-spacing:.1em;margin:0 0 .6em;font-size:1.2rem;color:#5a0d0d}
+  #waiver .doc ul{padding-left:1.2em;margin:.5em 0}
+  #waiver .doc .sig{margin-top:1.2em;font-family:'Special Elite',monospace;font-size:.9rem;color:#5a0d0d}
+  #map{display:none;position:fixed;inset:0;z-index:7;background:rgba(2,1,1,.86);align-items:center;justify-content:center;padding:16px}
+  #map .paper{position:relative;width:min(760px,96vw);background:#cfc1a2;color:#1b1410;border:1px solid #6e5a3c;box-shadow:0 10px 50px #000;padding:20px 22px 16px}
+  #map h2{font-family:'Special Elite',monospace;font-weight:400;letter-spacing:.12em;margin:0 0 6px;font-size:1.1rem;color:#5a0d0d}
+  #map svg{width:100%;height:auto;display:block}
+  #map .room{cursor:default}
+  #map .room.open{cursor:pointer}
+  #map .room.open:hover rect,#map .room.open:focus rect{fill:#b9a57e}
+  #map .legend{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.95rem;margin-top:8px}
+  #map .close{position:absolute;right:12px;top:12px;font-size:.7rem;padding:.4em .8em}
+  @media (prefers-reduced-motion: reduce){#grain{animation:none}#fade,#note,#sub{transition:none}}
 </style>
 <canvas id="c"></canvas>
-<div id="vig"></div><canvas id="grain"></canvas><div id="cross"></div><div id="flash"></div><div id="note"></div><button id="prompt">E · Touch the cabinet</button>
-<div id="top"><b>OCCULT HOUSE</b><div>The Doll Room</div></div>
-<div id="msg"><span id="msgT">Loading the Doll Room...</span><p id="msgP"></p><button id="enter" style="display:none">Enter the Doll Room</button></div>
+<div id="vig"></div><canvas id="grain"></canvas><div id="cross"></div><div id="flash"></div>
+<div id="note" role="status"></div>
+<div id="sub" aria-live="polite"></div>
+<button id="prompt"></button>
+<button id="skip">Skip</button>
+<div id="rules" aria-label="The rules"><div id="r1">I. Touch nothing.</div><div id="r2">II. Open no door that asks you not to.</div><div id="r3">III. No cameras.</div></div>
+<div id="top"><b>OCCULT HOUSE</b><div id="roomName"></div></div>
 <div id="bar">
+  <button id="bMap">Map (M)</button>
   <button id="bLan" class="on">Light</button>
   <button id="bDark" class="on">Night</button>
-  <button id="bSee">Find Marigold</button>
   <button id="bSnd" class="on">Sound</button>
 </div>
+<div id="fade"></div>
+
+<div class="scr" id="title">
+  <h1>OCCULT HOUSE</h1>
+  <p id="titleP">Loading the house...</p>
+  <button id="enter" style="display:none">Ring the bell</button>
+  <p class="small" id="keysP"></p>
+</div>
+
+<div class="scr" id="waiver">
+  <div class="doc">
+    <h2>VISITOR AGREEMENT</h2>
+    <p>Occult House accepts no responsibility for any of the following, which previous guests have reported during or after their visit:</p>
+    <ul><li>unexplained sounds, voices or knocking;</li><li>objects that are not where they were;</li><li>the feeling of being watched;</li><li>attachments, sleep paralysis, and dreams that are not your own.</li></ul>
+    <p>The collection is not a collection of replicas. You agree to follow the curator's rules for the whole of your visit.</p>
+    <p class="sig">Signed on behalf of the house: E. &amp; R. Hollowmere</p>
+  </div>
+  <button id="accept">I accept</button>
+  <p class="small">Contains darkness, flashing light and sudden loud sounds. Headphones recommended.</p>
+</div>
+
+<div id="map" role="dialog" aria-label="Map of the house">
+  <div class="paper">
+    <button class="close" id="mapClose">Close (M)</button>
+    <h2>THE HOUSE</h2>
+    <svg viewBox="0 0 700 380" id="mapSvg" aria-hidden="false"></svg>
+    <div class="legend"><span id="mapRules"></span><span>Click an open room to go there.</span></div>
+  </div>
+</div>
+
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { SparkRenderer, SplatMesh, SplatEdit, SplatEditSdf, SplatEditSdfType, SplatEditRgbaBlendMode } from '@sparkjsdev/spark';
 const $=i=>document.getElementById(i);
-function b64(id){const s=atob($(id).textContent.trim()),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
-function fail(t){$('msgT').textContent=t;$('msg').style.display='flex';}
+function fail(t){$('titleP').textContent=t;$('title').style.display='flex';}
 
 let renderer;
-try{renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:true});}catch(e){fail('This browser could not start WebGL.');throw e;}
+try{renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:true});}catch(e){fail('This browser could not start WebGL, which the house needs.');throw e;}
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x020101);
-const cam=new THREE.PerspectiveCamera(70,1,.03,60);cam.rotation.order='YXZ';
+const cam=new THREE.PerspectiveCamera(70,1,.03,60);cam.rotation.order='YXZ';scene.add(cam);
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
 const spark=new SparkRenderer({renderer});scene.add(spark);
 
-/* ---- the room: Aholo World splats. Source is Z-up; floor sits at z=-1.18 ---- */
-const FLOOR=-1.18;
-const room=new SplatMesh({url:'assets/doll_room.spz'});
-room.rotation.x=-Math.PI/2;room.position.y=-FLOOR;scene.add(room);
-
-/* ---- lighting edits applied to the splats ---- */
+/* ================= lighting applied to the splat rooms ================= */
 const night=new SplatEdit({rgbaBlendMode:SplatEditRgbaBlendMode.MULTIPLY,softEdge:0.01});
-const nightSdf=new SplatEditSdf({type:SplatEditSdfType.ALL,color:new THREE.Color(0.3,0.16,0.16)});night.addSdf(nightSdf);scene.add(night);
+const nightSdf=new SplatEditSdf({type:SplatEditSdfType.ALL,color:new THREE.Color(.3,.16,.16)});night.addSdf(nightSdf);scene.add(night);
 const glow=new SplatEdit({rgbaBlendMode:SplatEditRgbaBlendMode.MULTIPLY,softEdge:1.3});
-const glowSdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:0.45,color:new THREE.Color(2.4,1.1,1.1)});glowSdf.position.set(-3.5,1.25,-0.1);glow.addSdf(glowSdf);scene.add(glow);
+const glowSdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:.45,color:new THREE.Color(2.4,1.1,1.1)});glow.addSdf(glowSdf);scene.add(glow);
+const kill=new SplatEdit({rgbaBlendMode:SplatEditRgbaBlendMode.MULTIPLY,softEdge:.6});
+const killSdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:.5,color:new THREE.Color(.35,.3,.3)});kill.addSdf(killSdf);scene.add(kill);
 const lamp=new SplatEdit({rgbaBlendMode:SplatEditRgbaBlendMode.MULTIPLY,softEdge:2.4});
-const lampSdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:0.9,color:new THREE.Color(3.3,2.7,2.1)});lamp.addSdf(lampSdf);scene.add(lamp);
+const lampSdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:.9,color:new THREE.Color(3.3,2.7,2.1)});lamp.addSdf(lampSdf);scene.add(lamp);
+const hemi=new THREE.HemisphereLight(0x6e2418,0x0a0303,.4);scene.add(hemi);
+const lanternL=new THREE.PointLight(0xff9a60,.5,4.5,2);scene.add(lanternL);
 
-/* ---- meshes: lit to match the darkened splats ---- */
-const hemi=new THREE.HemisphereLight(0x6e2418,0x0a0303,0.4);scene.add(hemi);
-const lanternL=new THREE.PointLight(0xff9a60,0.5,4.5,2);scene.add(lanternL);
 function cv(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
 function tx(c,srgb=true){const t=new THREE.CanvasTexture(c);if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
 function rnd(s){return()=>{s=(s*16807)%2147483647;return s/2147483647;};}
@@ -97,8 +153,51 @@ const PINE=woodMat(3,'#3d2414',.82),DARK=woodMat(8,'#24150b',.88),TOPW=woodMat(1
 const IRON=new THREE.MeshStandardMaterial({color:0x111012,roughness:.55,metalness:.75});
 function plank(w,h,d,m,x,y,z,p,rad=.006){const b=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,Math.min(rad,w/2.1,h/2.1,d/2.1)),m);b.position.set(x,y,z);p.add(b);return b;}
 
+
+/* ================= rooms =================
+   Every room is an Aholo World splat scene. Source files are Z-up; floorZ is the floor height in the source. */
+const ROOMS={
+  hall:{name:'The Front Hall',url:'assets/front_hall.spz',floorZ:-1.33,
+    rects:[{x0:-3.0,x1:.62,z0:-1.0,z1:1.12}],
+    spawn:{x:0,z:0,yaw:2.26},
+    glow:{p:[-2.93,1.21,-1.03],r:.45,c:[3.2,1.3,1.2]},
+    kill:{p:[-1.59,2.04,.19],r:.55},
+    doors:[{to:'doll',p:[.62,-.78],r:.75,label:'Enter the Doll Room',spawn:{x:0,z:0,yaw:Math.PI/2}}]},
+  doll:{name:'The Doll Room',url:'assets/doll_room.spz',floorZ:-1.18,
+    rects:[{x0:-1.35,x1:.45,z0:-2.2,z1:2.6},{x0:-2.95,x1:-1.2,z0:-.75,z1:.75}],
+    spawn:{x:0,z:0,yaw:Math.PI/2},
+    glow:{p:[-3.5,1.25,-.1],r:.45,c:[2.4,1.1,1.1]},
+    kill:null,
+    doors:[{to:'hall',p:[.45,0],r:.6,label:'Return to the Front Hall',spawn:{x:.35,z:-.55,yaw:Math.PI/2-.35}}]}
+};
+const VISITED={hall:true,doll:false};
+let roomId=null,roomMesh=null,switching=false;
+function clampToRoom(x,z){let best=null,bd=1e9;for(const r of ROOMS[roomId].rects){const cx=Math.max(r.x0,Math.min(r.x1,x)),cz=Math.max(r.z0,Math.min(r.z1,z)),d=Math.hypot(cx-x,cz-z);if(d<bd){bd=d;best=[cx,cz];}}return best;}
+function waitInit(m){return new Promise(res=>{const t0=performance.now();(function chk(){if(m.isInitialized||performance.now()-t0>30000)res();else setTimeout(chk,100);})();});}
+async function loadRoom(id,spawn){
+  const R=ROOMS[id];const m=new SplatMesh({url:R.url});m.rotation.x=-Math.PI/2;m.position.y=-R.floorZ;
+  await waitInit(m);
+  if(roomMesh){scene.remove(roomMesh);try{roomMesh.dispose();}catch(_){}}
+  roomMesh=m;scene.add(m);roomId=id;VISITED[id]=true;
+  glowSdf.position.set(...R.glow.p);glowSdf.radius=R.glow.r;glowBase=R.glow.c;
+  kill.visible=!!R.kill;if(R.kill){killSdf.position.set(...R.kill.p);killSdf.radius=R.kill.r;}
+  const s=spawn||R.spawn;cam.position.set(s.x,1.2,s.z);yaw=s.yaw;pitch=-.05;
+  dollGroup.visible=id==='doll';curator.visible=id==='hall'&&CUR.present;
+  $('roomName').textContent=R.name;drawMap();
+}
+async function travel(id,spawn){
+  if(switching||id===roomId)return;switching=true;closeMap();$('fade').style.opacity=1;
+  await new Promise(r=>setTimeout(r,650));
+  try{await loadRoom(id,spawn);await new Promise(r=>setTimeout(r,450));}catch(e){note('That room could not be loaded.',4000);}
+  $('fade').style.opacity=0;switching=false;
+  if(id==='doll'&&!seenDoll){seenDoll=true;setTimeout(()=>note('The Doll Room',2500),700);}
+}
+let glowBase=[2.4,1.1,1.1],seenDoll=false;
+
+/* ================= the Doll Room: Marigold's cabinet ================= */
+const dollGroup=new THREE.Group();scene.add(dollGroup);dollGroup.visible=false;
 /* my wooden cabinet stands where the room's red cabinet was (those splats are removed from the room file) */
-const shrine=new THREE.Group();shrine.position.set(-3.5,0.72,-0.1);shrine.rotation.y=Math.PI/2;shrine.scale.setScalar(1.35);scene.add(shrine);
+const shrine=new THREE.Group();shrine.position.set(-3.5,0.72,-0.1);shrine.rotation.y=Math.PI/2;shrine.scale.setScalar(1.35);dollGroup.add(shrine);
 /* the cabinet */
 const cab=new THREE.Group();shrine.add(cab);
 const CW=.62,CH=.74,CD=.42,T=.03,fz=CD/2;
@@ -120,47 +219,41 @@ const red=new THREE.PointLight(0xff3a2a,.5,1.1,2);red.position.set(0,CH-.08,.04)
 const spill=new THREE.PointLight(0xff2010,.18,2,2);spill.position.set(0,.3,.55);cab.add(spill);
 const faceL=new THREE.SpotLight(0xffb8a8,.35,1.6,.5,.8,2);faceL.position.set(0,.45,.75);faceL.target.position.set(0,.3,0);cab.add(faceL);cab.add(faceL.target);
 const bulb=new THREE.Mesh(new THREE.SphereGeometry(.012,8,8),new THREE.MeshBasicMaterial({color:0xff6a50}));bulb.position.copy(red.position);cab.add(bulb);
+
 let doll=null,dollYaw=0;
 new GLTFLoader().load('assets/marigold.glb',g=>{
   const m=g.scene,bb=new THREE.Box3().setFromObject(m),s=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
   m.traverse(o=>{if(o.isMesh){if(o.material.map)o.material.map.colorSpace=THREE.SRGBColorSpace;o.material.color.setScalar(.9);o.material.roughness=.9;}});
   doll=new THREE.Group();m.position.set(-c.x,-bb.min.y,-c.z);doll.add(m);doll.scale.setScalar(.47/s.y);doll.position.set(0,T,-.03);cab.add(doll);dollHome={p:doll.position.clone(),r:doll.rotation.clone(),s:doll.scale.clone()};
-},undefined,e=>fail('A model could not be loaded. Reload the page to try again.'));
+},undefined,()=>fail('Marigold could not be loaded. Reload the page to try again.'));
 
-{const gc=$('grain'),gg=gc.getContext('2d');gc.width=gc.height=256;const id=gg.createImageData(256,256);for(let i=0;i<id.data.length;i+=4){const v=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}gg.putImageData(id,0,0);gc.style.background='url('+gc.toDataURL()+')';gc.width=gc.height=1;}
-/* ================= first-person hands + lantern (children of the camera) ================= */
-scene.add(cam);
-const SKIN=new THREE.MeshStandardMaterial({color:0xb98a72,roughness:.75});
-const SLEEVE=new THREE.MeshStandardMaterial({color:0x1b1513,roughness:.95});
-const BRASS=new THREE.MeshStandardMaterial({color:0x8a6a32,roughness:.45,metalness:.85});
-function cap(r,len,m){const g=new THREE.CapsuleGeometry(r,len,4,8);return new THREE.Mesh(g,m);}
-function limb(m,a,b,r){const d=new THREE.Vector3().subVectors(b,a),L=d.length();const c=new THREE.Mesh(new THREE.CylinderGeometry(r*.92,r,L,12),m);c.position.copy(a).add(b).multiplyScalar(.5);c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return c;}
-/* left hand: a fist gripping the lantern's handle */
-const handL=new THREE.Group();handL.position.set(-.21,-.06,-.43);/* placeholder fist and lantern are kept out of the scene */
-/* left hand: the Lux3D hand, mirrored, palm up with the lantern hooked over its fingers (added when the model loads) */
-/* the lantern hangs from the fist */
-const lantern=new THREE.Group();lantern.position.set(0,.03,-.05);handL.add(lantern);
-const lanBody=new THREE.Group();lanBody.position.y=-.03;lanBody.scale.setScalar(.85);lantern.add(lanBody);
-{const bail=new THREE.Mesh(new THREE.TorusGeometry(.04,.003,6,20,Math.PI),BRASS);bail.position.y=-.035;bail.rotation.z=Math.PI;lanBody.add(bail);
- const top=new THREE.Mesh(new THREE.ConeGeometry(.045,.035,16),BRASS);top.position.y=-.075;lanBody.add(top);
- const ring=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.012,16),BRASS);ring.position.y=-.095;lanBody.add(ring);
- const glassC=new THREE.Mesh(new THREE.CylinderGeometry(.034,.038,.085,16,1,true),new THREE.MeshStandardMaterial({color:0xffe2c0,transparent:true,opacity:.18,roughness:.05,side:THREE.DoubleSide,depthWrite:false}));glassC.position.y=-.145;lanBody.add(glassC);
- for(let i=0;i<4;i++){const a=i/4*6.283+.4;const w=new THREE.Mesh(new THREE.CylinderGeometry(.0025,.0025,.09,5),BRASS);w.position.set(Math.cos(a)*.04,-.145,Math.sin(a)*.04);lanBody.add(w);}
- const base=new THREE.Mesh(new THREE.CylinderGeometry(.046,.05,.03,16),BRASS);base.position.y=-.2;lanBody.add(base);}
-function glowTex(){const c=cv(64,64),g=c.getContext('2d'),gr=g.createRadialGradient(32,32,1,32,32,32);gr.addColorStop(0,'rgba(255,240,200,1)');gr.addColorStop(.25,'rgba(255,170,80,.8)');gr.addColorStop(1,'rgba(255,90,20,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return tx(c);}
-const flame=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));flame.position.y=-.15;flame.scale.set(.05,.07,1);lanBody.add(flame);
-const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.35}));halo.position.y=-.15;halo.scale.set(.22,.22,1);lanBody.add(halo);
-const handFill=new THREE.PointLight(0xffa060,.05,.6,2);handFill.position.set(.05,-.05,.12);handL.add(handFill);
-/* right hand: open, reaches out to touch */
+
+/* ================= the Curator (placeholder figure until the Lux3D model arrives) ================= */
+const curator=new THREE.Group();curator.position.set(-1.15,0,.95);scene.add(curator);curator.visible=false;
+const CUR={present:true,fade:0,mats:[]};
+{const coatM=new THREE.MeshStandardMaterial({color:0x0b0909,roughness:1,transparent:true});
+ const faceM=new THREE.MeshStandardMaterial({color:0x8d7a6e,roughness:.85,transparent:true});
+ const hairM=new THREE.MeshStandardMaterial({color:0x2a2622,roughness:.7,transparent:true});
+ const gloveM=new THREE.MeshStandardMaterial({color:0xb8b0a4,roughness:.9,transparent:true});
+ const eyeM=new THREE.MeshBasicMaterial({color:0x3a0a08,transparent:true});
+ CUR.mats=[coatM,faceM,hairM,gloveM,eyeM];
+ const prof=[[0,0],[.3,0],[.29,.25],[.25,.7],[.22,1.1],[.21,1.38],[.24,1.5],[.2,1.56],[.07,1.62],[.06,1.66],[0,1.66]].map(p=>new THREE.Vector2(p[0],p[1]));
+ const coat=new THREE.Mesh(new THREE.LatheGeometry(prof,28),coatM);coat.scale.z=.62;curator.add(coat);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.105,24,18),faceM);head.scale.set(.85,1.15,.92);head.position.y=1.79;curator.add(head);
+ const hair=new THREE.Mesh(new THREE.SphereGeometry(.108,24,12,0,Math.PI*2,0,Math.PI*.42),hairM);hair.scale.set(.88,1.05,.98);hair.position.set(0,1.81,-.008);curator.add(hair);
+ [-.035,.035].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.011,8,8),eyeM);e.position.set(x,1.8,.088);curator.add(e);});
+ [-.27,.27].forEach(x=>{const g=new THREE.Mesh(new THREE.SphereGeometry(.045,12,10),gloveM);g.scale.set(.8,1.3,.7);g.position.set(x,.9,.02);curator.add(g);
+   const arm=new THREE.Mesh(new THREE.CylinderGeometry(.045,.055,.62,10),coatM);arm.position.set(x*.93,1.22,0);arm.rotation.z=x>0?.05:-.05;curator.add(arm);});
+ const curL=new THREE.PointLight(0xff5040,.25,1.6,2);curL.position.set(.5,1.9,.6);curator.add(curL);CUR.light=curL;}
+
+/* ================= the player's hand (Lux3D) ================= */
 const handR=new THREE.Group();cam.add(handR);
 const R_IDLE=new THREE.Vector3(.3,-.55,-.3),R_TOUCH=new THREE.Vector3(.06,-.05,-.4);handR.position.copy(R_IDLE);
-/* the right hand is a Lux3D model: open hand in a dark wool cuff (fingers along +X, palm toward -Z, thumb up) */
+const SLEEVE=new THREE.MeshStandardMaterial({color:0x1b1513,roughness:.95});
+function limb(m,a,b,r){const d=new THREE.Vector3().subVectors(b,a),L=d.length();const c=new THREE.Mesh(new THREE.CylinderGeometry(r*.92,r,L,12),m);c.position.copy(a).add(b).multiplyScalar(.5);c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return c;}
 new GLTFLoader().load('assets/hand_right.glb',g=>{const h=g.scene;h.traverse(o=>{if(o.isMesh&&o.material.map)o.material.map.colorSpace=THREE.SRGBColorSpace;});
-  h.rotation.z=Math.PI/2;h.scale.setScalar(1.12);handR.add(h);
-  const hl=h.clone(true);const lq=new THREE.Group();lq.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,-1,0)));
-  hl.rotation.set(0,0,0);hl.scale.set(-1.12,1.12,1.12);lq.add(hl);lq.position.set(0,.012,0);handL.add(lq);
-  handL.add(limb(SLEEVE,new THREE.Vector3(0,.005,.1),new THREE.Vector3(-.13,-.26,.36),.034));
-  handR.add(limb(SLEEVE,new THREE.Vector3(0,-.1,.004),new THREE.Vector3(.11,-.42,.26),.034));},undefined,e=>fail('A model could not be loaded. Reload the page to try again.'));
+  h.rotation.z=Math.PI/2;h.scale.setScalar(1.12);handR.add(h);handR.add(limb(SLEEVE,new THREE.Vector3(0,-.1,.004),new THREE.Vector3(.11,-.42,.26),.034));handReady=true;},undefined,()=>{handReady=true;});
+let handReady=false;
 
 /* ================= sound (synthesised, no files) ================= */
 let AC=null,master=null;
@@ -182,6 +275,10 @@ function stinger(){if(!AC)return;const t=AC.currentTime,lp=AC.createBiquadFilter
   [110,116.5,155.6,233.1,246.9,329.6,349.2].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,t);o.frequency.linearRampToValueAtTime(f*.94,t+1.8);o.connect(lp);o.start(t);o.stop(t+2);});
   const n=noise(),hg=AC.createGain();n.connect(hg);hg.connect(master);env(hg,t,.005,.5,.35);n.start(t);n.stop(t+.5);}
 
+
+function say(text){try{if(!S.snd||!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));
+  const pick=v.find(v=>/male|daniel|george|arthur|fred|alex/i.test(v.name))||v[0];if(pick)u.voice=pick;u.rate=.82;u.pitch=.55;u.volume=.9;speechSynthesis.speak(u);}catch(_){}}
+
 /* ================= the rule: do not touch the exhibits ================= */
 const E={phase:'idle',t:0,broken:0,next:0,lost:0};
 const doorClosed=0,doorOpen=1.75;let dollHome=null;
@@ -191,7 +288,7 @@ function canTouch(){if(E.phase!=='idle'||!doll)return false;cabFront(tmpV);const
 function startTouch(){if(!canTouch())return;E.phase='reach';E.t=0;}
 let noteT=null;function note(txt,ms){const n=$('note');n.textContent=txt;n.style.opacity=1;clearTimeout(noteT);if(ms)noteT=setTimeout(()=>{n.style.opacity=0;},ms);}
 function hideDoll(){scene.attach(doll);cam.getWorldDirection(tmpV);tmpV.y=0;tmpV.normalize();
-  let x=cam.position.x-tmpV.x*1.05,z=cam.position.z-tmpV.z*1.05;x=Math.max(BOUND.x0,Math.min(BOUND.x1,x));z=Math.max(BOUND.z0,Math.min(BOUND.z1,z));if(x<-2.3)z=Math.max(-.7,Math.min(.7,z));
+  const c=clampToRoom(cam.position.x-tmpV.x*1.05,cam.position.z-tmpV.z*1.05);const x=c[0],z=c[1];
   doll.position.set(x,0,z);doll.rotation.set(0,Math.atan2(cam.position.x-x,cam.position.z-z),0);}
 function homeDoll(){cab.add(doll);doll.position.copy(dollHome.p);doll.rotation.copy(dollHome.r);doll.scale.copy(dollHome.s);}
 const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
@@ -209,7 +306,7 @@ function updateEvent(dt,t){
     if(d<3.2&&tmpV2.dot(tmpV.sub(cam.position).normalize())>.82){E.phase='lunge';E.t=0;stinger();flash=.85;E.from=doll.position.clone();}}
   else if(p==='lunge'){const k=Math.min(1,E.t/.38);cam.getWorldDirection(tmpV2);const to=tmpV.copy(cam.position).addScaledVector(tmpV2,.34);to.y=cam.position.y-.5;
     doll.position.lerpVectors(E.from,to,ease(k));doll.rotation.y=Math.atan2(cam.position.x-doll.position.x,cam.position.z-doll.position.z);shake=.012;
-    if(E.t>=.5){E.phase='reset';E.t=0;shake=0;dark01=0;homeDoll();door.rotation.y=doorClosed;E.broken++;}}
+    if(E.t>=.5){E.phase='reset';E.t=0;shake=0;dark01=0;homeDoll();door.rotation.y=doorClosed;E.broken++;$('r1').classList.add('broken');}}
   else if(p==='reset'){dark01=0;if(E.t>=1.3){E.phase='idle';E.t=0;dollYaw=0;awayFor=0;note('Rules broken: '+E.broken+' of 3',4500);}}
   if(p!=='black'&&p!=='reset'&&E.phase!=='black'&&E.phase!=='reset')dark01=Math.min(1,dark01+dt*1.6);
   flash=Math.max(0,flash-dt*1.4);$('flash').style.opacity=flash;
@@ -217,71 +314,142 @@ function updateEvent(dt,t){
   cam.position.x+=shake?(Math.random()-.5)*shake*.6:0;
 }
 
-/* ---- walking ---- */
-const BOUND={x0:-2.95,x1:.45,z0:-2.2,z1:2.6};
-let yaw=Math.PI/2,pitch=-.05,started=false,locked=false;const keys={};
-cam.position.set(0,1.2,0);
+
+/* ================= the Curator's welcome ================= */
+const LINES=[
+  ['Good evening. You are the only guest tonight, which is how the house prefers it.'],
+  ['This was the home of Edgar and Rosalind Hollowmere. For forty years they took in the objects other people begged them to take away.'],
+  ['Nothing here is a replica. Every object in these rooms was removed from a home where it was no longer welcome.'],
+  ['Before you go further, three rules.'],
+  ['Touch nothing.','r1'],
+  ['Open no door that asks you not to.','r2'],
+  ['And no cameras. The house does not like to be looked at twice.','r3'],
+  ['Take this. It will show you the way.','map'],
+  ['I will not be far.','leave']];
+const INTRO={on:false,i:-1,t:0,dur:0,done:false};
+function lineDur(t){return Math.max(2.6,t.split(/\s+/).length*.42+.8);}
+function showLine(k){const L=LINES[k];$('sub').innerHTML='<i>MR. AMBROSE VANE</i>'+L[0];$('sub').style.opacity=1;say(L[0]);INTRO.dur=lineDur(L[0]);INTRO.t=0;
+  if(L[1]&&L[1][0]==='r')$(L[1]).classList.add('show');
+  if(L[1]==='map'){$('bMap').style.display='';note('You received the map. Press M to open it.',4500);}
+  if(L[1]==='leave'){CUR.leaving=true;whisper(2.4,.1);}}
+function startIntro(){if(INTRO.done||INTRO.on)return;INTRO.on=true;INTRO.i=0;showLine(0);$('skip').style.display='block';$('bMap').style.display='none';}
+function endIntro(){if(INTRO.done)return;INTRO.on=false;INTRO.done=true;$('sub').style.opacity=0;$('skip').style.display='none';['r1','r2','r3'].forEach(r=>$(r).classList.add('show'));
+  $('bMap').style.display='';CUR.present=false;curator.visible=false;try{speechSynthesis.cancel();}catch(_){}
+  setTimeout(()=>note('Find the Doll Room. Press M for the map.',5000),600);}
+function updateIntro(dt){if(!INTRO.on)return;INTRO.t+=dt;if(INTRO.t>=INTRO.dur){INTRO.i++;if(INTRO.i>=LINES.length){endIntro();return;}showLine(INTRO.i);}}
+$('skip').onclick=()=>{endIntro();};
+
+/* ================= map ================= */
+const MAPROOMS=[
+  {id:'hall',label:'Front Hall',x:270,y:220,w:170,h:110},
+  {id:'doll',label:'Doll Room',x:450,y:220,w:150,h:110},
+  {id:null,label:'Portrait Gallery',x:270,y:110,w:170,h:100},
+  {id:null,label:'Card Parlour',x:90,y:220,w:170,h:110},
+  {id:null,label:'Antiquities Study',x:90,y:110,w:170,h:100},
+  {id:null,label:'Screening Room',x:450,y:110,w:150,h:100},
+  {id:null,label:'Cellar Monitors',x:90,y:20,w:170,h:80},
+  {id:null,label:'The Passage',x:270,y:20,w:330,h:80}];
+function drawMap(){const svg=$('mapSvg');let h='<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#8a7a5c" stroke-width="1.4"/></pattern></defs>';
+  for(const r of MAPROOMS){const open=!!r.id,here=r.id===roomId;
+    h+=`<g class="room ${open?'open':''}" ${open?`tabindex="0" role="button" aria-label="Go to the ${r.label}" data-id="${r.id}"`:''}>`+
+      `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${open?'#d9cba9':'url(#hatch)'}" stroke="#3a2a1c" stroke-width="${here?4:2}"/>`+
+      `<text x="${r.x+r.w/2}" y="${r.y+r.h/2+(here?-4:5)}" text-anchor="middle" font-family="Special Elite, monospace" font-size="15" fill="${open?'#1b1410':'#5a4a36'}">${open?r.label:'? ? ?'}</text>`+
+      (here?`<text x="${r.x+r.w/2}" y="${r.y+r.h/2+16}" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="14" fill="#7a1616">you are here</text>`:'')+'</g>';}
+  h+='<text x="355" y="360" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="15" fill="#3a2a1c">front door</text><line x1="330" y1="333" x2="380" y2="333" stroke="#7a1616" stroke-width="5"/>';
+  svg.innerHTML=h;svg.querySelectorAll('.room.open').forEach(g=>{const go=()=>{const id=g.dataset.id;if(id!==roomId)travel(id);else closeMap();};g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
+  $('mapRules').textContent='Rules broken: '+E.broken+' of 3';}
+let mapOpen=false;
+function openMap(){if(!INTRO.done||switching)return;mapOpen=true;drawMap();$('map').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}
+function closeMap(){mapOpen=false;$('map').style.display='none';}
+$('bMap').onclick=()=>mapOpen?closeMap():openMap();$('mapClose').onclick=closeMap;
+
+/* ================= input ================= */
+let yaw=0,pitch=-.05,started=false,locked=false;const keys={};
 const canvas=$('c');
-addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyL')toggle('bLan','lan');if(e.code==='KeyN')toggle('bDark','dark');if(e.code==='KeyE'&&started)startTouch();});
+const S={lan:true,dark:true,snd:true};
+function toggle(id,k){S[k]=!S[k];$(id).classList.toggle('on',S[k]);}
+addEventListener('keydown',e=>{keys[e.code]=true;if(!started)return;
+  if(e.code==='KeyM'){mapOpen?closeMap():openMap();}
+  if(e.code==='Escape'&&mapOpen)closeMap();
+  if(mapOpen)return;
+  if(e.code==='KeyL')toggle('bLan','lan');if(e.code==='KeyN')toggle('bDark','dark');if(e.code==='KeyE')interact();});
 addEventListener('keyup',e=>{keys[e.code]=false;});addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;});
 let drag=false,lx=0,ly=0;
-canvas.addEventListener('mousedown',e=>{if(!started)return;if(locked&&canTouch()){startTouch();return;}drag=true;lx=e.clientX;ly=e.clientY;try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(_){}});
+function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(_){}}
+canvas.addEventListener('mousedown',e=>{if(!started||mapOpen)return;if(locked&&current){interact();return;}drag=true;lx=e.clientX;ly=e.clientY;lock();});
 addEventListener('mouseup',()=>{drag=false;});
-addEventListener('mousemove',e=>{if(!started)return;if(locked){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}else if(drag){yaw+=(e.clientX-lx)*.004;pitch+=(e.clientY-ly)*.004;lx=e.clientX;ly=e.clientY;}pitch=Math.max(-1.2,Math.min(1.2,pitch));});
+addEventListener('mousemove',e=>{if(!started||mapOpen)return;if(locked){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}else if(drag){yaw+=(e.clientX-lx)*.004;pitch+=(e.clientY-ly)*.004;lx=e.clientX;ly=e.clientY;}pitch=Math.max(-1.2,Math.min(1.2,pitch));});
 let tMove=null,tLook=null,tv={x:0,y:0};
 canvas.addEventListener('touchstart',e=>{for(const t of e.changedTouches){if(t.clientX<innerWidth/2&&!tMove)tMove={id:t.identifier,x:t.clientX,y:t.clientY};else if(!tLook)tLook={id:t.identifier,x:t.clientX,y:t.clientY};}e.preventDefault();},{passive:false});
 canvas.addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(tMove&&t.identifier===tMove.id){tv.x=Math.max(-1,Math.min(1,(t.clientX-tMove.x)/60));tv.y=Math.max(-1,Math.min(1,(t.clientY-tMove.y)/60));}if(tLook&&t.identifier===tLook.id){yaw+=(t.clientX-tLook.x)*.005;pitch+=(t.clientY-tLook.y)*.005;pitch=Math.max(-1.2,Math.min(1.2,pitch));tLook.x=t.clientX;tLook.y=t.clientY;}}e.preventDefault();},{passive:false});
 canvas.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(tMove&&t.identifier===tMove.id){tMove=null;tv.x=tv.y=0;}if(tLook&&t.identifier===tLook.id)tLook=null;}});
-
-const S={lan:true,dark:true,snd:true};
-function toggle(id,k){S[k]=!S[k];$(id).classList.toggle('on',S[k]);}
-$('bLan').onclick=()=>toggle('bLan','lan');$('bSnd').onclick=()=>{toggle('bSnd','snd');if(master)master.gain.value=S.snd?1:0;};$('prompt').onclick=()=>startTouch();$('bDark').onclick=()=>toggle('bDark','dark');
-$('bSee').onclick=()=>{const d=new THREE.Vector3();shrine.getWorldPosition(d);yaw=Math.atan2(-(d.x-cam.position.x),-(d.z-cam.position.z));pitch=-.08;};
+$('bLan').onclick=()=>toggle('bLan','lan');$('bDark').onclick=()=>toggle('bDark','dark');
+$('bSnd').onclick=()=>{toggle('bSnd','snd');if(master)master.gain.value=S.snd?1:0;if(!S.snd)try{speechSynthesis.cancel();}catch(_){}};
 const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
-$('msgP').textContent=touch?'Drag the left side to walk, the right side to look. Use headphones.':'W A S D to walk, click and move the mouse to look, E to touch. L toggles your light, N toggles night. Esc frees the mouse. Use headphones.';
-$('enter').onclick=()=>{started=true;audioOn();$('msg').style.display='none';if(!touch){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(_){}}};
+$('keysP').textContent=touch?'Drag the left side to walk, the right side to look.':'W A S D to walk. Click, then move the mouse to look. E to interact, M for the map. Esc frees the mouse.';
 
-/* ---- loop ---- */
+/* interactions: doors between rooms, and Marigold's cabinet */
+let current=null;
+function findInteract(){if(!started||!INTRO.done||switching||mapOpen||E.phase!=='idle')return null;
+  for(const d of ROOMS[roomId].doors){if(Math.hypot(cam.position.x-d.p[0],cam.position.z-d.p[1])<d.r)return {label:d.label,go:()=>travel(d.to,d.spawn)};}
+  if(roomId==='doll'&&canTouch())return {label:'Touch the cabinet',go:startTouch};
+  return null;}
+function interact(){if(current)current.go();}
+$('prompt').onclick=()=>interact();
+
+$('enter').onclick=()=>{audioOn();$('title').style.display='none';$('waiver').style.display='flex';$('accept').focus();};
+$('accept').onclick=()=>{$('waiver').style.display='none';started=true;$('bar').style.display='flex';$('cross').style.display='block';if(!touch)lock();
+  curator.visible=true;setTimeout(startIntro,1200);};
+
+/* ================= loop ================= */
 const clock=new THREE.Clock(),fwd=new THREE.Vector3(),toDoll=new THREE.Vector3(),dp=new THREE.Vector3();
-let readyShown=false,awayFor=0;
+let awayFor=0,ready=false;
+(async()=>{try{await loadRoom('hall');}catch(e){fail('The house could not be loaded. Reload the page to try again.');return;}
+  const t0=performance.now();while(!(doll&&handReady)&&performance.now()-t0<30000)await new Promise(r=>setTimeout(r,100));
+  ready=true;$('titleP').textContent='A private visit to the Hollowmere collection.';$('enter').style.display='inline-block';$('enter').focus();})();
+{const gc=$('grain'),gg=gc.getContext('2d');gc.width=gc.height=256;const id=gg.createImageData(256,256);for(let i=0;i<id.data.length;i+=4){const v=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}gg.putImageData(id,0,0);gc.style.background='url('+gc.toDataURL()+')';gc.width=gc.height=1;}
+
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
-  if(!readyShown&&room.isInitialized&&doll){readyShown=true;$('msgT').textContent='The Doll Room';$('enter').style.display='inline-block';}
-  const frozen=E.phase==='lunge'||E.phase==='reset'||E.phase==='black';
+  if(!roomId){renderer.render(scene,cam);return;}
+  const frozen=E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||(INTRO.on&&INTRO.i<7);
+  let mv=0;
   if(started&&!frozen){
     let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x;
-    const L=Math.hypot(f,s);if(L>1){f/=L;s/=L;}const sp=(keys.ShiftLeft?2.6:1.5)*dt,sy=Math.sin(yaw),cy=Math.cos(yaw);
-    cam.position.x=Math.max(BOUND.x0,Math.min(BOUND.x1,cam.position.x+(-sy*f+cy*s)*sp));
-    cam.position.z=Math.max(BOUND.z0,Math.min(BOUND.z1,cam.position.z+(-cy*f-sy*s)*sp));
-    if(cam.position.x<-2.3)cam.position.z=Math.max(-.75,Math.min(.75,cam.position.z));
-    cam.position.y=1.2+(L>.1?Math.sin(t*8)*.018:0);
+    const L=Math.hypot(f,s);if(L>1){f/=L;s/=L;}mv=L>.1?1:0;const sp=(keys.ShiftLeft?2.6:1.5)*dt,sy=Math.sin(yaw),cy=Math.cos(yaw);
+    let nx=cam.position.x+(-sy*f+cy*s)*sp,nz=cam.position.z+(-cy*f-sy*s)*sp;
+    if(roomId==='hall'&&CUR.present&&curator.visible){const dx=nx-curator.position.x,dz=nz-curator.position.z,d=Math.hypot(dx,dz);if(d<.6){nx=curator.position.x+dx/d*.6;nz=curator.position.z+dz/d*.6;}}
+    const c=clampToRoom(nx,nz);cam.position.x=c[0];cam.position.z=c[1];
   }
+  cam.position.y=1.2+(mv?Math.sin(t*8)*.018:0);
   cam.rotation.set(pitch,yaw,0);
   const fl=1+Math.sin(t*9)*.05+Math.sin(t*23.3)*.04+(Math.sin(t*1.3)>.99?-.6:0);
-  if(started)updateEvent(dt,t);
+  if(started){updateIntro(dt);if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
   const spark_=E.phase==='shake'?(Math.random()>.5?2.2:0):1;
   night.visible=S.dark||dark01<1;nightSdf.color.setRGB((S.dark?.3:1)*dark01+.004,(S.dark?.16:1)*dark01+.002,(S.dark?.16:1)*dark01+.002);
-  glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;
-  glowSdf.color.setRGB(2.4*fl*(E.phase==='shake'?spark_:1),1.1,1.1);
+  glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
+  glowSdf.color.setRGB(glowBase[0]*fl*(E.phase==='shake'?spark_:1),glowBase[1],glowBase[2]);
   const lanFl=(E.phase==='gone'?(Math.random()>.93?.3:1):1)*(1+Math.sin(t*13)*.05+Math.sin(t*31)*.03);
   lampSdf.position.copy(cam.position);lampSdf.color.setRGB(1+2.3*lanFl,1+1.7*lanFl,1+1.1*lanFl);
-  flame.visible=halo.visible=S.lan;flame.scale.set(.05*lanFl,.07*lanFl,1);halo.material.opacity=.35*lanFl*dark01;
-  cam.localToWorld(lanternL.position.set(0,-.08,-.9));lanternL.intensity=S.lan?.5*lanFl*dark01:0;handFill.intensity=S.lan?.05*lanFl:.0;
+  cam.localToWorld(lanternL.position.set(0,-.08,-.9));lanternL.intensity=S.lan?.5*lanFl*dark01:0;
   red.intensity=.8*fl*spark_*dark01;spill.intensity=.1*fl*dark01;faceL.intensity=.35*dark01;hemi.intensity=(S.dark?.35:1.6)*dark01;bulb.visible=dark01>.5;
-  { const mv=(keys.KeyW||keys.KeyS||keys.KeyA||keys.KeyD||keys.ArrowUp||keys.ArrowDown||keys.ArrowLeft||keys.ArrowRight||tv.x||tv.y)&&!frozen?1:0;
-    handL.position.set(-.21+Math.sin(t*4)*.006*mv,-.06+Math.abs(Math.sin(t*4))*.008*mv+Math.sin(t*1.3)*.002,-.4);
-    lanBody.rotation.z=Math.sin(t*4)*.12*mv+Math.sin(t*1.1)*.03;lanBody.rotation.x=Math.sin(t*1.7)*.025; }
-  $('prompt').style.display=(started&&canTouch())?'block':'none';
-  if(doll&&E.phase==='idle'){
+  /* curator: idle sway, faces the player, fades out when he leaves */
+  if(curator.visible){curator.rotation.y+=(Math.atan2(cam.position.x-curator.position.x,cam.position.z-curator.position.z)-curator.rotation.y)*Math.min(1,dt*2);
+    curator.children[0].rotation.z=Math.sin(t*.9)*.012;
+    if(CUR.leaving){CUR.fade=Math.min(1,CUR.fade+dt*.45);curator.position.x=-1.15-CUR.fade*.5;}
+    const a=1-CUR.fade;CUR.mats.forEach(m=>m.opacity=a);CUR.light.intensity=.25*a*fl;}
+  /* Marigold watches you when you look away */
+  if(roomId==='doll'&&doll&&E.phase==='idle'){
     doll.getWorldPosition(dp);cam.getWorldDirection(fwd);toDoll.subVectors(dp,cam.position).normalize();
     const seen=fwd.dot(toDoll)>.55;awayFor=seen?0:awayFor+dt;
     if(awayFor>1.5){const local=cab.worldToLocal(cam.position.clone());dollYaw=Math.max(-1.1,Math.min(1.1,Math.atan2(local.x,local.z)));}
     doll.rotation.y+=(dollYaw-doll.rotation.y)*Math.min(1,dt*(seen?0:3));
   }
+  current=findInteract();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={E,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>!!(room.isInitialized&&doll),go:()=>$('enter').click()};
+window.__t={E,INTRO,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
