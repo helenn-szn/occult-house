@@ -24,11 +24,12 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 - **The Front Hall** and **the Doll Room**: walkable splat rooms, darkened in code so only red light and your own light show the way.
 - **Marigold**: she sits in a locked cabinet and turns to face you when you look away.
 - **The first rule**: touch her cabinet and the house answers. Knocks, a blackout, an empty cabinet, and something behind you.
+- **The third rule**: the curator says no cameras, but there is one in your pocket. Through its lens you see what the eye cannot: figures in the rooms and writing on the walls. Every photo cracks the lens and brings them closer. After eight photos the camera breaks, and what it last saw stays.
 
 ## Controls
 
 - W A S D to walk, mouse to look (click to capture the mouse, Esc to release)
-- E to interact, M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
+- E to interact, C to raise the camera (click or Space takes a photo), M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
 - On a phone: drag the left side to walk, the right side to look
 
 Headphones recommended. All sound is synthesised in the page.
