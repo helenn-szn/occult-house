@@ -26,6 +26,17 @@
   #sub i{font-family:'Special Elite',monospace;font-style:normal;color:#c0392b;font-size:.85rem;letter-spacing:.12em;display:block;margin-bottom:.25em}
   #skip{position:fixed;right:16px;bottom:16px;z-index:4;display:none}
   #prompt{position:fixed;left:50%;bottom:28%;transform:translateX(-50%);z-index:3;display:none}
+  #radar{position:fixed;right:14px;top:56px;z-index:3;display:none;pointer-events:none;text-align:center;font-family:'Special Elite',monospace}
+  #radar.on{display:block}
+  #radarC{position:static!important;inset:auto!important;width:150px;height:150px;display:block;margin:0 0 0 auto}
+  #radarT{margin-top:4px;font-size:.72rem;line-height:1.5;letter-spacing:.04em;color:#e6d9c8;text-shadow:0 1px 3px #000,0 0 6px #000;text-align:right;white-space:nowrap}
+  #radarT .near{color:#ff8a70}
+  #radarT .ar{display:inline-block;width:1.1em;text-align:center;color:#c0392b}
+  #radarT b{color:#ff8a70;font-weight:normal}
+  body.touch #radar{top:50px;right:10px}
+  body.touch #radarC{width:110px;height:110px}
+  body.touch #radarT{font-size:.6rem}
+  @media (max-height:520px){#radarC{width:110px;height:110px}}
   #tui{display:none;position:fixed;inset:0;z-index:3;pointer-events:none}
   #tui.on{display:block}
   #stickBase{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(230,217,200,.35);background:rgba(10,6,7,.35);pointer-events:none;opacity:.55;transition:opacity .2s}
@@ -150,6 +161,7 @@
 <div id="note" role="status"></div>
 <div id="sub" aria-live="polite"></div>
 <button id="prompt"></button>
+<div id="radar" aria-hidden="true"><canvas id="radarC" width="340" height="340"></canvas><div id="radarT"></div></div>
 <div id="tui" aria-hidden="true">
   <div id="stickBase"><div id="stickKnob"></div></div>
   <div id="stickHint">DRAG HERE<br>TO WALK</div><div id="lookHint">DRAG TO LOOK<br>TAP TO CONTINUE</div>
@@ -215,7 +227,7 @@
     <button class="close" id="mapClose">Close (M)</button>
     <h2>THE HOUSE</h2>
     <svg viewBox="0 0 700 372" id="mapSvg" aria-hidden="false"></svg>
-    <div class="legend"><span id="mapRules"></span><span>Rooms are reached through their doors (red diamonds). Ticks mark the rooms you have been in.</span></div>
+    <div class="legend"><span id="mapRules"></span><span>Rooms are reached through their doors (red diamonds). Each room shows how far a walk it is from where you stand. Ticks mark the rooms you have been in.</span></div>
   </div>
 </div>
 
@@ -966,12 +978,12 @@ function listenTo(p,dt){const el=$('listener');el.style.display='block';const d=
 const CLOCK={p:[-1.25,1.2],hold:0,holding:false,done:false,tries:0};
 function clockSpot(){if(CLOCK.done||roomId!=='hall'||!INTRO.done||INTRO.on)return null;const d=Math.hypot(CLOCK.p[0]-cam.position.x,CLOCK.p[1]-cam.position.z);if(d>.95)return null;
   cam.getWorldDirection(tmpV2);if((tmpV2.x*(CLOCK.p[0]-cam.position.x)+tmpV2.z*(CLOCK.p[1]-cam.position.z))/Math.max(d,.01)<.6)return null;return {label:'Hold to wind the clock',hold:true,go:()=>{}};}
-function updateClock(dt){if(CLOCK.done)return;const near=current&&current.hold;const held=near&&(keys.KeyE||HOLD.touch);
+function updateClock(dt){if(CLOCK.done)return;const near=current&&current.hold;const held=near&&(keys.KeyE||HOLD.touch||HOLD.pad);
   if(held){CLOCK.hold+=dt;CLOCK.holding=true;dark01=Math.min(dark01,1-CLOCK.hold/5*.85);if(Math.random()<dt*1.4)whisper(.8,.05+CLOCK.hold*.025);
     $('holdBar').style.display='block';$('holdFill').style.width=Math.min(100,CLOCK.hold/4*100)+'%';
     if(CLOCK.hold>=4){CLOCK.done=true;CLOCK.holding=false;$('holdBar').style.display='none';dark01=1;bell();giveKey('clock','The clock strikes. Behind its glass the pendulum swings again, and something drops from inside the case onto the floor.');}}
   else if(CLOCK.holding){CLOCK.holding=false;CLOCK.tries++;$('holdBar').style.display='none';if(CLOCK.hold>.6){thud();note('You let go. The spring unwinds with a shriek, and the hands spin back to where they were.',4000);}CLOCK.hold=0;}}
-const HOLD={touch:false};
+const HOLD={touch:false,pad:false};
 /* --- doll room: hide and seek with Button --- */
 const SEEK={state:'wait',t:0,spot:null,tries:0,giggleT:0};
 const SEEK_SPOTS=[[-.95,-1.95],[.2,2.3],[-1.15,1.9],[-2.7,.6],[.25,-1.8]];
@@ -1090,6 +1102,65 @@ $('skip').onclick=()=>{endIntro();};
 function advance(){if(INTRO.on){try{speechSynthesis.cancel();}catch(_){}nextLine();}}
 
 /* ================= map ================= */
+/* ================= distances: radar + map ================= */
+const ROOMNAME={hall:'Front Hall',doll:'Doll Room',passage:'The Passage',parlour:'Card Parlour',study:'Antiquities Study',gallery:'Portrait Gallery',lift:'Restricted'};
+function exitsOf(id){const R=ROOMS[id];if(!R)return[];const ex=(R.doors||[]).map(d=>({to:d.to,p:d.p,spawn:d.spawn}));
+  if(id==='hall')ex.push({to:'gallery',p:[-2.35,-1.15],spawn:ROOMS.gallery.spawn,stairs:true});
+  if(id==='passage')ex.push({to:'lift',p:[-.25,-1.45],spawn:null});return ex;}
+/* shortest walk (in metres) from x,z in room `from` to the door of room T, going through other rooms if needed */
+function routeTo(T,from,x,z,seen){seen=seen||new Set([from]);let best=null;
+  for(const e of exitsOf(from)){const d0=Math.hypot(e.p[0]-x,e.p[1]-z);let d=null;
+    if(e.to===T)d=d0;else if(!seen.has(e.to)&&ROOMS[e.to]&&e.spawn){const sub=routeTo(T,e.to,e.spawn.x,e.spawn.z,new Set([...seen,e.to]));if(sub)d=d0+sub.d;}
+    if(d!=null&&(!best||d<best.d))best={d,via:e};}
+  return best;}
+const fmtM=d=>d<.95?'right here':d.toFixed(1)+' m';
+const RADAR={c:null,g:null,t:0,txt:''};
+function drawRadar(dt){const el=$('radar');const show=started&&INTRO.done&&!END.on&&!mapOpen&&roomId&&roomId!=='nine'&&!switching&&!CAM.up&&!INSPECT.visible;
+  el.classList.toggle('on',!!show);if(!show)return;RADAR.t+=dt;
+  if(!RADAR.c){RADAR.c=$('radarC');RADAR.g=RADAR.c.getContext('2d');}
+  const g=RADAR.g,W=340,C=W/2,RAD=158,S=RAD/3.2,px=cam.position.x,pz=cam.position.z,sy=Math.sin(yaw),cy=Math.cos(yaw);
+  const P=(x,z)=>{const dx=x-px,dz=z-pz;return[C+(dx*cy-dz*sy)*S,C+(dx*sy+dz*cy)*S];};
+  g.clearRect(0,0,W,W);g.save();g.beginPath();g.arc(C,C,RAD,0,Math.PI*2);g.fillStyle='rgba(8,4,4,.72)';g.fill();g.clip();
+  /* floor of this room, turned so you always face up */
+  g.fillStyle='rgba(122,22,22,.32)';g.strokeStyle='rgba(230,217,200,.45)';g.lineWidth=2;
+  for(const r of ROOMS[roomId].rects){const a=P(r.x0,r.z0),b=P(r.x1,r.z0),c=P(r.x1,r.z1),d=P(r.x0,r.z1);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.lineTo(c[0],c[1]);g.lineTo(d[0],d[1]);g.closePath();g.fill();g.stroke();}
+  for(const o of (ROOMS[roomId].obstacles||[])){const q=P(o.x,o.z);g.beginPath();g.arc(q[0],q[1],o.r*S*.8,0,Math.PI*2);g.fillStyle='rgba(40,24,18,.85)';g.fill();}
+  /* range rings, 1 m apart */
+  g.strokeStyle='rgba(230,217,200,.12)';g.lineWidth=1.5;for(let k=1;k<=3;k++){g.beginPath();g.arc(C,C,k*S,0,Math.PI*2);g.stroke();}
+  g.restore();g.strokeStyle='#7a1616';g.lineWidth=4;g.beginPath();g.arc(C,C,RAD,0,Math.PI*2);g.stroke();
+  /* doors */
+  const ex=exitsOf(roomId).map(e=>({...e,d:Math.hypot(e.p[0]-px,e.p[1]-pz)})).sort((a,b)=>a.d-b.d);
+  g.font='22px "Special Elite", monospace';g.textAlign='center';g.textBaseline='middle';
+  for(const e of ex){let [x,y]=P(e.p[0],e.p[1]);const vx=x-C,vy=y-C,L=Math.hypot(vx,vy),out=L>RAD-18;if(out){x=C+vx/L*(RAD-18);y=C+vy/L*(RAD-18);}
+    const near=e.d<1.0,pulse=near?1+Math.sin(RADAR.t*7)*.25:1,sz=(out?9:12)*pulse;
+    g.save();g.translate(x,y);g.rotate(out?Math.atan2(vy,vx)+Math.PI/4:Math.PI/4);g.fillStyle=e.to==='lift'?'#b08a3a':near?'#ff5a3c':'#c0392b';g.strokeStyle='#000';g.lineWidth=3;g.fillRect(-sz,-sz,sz*2,sz*2);g.strokeRect(-sz,-sz,sz*2,sz*2);g.restore();
+}
+  /* you: a dot with a cone for where you're looking */
+  g.beginPath();g.moveTo(C,C);g.arc(C,C,S*1.4,-Math.PI/2-.5,-Math.PI/2+.5);g.closePath();const gr=g.createRadialGradient(C,C,0,C,C,S*1.4);gr.addColorStop(0,'rgba(255,200,160,.45)');gr.addColorStop(1,'rgba(255,200,160,0)');g.fillStyle=gr;g.fill();
+  g.beginPath();g.arc(C,C,9,0,Math.PI*2);g.fillStyle='#ffe2c8';g.fill();g.lineWidth=3;g.strokeStyle='#000';g.stroke();
+  g.fillStyle='rgba(230,217,200,.55)';g.font='17px "Special Elite", monospace';g.fillText(ROOMNAME[roomId]||'',C,W-30);
+  /* the list under the radar: every door, nearest first, with an arrow pointing the way */
+  if(RADAR.t-(RADAR.last||0)>.2){RADAR.last=RADAR.t;const AR=['↑','↗','→','↘','↓','↙','←','↖'];
+    const txt=ex.map(e=>{const dx=e.p[0]-px,dz=e.p[1]-pz,ang=Math.atan2(dx*cy-dz*sy,-(dx*sy+dz*cy));const a=AR[((Math.round(ang/(Math.PI/4))%8)+8)%8];
+      const near=e.d<1.0;return `<div class="${near?'near':''}">${ROOMNAME[e.to]} · ${near?'here':e.d.toFixed(1)+' m'} <span class="ar">${near?'◆':a}</span></div>`;}).join('');
+    if(txt!==RADAR.txt){RADAR.txt=txt;$('radarT').innerHTML=txt;}}}
+/* ================= game controller ================= */
+const PAD={prev:[],on:false};
+addEventListener('gamepadconnected',()=>{if(!PAD.on){PAD.on=true;note('Controller connected. Left stick walks, right stick looks, A acts, Y opens the map.',4500);}});
+function padInput(dt){const gp=[...(navigator.getGamepads?navigator.getGamepads():[])].find(p=>p&&p.connected);if(!gp){HOLD.pad=false;return{f:0,s:0};}
+  const dz=v=>Math.abs(v)<.18?0:(v-Math.sign(v)*.18)/.82,ax=i=>dz(gp.axes[i]||0),b=i=>!!(gp.buttons[i]&&gp.buttons[i].pressed),hit=i=>b(i)&&!PAD.prev[i];
+  const out={f:-ax(1),s:ax(0)};
+  if(started&&!mapOpen){yaw-=ax(2)*2.6*dt;pitch=Math.max(-1.2,Math.min(1.2,pitch-ax(3)*1.8*dt));}
+  HOLD.pad=b(0);
+  if(started){
+    if(hit(3)||hit(8))mapOpen?closeMap():openMap();
+    else if(mapOpen){if(hit(1))closeMap();}
+    else if(INTRO.on&&(hit(0)||hit(9)))advance();
+    else if(quizOpen){if(hit(1))closeQuiz();}
+    else if(HL.open){if(hit(1))closeHL();if(hit(12))hlGuess(true);if(hit(13))hlGuess(false);}
+    else if(casesOpen){if(hit(1)||hit(4))toggleCases();}
+    else{if(hit(0))interact();if(hit(2))raiseCam();if((hit(7)||hit(5))&&CAM.up)takePhoto();if(hit(4))toggleCases();}}
+  PAD.prev=gp.buttons.map(x=>x.pressed);return out;}
 const MAPROOMS=[
   {id:'gallery',label:'Portrait Gallery',x:250,y:14,w:200,h:70,note:'up the stairs'},
   {id:'study',label:'Antiquities Study',x:40,y:110,w:180,h:90},
@@ -1102,6 +1173,7 @@ const MAPLINKS=[['hall','gallery'],['hall','study'],['hall','parlour'],['hall','
 function drawMap(){const svg=$('mapSvg');const R0=Object.fromEntries(MAPROOMS.map(r=>[r.id,r]));
   let h='<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#8a7a5c" stroke-width="1.4"/></pattern></defs>';
   const cx=r=>r.x+r.w/2,cy=r=>r.y+r.h/2;
+  const DIST={};for(const r of MAPROOMS){if(r.id===roomId)continue;const rt=routeTo(r.id,roomId,cam.position.x,cam.position.z);if(rt)DIST[r.id]=rt.d<.95?'at the door':rt.d.toFixed(1)+' m away';}
   const mids=r=>[[cx(r),r.y],[cx(r),r.y+r.h],[r.x,cy(r)],[r.x+r.w,cy(r)]];
   for(const [a,b] of MAPLINKS){const A=R0[a],B=R0[b];
     let best=null,bd=1e9;for(const p of mids(A))for(const q of mids(B)){const d=Math.hypot(p[0]-q[0],p[1]-q[1]);if(d<bd){bd=d;best=[p,q];}}
@@ -1114,6 +1186,7 @@ function drawMap(){const svg=$('mapSvg');const R0=Object.fromEntries(MAPROOMS.ma
     h+=`<rect x="${r.x}" y="${r.y+r.h-26}" width="${r.w}" height="26" fill="rgba(20,12,8,.78)"/>`+
       `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="none" stroke="${here?'#c0392b':'#3a2a1c'}" stroke-width="${here?4:2}"/>`+
       `<text x="${r.x+r.w/2}" y="${r.y+r.h-9}" text-anchor="middle" font-family="Special Elite, monospace" font-size="13" fill="${here?'#ff8a70':'#e6d9c8'}">${r.label}${seen&&!here&&r.id!=='lift'?' ✓':''}</text>`+
+      (!here&&DIST[r.id]?`<text x="${r.x+r.w-8}" y="${r.y+16}" text-anchor="end" font-family="Special Elite, monospace" font-size="12" fill="#ffd2b8" style="paint-order:stroke" stroke="#000" stroke-width="3">${DIST[r.id]}</text>`:'')+
       (here?`<text x="${r.x+8}" y="${r.y+16}" font-family="Special Elite, monospace" font-size="11" fill="#ff8a70" style="paint-order:stroke" stroke="#000" stroke-width="3">YOU ARE HERE</text>`:'')+
       (r.note&&!here?`<text x="${r.x+8}" y="${r.y+16}" font-family="EB Garamond, serif" font-style="italic" font-size="13" fill="#e6d9c8" style="paint-order:stroke" stroke="#000" stroke-width="3">${r.note}</text>`:'')+'</g>';}
   svg.innerHTML=h;
@@ -1200,9 +1273,9 @@ renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
   if(!roomId){renderer.render(scene,cam);return;}
   const frozen=END.on||E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||quizOpen||HL.open||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
-  let mv=0;
+  let mv=0;const pad=padInput(dt);
   if(started&&!frozen){
-    let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x;
+    let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y+pad.f,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x+pad.s;
     const L=Math.hypot(f,s);if(L>1){f/=L;s/=L;}mv=L>.1?1:0;const sp=(keys.ShiftLeft?2.6:1.5)*(CAM.up?.5:1)*dt,sy=Math.sin(yaw),cy=Math.cos(yaw);
     let nx=cam.position.x+(-sy*f+cy*s)*sp,nz=cam.position.z+(-cy*f-sy*s)*sp;
     if(roomId==='hall'&&CUR.present&&curator.visible&&!CUR.leaving){const dx=nx-curator.position.x,dz=nz-curator.position.z,d=Math.hypot(dx,dz);if(d<.6){nx=curator.position.x+dx/d*.6;nz=curator.position.z+dz/d*.6;}}
@@ -1236,7 +1309,7 @@ renderer.setAnimationLoop(()=>{
     if(awayFor>1.5){const local=cab.worldToLocal(cam.position.clone());dollYaw=Math.max(-1.1,Math.min(1.1,Math.atan2(local.x,local.z)));}
     doll.rotation.y+=(dollYaw-doll.rotation.y)*Math.min(1,dt*(seen?0:3));
   }
-  current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
+  current=findInteract();updateTouchUI();drawRadar(dt);const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
 window.__t={cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};

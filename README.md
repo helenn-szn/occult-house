@@ -27,7 +27,6 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 ## What is playable now
 
 - **The welcome**: ring the bell, sign the visitor agreement, and meet the curator, Mr. Ambrose Vane, in the Front Hall. He gives you three rules and a map.
-- **The map**: press M to see the house and travel to any room you have unlocked.
 - **The Front Hall**, **the Doll Room**, **the Card Parlour** and **the Passage**: walkable splat rooms, darkened in code so only red light and your own light show the way.
 - **Marigold**: she sits in a locked cabinet and turns to face you when you look away.
 - **The first rule**: touch her cabinet and the house answers. Knocks, a blackout, an empty cabinet, and something behind you.
@@ -37,7 +36,8 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 - **The Portrait Gallery**: six portraits. Look away and one of them changes; find which and examine it before it changes back. Catch three changes to close the case. Pick wrong and the gallery notices you.
 - **A challenge in every room, and a key in four pieces**: wind the stopped clock in the Front Hall (hold E while the hall goes dark), find Button the doll by her giggling before time runs out, knock back door II's pattern in the Passage, and beat Edgar at higher or lower in the Card Parlour. Each gives a piece of a brass key.
 - **The restricted lift**: the door marked STAFF ONLY in the Passage takes the whole key. No one is allowed in, and there is no way back.
-- **The map** shows every room with a picture of it, the doors between them, and where you are. You travel by opening doors.
+- **The map** shows every room with a picture of it, the doors between them, and where you are. You travel by opening doors. Each room on the map shows how far a walk it is from where you stand.
+- **The radar** in the top corner shows the room you're in, turned so you always face up, with a diamond for every door. Under it, each door is listed nearest first, with its distance in metres and an arrow pointing the way.
 - **The endings**: leave by the front door at any time, or the house calls you back once every rule is broken or every case is closed. The curator is waiting. Five endings: The Lift (you took the restricted lift), The Guest (no rules broken), The Visitor (one or two), The Exhibit (all three: you wake inside Marigold's cabinet) and The Curator (all four cases closed: he hands you his keys). An end card sums up your visit.
 - **The second rule**: down in the Passage, three doors at the end say DO NOT OPEN. Two will not open, and something answers from the other side. The third lets you into Room Nine: the front hall again, the wrong way round, and the only way out is to find what does not belong.
 - **The third rule**: the curator says no cameras, but there is one in your pocket. Through its lens you see what the eye cannot: figures in the rooms and writing on the walls. Every photo cracks the lens and brings them closer. On the eighth photo the figure comes through the lens. You wake in the Front Hall with the curator standing over you, and from then on the figure follows you through the house, waiting behind you until you turn around.
@@ -46,6 +46,7 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 
 - W A S D to walk, mouse to look (click to capture the mouse, Esc to release)
 - E to interact, J for the case files, C to raise the camera (click or Space takes a photo), M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
+- With a game controller: left stick to walk, right stick to look, A to use things (hold A for the clock), B to close, X to raise the camera, RT or RB to take a photo, Y or View for the map, LB for the case files, D-pad up and down for Edgar's game
 - On a phone or tablet (best held sideways): a joystick appears under your left thumb to walk, drag on the right to look, tap to continue or take a photo, and on-screen buttons for using things, the camera and the map
 
 Headphones recommended. All sound is synthesised in the page.
