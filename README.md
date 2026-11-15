@@ -37,7 +37,7 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 - **The Portrait Gallery**: six portraits. Look away and one of them changes; find which and examine it before it changes back. Catch three changes to close the case. Pick wrong and the gallery notices you.
 - **A challenge in every room, and a key in four pieces**: wind the stopped clock in the Front Hall (hold E while the hall goes dark), find Button the doll by her giggling before time runs out, knock back door II's pattern in the Passage, and beat Edgar at higher or lower in the Card Parlour. Each gives a piece of a brass key.
 - **The restricted lift**: the door marked STAFF ONLY in the Passage takes the whole key. No one is allowed in, and there is no way back.
-- **The map** shows the rooms you have found and the doors between them. You travel by opening doors.
+- **The map** shows every room with a picture of it, the doors between them, and where you are. You travel by opening doors.
 - **The endings**: leave by the front door at any time, or the house calls you back once every rule is broken or every case is closed. The curator is waiting. Five endings: The Lift (you took the restricted lift), The Guest (no rules broken), The Visitor (one or two), The Exhibit (all three: you wake inside Marigold's cabinet) and The Curator (all four cases closed: he hands you his keys). An end card sums up your visit.
 - **The second rule**: down in the Passage, three doors at the end say DO NOT OPEN. Two will not open, and something answers from the other side. The third lets you into Room Nine: the front hall again, the wrong way round, and the only way out is to find what does not belong.
 - **The third rule**: the curator says no cameras, but there is one in your pocket. Through its lens you see what the eye cannot: figures in the rooms and writing on the walls. Every photo cracks the lens and brings them closer. On the eighth photo the figure comes through the lens. You wake in the Front Hall with the curator standing over you, and from then on the figure follows you through the house, waiting behind you until you turn around.
@@ -71,6 +71,7 @@ assets/parlour.spz    the Card Parlour (compressed Gaussian splats)
 assets/study.spz      the Antiquities Study (compressed Gaussian splats)
 assets/gallery.spz    the Portrait Gallery (compressed Gaussian splats)
 assets/portrait_*.jpg the gallery's paintings, two versions of each
+assets/map_*.jpg      the map's pictures of each room, cropped from the room panoramas
 assets/marigold.glb   Marigold
 assets/hand_right.glb the player's right hand
 assets/curator.glb    the curator, rigged, with idle, talk and walk animations
