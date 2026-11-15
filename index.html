@@ -572,7 +572,7 @@ let handReady=false;
 let AC=null,master=null;
 function audioOn(){if(AC){AC.resume();return;}try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=S.snd?1:0;master.connect(AC.destination);drone();loadSfx();}catch(e){AC=null;}}
 /* recorded sounds: each one replaces its synthesised version as soon as it has loaded; until then (or if it fails) the synth plays */
-const SFX={buf:{},files:['ambience','whisper','door_creak'],droneG:null,amb:null};
+const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps'],droneG:null,amb:null};
 function loadSfx(){for(const n of SFX.files)fetch('assets/sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject(r.status)).then(a=>new Promise((ok,no)=>AC.decodeAudioData(a,ok,no))).then(b=>{SFX.buf[n]=b;if(n==='ambience')startAmbience();}).catch(()=>{});}
 function startAmbience(){if(SFX.amb||!SFX.buf.ambience)return;const src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=SFX.buf.ambience;src.loop=true;src.loopStart=.05;src.loopEnd=SFX.buf.ambience.duration-.05;
   src.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+4);src.start(t,.05);SFX.amb={src,g};
@@ -593,13 +593,13 @@ function whisper(dur=2.2,vol=.14){if(!AC)return;{const b=SFX.buf.whisper;if(b){c
   b1.type='bandpass';b1.frequency.value=1900;b1.Q.value=1.4;b2.type='peaking';b2.frequency.value=3400;b2.gain.value=8;lfo.frequency.value=4.2+Math.random()*2;lg.gain.value=.5;am.gain.value=.5;lfo.connect(lg);lg.connect(am.gain);
   const pan=AC.createStereoPanner?AC.createStereoPanner():null;n.connect(b1);b1.connect(b2);b2.connect(am);am.connect(g);if(pan){pan.pan.value=Math.random()*1.6-.8;g.connect(pan);pan.connect(master);}else g.connect(master);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.4);g.gain.linearRampToValueAtTime(vol*.7,t+dur-.5);g.gain.linearRampToValueAtTime(0,t+dur);n.start(t);lfo.start(t);n.stop(t+dur+.1);lfo.stop(t+dur+.1);}
-function thud(){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(30,t+.6);o.connect(g);g.connect(master);env(g,t,.005,.9,.9);o.start(t);o.stop(t+1);}
+function thud(){if(!AC)return;if(playBuf('thud',.95,{rate:.92+Math.random()*.14}))return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(30,t+.6);o.connect(g);g.connect(master);env(g,t,.005,.9,.9);o.start(t);o.stop(t+1);}
 function stinger(v=.42){if(!AC)return;const t=AC.currentTime,lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=2600;lp.connect(g);g.connect(master);env(g,t,.015,v,1.8);
   [110,116.5,155.6,233.1,246.9,329.6,349.2].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,t);o.frequency.linearRampToValueAtTime(f*.94,t+1.8);o.connect(lp);o.start(t);o.stop(t+2);});
   const n=noise(),hg=AC.createGain();n.connect(hg);hg.connect(master);env(hg,t,.005,.5,.35);n.start(t);n.stop(t+.5);}
 
 
-function footsteps(){if(!AC)return;const t=AC.currentTime;[0,.32,.62].forEach(d=>{const n=noise(),lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=320;n.connect(lp);lp.connect(g);g.connect(master);env(g,t+d,.006,.7,.14);n.start(t+d);n.stop(t+d+.25);});}
+function footsteps(){if(!AC)return;if(playBuf('footsteps',.7,{rate:1.12+Math.random()*.1}))return;const t=AC.currentTime;[0,.32,.62].forEach(d=>{const n=noise(),lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=320;n.connect(lp);lp.connect(g);g.connect(master);env(g,t+d,.006,.7,.14);n.start(t+d);n.stop(t+d+.25);});}
 function doorCreak(){if(!AC)return;if(playBuf('door_creak',.85,{rate:.9+Math.random()*.2}))return;const t=AC.currentTime,o=AC.createOscillator(),bp=AC.createBiquadFilter(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(140,t);o.frequency.linearRampToValueAtTime(210,t+.5);o.frequency.linearRampToValueAtTime(120,t+.9);
   lfo.frequency.value=23;lg.gain.value=40;lfo.connect(lg);lg.connect(o.frequency);bp.type='bandpass';bp.frequency.value=900;bp.Q.value=4;o.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.09,t+.12);g.gain.linearRampToValueAtTime(.06,t+.7);g.gain.linearRampToValueAtTime(0,t+.95);o.start(t);lfo.start(t);o.stop(t+1);lfo.stop(t+1);}
 function say(text,onend){try{if(!S.snd||!('speechSynthesis' in window))return false;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));
