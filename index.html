@@ -572,7 +572,7 @@ let handReady=false;
 let AC=null,master=null;
 function audioOn(){if(AC){AC.resume();return;}try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=S.snd?1:0;master.connect(AC.destination);drone();loadSfx();}catch(e){AC=null;}}
 /* recorded sounds: each one replaces its synthesised version as soon as it has loaded; until then (or if it fails) the synth plays */
-const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps','knock','bell','glass','giggle'],droneG:null,amb:null};
+const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps','knock','bell','glass','giggle','clock_spring','clock_wind','card_slide','canvas_creak','scratch','death','keys'],wind:null,droneG:null,amb:null};
 function loadSfx(){for(const n of SFX.files)fetch('assets/sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject(r.status)).then(a=>new Promise((ok,no)=>AC.decodeAudioData(a,ok,no))).then(b=>{SFX.buf[n]=b;if(n==='ambience')startAmbience();}).catch(()=>{});}
 function startAmbience(){if(SFX.amb||!SFX.buf.ambience)return;const src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=SFX.buf.ambience;src.loop=true;src.loopStart=.05;src.loopEnd=SFX.buf.ambience.duration-.05;
   src.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+4);src.start(t,.05);SFX.amb={src,g};
@@ -581,6 +581,9 @@ function playBuf(name,vol,opt={}){const b=SFX.buf[name];if(!b||!AC)return false;
   let out=g;if(opt.pan!=null&&AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=opt.pan;g.connect(pn);out=pn;}src.connect(g);out.connect(master);
   const off=opt.off||0,dur=opt.dur||b.duration-off;if(opt.dur){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+Math.min(.35,dur*.3));g.gain.setValueAtTime(vol,t+Math.max(.36,dur-.5));g.gain.linearRampToValueAtTime(0,t+dur);}else g.gain.value=vol;
   src.start(t,off,opt.dur?dur+.05:undefined);return true;}
+/* the clock's winding ratchet loops for as long as E is held */
+function windOn(){if(SFX.wind||!AC||!SFX.buf.clock_wind)return;const t=AC.currentTime,src=AC.createBufferSource(),g=AC.createGain();src.buffer=SFX.buf.clock_wind;src.loop=true;src.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.8,t+.06);src.start(t);SFX.wind={src,g};}
+function windOff(){if(!SFX.wind)return;const {src,g}=SFX.wind,t=AC.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+.12);src.stop(t+.15);SFX.wind=null;}
 let NB=null;function noise(){if(!NB){NB=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);const d=NB.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}const s=AC.createBufferSource();s.buffer=NB;s.loop=true;return s;}
 function env(g,t0,a,peak,dec){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(peak,t0+a);g.gain.exponentialRampToValueAtTime(.0001,t0+a+dec);}
 function drone(){const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=170;const g=AC.createGain();g.gain.value=.05;SFX.droneG=g;lp.connect(g);g.connect(master);
@@ -725,7 +728,7 @@ function updateCam(dt){if(CAM.cool>0)CAM.cool-=dt;CAM.flash=Math.max(0,CAM.flash
 const PASS={tried:{},rule2:false};
 function breakRule2(){}
 function rattle2(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<6;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=900+Math.random()*500;bp.Q.value=6;n.connect(bp);bp.connect(g);g.connect(master);env(g,t+k*.09,.003,.5,.06);n.start(t+k*.09);n.stop(t+k*.09+.12);}}
-function scratch(){if(!AC)return;const t=AC.currentTime+.6,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=2400;bp.Q.value=2;n.connect(bp);bp.connect(g);g.connect(master);
+function scratch(){if(!AC)return;{const b=SFX.buf.scratch;if(b&&playBuf('scratch',.9,{at:.6,off:Math.random()*(b.duration-2.6),dur:2.4}))return;}const t=AC.currentTime+.6,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=2400;bp.Q.value=2;n.connect(bp);bp.connect(g);g.connect(master);
   g.gain.setValueAtTime(0,t);for(let k=0;k<5;k++){g.gain.linearRampToValueAtTime(.18,t+k*.32+.05);g.gain.linearRampToValueAtTime(0,t+k*.32+.26);}n.start(t);n.stop(t+1.8);}
 function lockedDoor(which){if(PASS.busy)return;PASS.busy=true;rattle2();breakRule2();
   setTimeout(()=>{knock();scratch();},500);
@@ -830,7 +833,7 @@ function useBoard(){if(SPELL)return;const broke=breakRule(1);
   reach(()=>{const msg=boardMessage();SPELL={msg,i:-1,t:0,from:planch.position.clone(),to:planch.position.clone(),text:''};$('sub').innerHTML='<i>THE BOARD</i>&nbsp;';$('sub').style.opacity=1;whisper(1.2,.08);
     setTimeout(()=>note('You let go. The pointer keeps moving.',3000),300);
     if(broke)setTimeout(()=>note('Rule broken: touch nothing.',3500),3400);});}
-function slide(){if(!AC)return;const t=AC.currentTime,n=noise(),lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=700;n.connect(lp);lp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+.08);g.gain.linearRampToValueAtTime(0,t+.38);n.start(t);n.stop(t+.4);}
+function slide(){if(!AC)return;if(playBuf('card_slide',.8,{rate:.92+Math.random()*.16}))return;const t=AC.currentTime,n=noise(),lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=700;n.connect(lp);lp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+.08);g.gain.linearRampToValueAtTime(0,t+.38);n.start(t);n.stop(t+.4);}
 function updateSpell(dt){if(!SPELL)return;SPELL.t+=dt;const step=.62;
   if(SPELL.i<0||SPELL.t>=step){SPELL.i++;SPELL.t=0;const ch=SPELL.i<SPELL.msg.length?SPELL.msg[SPELL.i]:(SPELL.i===SPELL.msg.length?'GOODBYE':null);
     if(ch===null){setTimeout(()=>{$('sub').style.opacity=0;},1800);SPELL=null;return;}
@@ -965,7 +968,7 @@ async function startEnding(){if(END.on||LIFT.in)return;END.on=true;closeMap();if
     await showRoom('hall',{x:-1.15,z:.95,yaw:Math.atan2(-(-2.95+1.15),-(0-.95))});F.style.transition='opacity 1.6s';F.style.opacity=0;await sleep(1600);
     $('sub').innerHTML='<i>YOU</i>Good evening. You are our only guest tonight. The house prefers it that way.';$('sub').style.opacity=1;await sleep(6000);$('sub').style.opacity=0;
     F.style.transition='opacity 2s';F.style.opacity=1;await sleep(2100);endCard(kind);}}
-function jingle(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<7;k++){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=2600+Math.random()*1800;o.connect(g);g.connect(master);env(g,t+k*.07+Math.random()*.03,.002,.05,.25);o.start(t+k*.07);o.stop(t+k*.07+.35);}}
+function jingle(){if(!AC)return;if(playBuf('keys',.85))return;const t=AC.currentTime;for(let k=0;k<7;k++){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=2600+Math.random()*1800;o.connect(g);g.connect(master);env(g,t+k*.07+Math.random()*.03,.002,.05,.25);o.start(t+k*.07);o.stop(t+k*.07+.35);}}
 const ENDINGS={A:['The Guest','You passed every trial, kept the one rule, and the house let you go.'],A2:['The Visitor','You passed every trial, but the camera saw too much. Something followed you home.'],
   D:['The Lift','You went where no one is allowed. The lift is still going down.'],
   B:['The Exhibit','You broke every rule. Now you are behind glass.'],C:['The Curator','You uncovered the house\'s secrets, and it gave you the keys.']};
@@ -1068,7 +1071,7 @@ const PT={};
    PT[P.id]={P,g,mat,tex:{a:texA,b:texB}};SIT.state[P.id]='a';
    for(const v of ['a','b'])new THREE.TextureLoader().load('assets/portrait_'+P.id+'_'+v+'.jpg',t=>{t.colorSpace=THREE.SRGBColorSpace;const was=PT[P.id].tex[v];PT[P.id].tex[v]=t;if(mat.map===was){mat.map=t;mat.emissiveMap=t;mat.needsUpdate=true;}},undefined,()=>{});}}
 function setPortrait(id,v){SIT.state[id]=v;const p=PT[id];p.mat.map=p.tex[v];p.mat.emissiveMap=p.tex[v];p.mat.needsUpdate=true;}
-function canvasCreak(){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),bp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(90,t);o.frequency.linearRampToValueAtTime(140,t+.6);bp.type='bandpass';bp.frequency.value=700;bp.Q.value=6;o.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.2);g.gain.linearRampToValueAtTime(0,t+.7);o.start(t);o.stop(t+.75);}
+function canvasCreak(){if(!AC)return;if(playBuf('canvas_creak',.9,{rate:.9+Math.random()*.15}))return;const t=AC.currentTime,o=AC.createOscillator(),bp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(90,t);o.frequency.linearRampToValueAtTime(140,t+.6);bp.type='bandpass';bp.frequency.value=700;bp.Q.value=6;o.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.2);g.gain.linearRampToValueAtTime(0,t+.7);o.start(t);o.stop(t+.75);}
 function inView(id){const p=PT[id].g.getWorldPosition(tmpV);cam.getWorldDirection(tmpV2);return tmpV2.dot(tmpV.sub(cam.position).normalize())>.45;}
 function updateGallery(dt){if(roomId!=='gallery'||SIT.done||switching||END.on||!INTRO_SEEN.gallery)return;
   if(SIT.pending){SIT.pendT+=dt;if(SIT.pendT>28&&!inView(SIT.pending)){setPortrait(SIT.pending,'a');SIT.pending=null;SIT.next=7;canvasCreak();note('Something in the gallery has quietly been put back the way it was.',4000);}return;}
@@ -1102,10 +1105,10 @@ const CLOCK={p:[-1.25,1.2],hold:0,holding:false,done:false,tries:0};
 function clockSpot(){if(CLOCK.done||roomId!=='hall'||!INTRO.done||INTRO.on)return null;const d=Math.hypot(CLOCK.p[0]-cam.position.x,CLOCK.p[1]-cam.position.z);if(d>.95)return null;
   cam.getWorldDirection(tmpV2);if((tmpV2.x*(CLOCK.p[0]-cam.position.x)+tmpV2.z*(CLOCK.p[1]-cam.position.z))/Math.max(d,.01)<.6)return null;return {label:'Hold to wind the clock',hold:true,go:()=>{}};}
 function updateClock(dt){if(CLOCK.done)return;const near=current&&current.hold;const held=near&&(keys.KeyE||HOLD.touch||HOLD.pad);
-  if(held){CLOCK.hold+=dt;CLOCK.holding=true;dark01=Math.min(dark01,1-CLOCK.hold/5*.85);if(Math.random()<dt*1.4)whisper(.8,.05+CLOCK.hold*.025);
+  if(held){CLOCK.hold+=dt;CLOCK.holding=true;windOn();dark01=Math.min(dark01,1-CLOCK.hold/5*.85);if(Math.random()<dt*1.4)whisper(.8,.05+CLOCK.hold*.025);
     $('holdBar').style.display='block';$('holdFill').style.width=Math.min(100,CLOCK.hold/4*100)+'%';
-    if(CLOCK.hold>=4){CLOCK.done=true;CLOCK.holding=false;$('holdBar').style.display='none';dark01=1;bell();giveKey('clock','The clock strikes. Behind its glass the pendulum swings again, and an iron key drops from inside the case onto the floor.');}}
-  else if(CLOCK.holding){CLOCK.holding=false;CLOCK.tries++;$('holdBar').style.display='none';if(CLOCK.hold>1){thud();dark01=.15;strike('hall','You let go too soon. The spring unwinds with a shriek and the hands spin back.','The spring tore loose, and the clock struck for you. It was the last thing you heard.');}CLOCK.hold=0;}}
+    if(CLOCK.hold>=4){windOff();CLOCK.done=true;CLOCK.holding=false;$('holdBar').style.display='none';dark01=1;bell();giveKey('clock','The clock strikes. Behind its glass the pendulum swings again, and an iron key drops from inside the case onto the floor.');}}
+  else if(CLOCK.holding){windOff();CLOCK.holding=false;CLOCK.tries++;$('holdBar').style.display='none';if(CLOCK.hold>1){if(!playBuf('clock_spring',1))thud();dark01=.15;strike('hall','You let go too soon. The spring unwinds with a shriek and the hands spin back.','The spring tore loose, and the clock struck for you. It was the last thing you heard.');}CLOCK.hold=0;}}
 const HOLD={touch:false,pad:false};
 /* --- doll room: hide and seek with Button --- */
 const SEEK={state:'wait',t:0,spot:null,tries:0,giggleT:0};
@@ -1282,7 +1285,7 @@ function lockedMsg(id){rattle2();const q=QSEQ[stage()];note('Locked. '+(q?'Pass 
 function strike(room,msg,death){if(QS.go||questDone(room))return true;const n=(QS.strikes[room]||0)+1;QS.strikes[room]=n;QUI.last='';
   if(n>=3){gameOver(room,death);return true;}note(msg+' '+(3-n)+(3-n===1?' chance':' chances')+' left.',6000);return false;}
 function resetTrial(room){QS.strikes[room]=0;dark01=1;OMEN.towerT=0;
-  if(room==='hall'){CLOCK.hold=0;CLOCK.holding=false;$('holdBar').style.display='none';}
+  if(room==='hall'){windOff();CLOCK.hold=0;CLOCK.holding=false;$('holdBar').style.display='none';}
   if(room==='doll'){SEEK.state='wait';SEEK.t=0;buttonDoll.visible=false;$('seekT').style.display='none';$('listener').style.display='none';}
   if(room==='parlour'){HL.streak=0;HL.losses=0;closeHL();}
   if(room==='study'){STUDY.wrong=0;closeQuiz();}
@@ -1294,8 +1297,8 @@ async function gameOver(room,why){if(QS.go||END.on)return;QS.go=true;QS.room=roo
   $('sub').style.opacity=0;$('holdBar').style.display='none';$('seekT').style.display='none';
   if(follower){cam.getWorldDirection(tmpV);tmpV.y=0;tmpV.normalize();const from=new THREE.Vector3(cam.position.x+tmpV.x*1.8,0,cam.position.z+tmpV.z*1.8),to=new THREE.Vector3(cam.position.x+tmpV.x*.38,0,cam.position.z+tmpV.z*.38);
     follower.position.copy(from);follower.rotation.y=Math.atan2(-tmpV.x,-tmpV.z);followMat.opacity=.55;follower.visible=true;whisper(1.2,.2);await sleep(500);
-    stinger(.4);flash=.9;const t0=performance.now();while(performance.now()-t0<380){const k=(performance.now()-t0)/380;follower.position.lerpVectors(from,to,k*k);await sleep(16);}}
-  else{stinger(.4);flash=.9;}
+    if(!playBuf('death',1))stinger(.4);flash=.9;const t0=performance.now();while(performance.now()-t0<380){const k=(performance.now()-t0)/380;follower.position.lerpVectors(from,to,k*k);await sleep(16);}}
+  else{if(!playBuf('death',1))stinger(.4);flash=.9;}
   await sleep(250);const F=$('fade');F.style.transition='opacity .12s';F.style.opacity=1;thud();await sleep(900);if(follower)follower.visible=false;
   showGameOver(room,'YOU DIED',why);}
 function showGameOver(room,title,why){QS.go=true;QS.room=room;QS.deaths++;switching=true;try{document.exitPointerLock();}catch(_){}
@@ -1543,7 +1546,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
