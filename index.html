@@ -572,7 +572,7 @@ let handReady=false;
 let AC=null,master=null;
 function audioOn(){if(AC){AC.resume();return;}try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=S.snd?1:0;master.connect(AC.destination);drone();loadSfx();}catch(e){AC=null;}}
 /* recorded sounds: each one replaces its synthesised version as soon as it has loaded; until then (or if it fails) the synth plays */
-const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps','knock','bell','glass','giggle','clock_spring','clock_wind','card_slide','canvas_creak','scratch','death','keys'],wind:null,droneG:null,amb:null};
+const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps','knock','bell','glass','giggle','clock_spring','clock_wind','card_slide','canvas_creak','scratch','death','keys','door_pound','door_rattle','game_over','stinger','shutter','glitch'],wind:null,droneG:null,amb:null};
 function loadSfx(){for(const n of SFX.files)fetch('assets/sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject(r.status)).then(a=>new Promise((ok,no)=>AC.decodeAudioData(a,ok,no))).then(b=>{SFX.buf[n]=b;if(n==='ambience')startAmbience();}).catch(()=>{});}
 function startAmbience(){if(SFX.amb||!SFX.buf.ambience)return;const src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=SFX.buf.ambience;src.loop=true;src.loopStart=.05;src.loopEnd=SFX.buf.ambience.duration-.05;
   src.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+4);src.start(t,.05);SFX.amb={src,g};
@@ -597,7 +597,7 @@ function whisper(dur=2.2,vol=.14){if(!AC)return;{const b=SFX.buf.whisper;if(b){c
   const pan=AC.createStereoPanner?AC.createStereoPanner():null;n.connect(b1);b1.connect(b2);b2.connect(am);am.connect(g);if(pan){pan.pan.value=Math.random()*1.6-.8;g.connect(pan);pan.connect(master);}else g.connect(master);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.4);g.gain.linearRampToValueAtTime(vol*.7,t+dur-.5);g.gain.linearRampToValueAtTime(0,t+dur);n.start(t);lfo.start(t);n.stop(t+dur+.1);lfo.stop(t+dur+.1);}
 function thud(){if(!AC)return;if(playBuf('thud',.95,{rate:.92+Math.random()*.14}))return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(30,t+.6);o.connect(g);g.connect(master);env(g,t,.005,.9,.9);o.start(t);o.stop(t+1);}
-function stinger(v=.42){if(!AC)return;const t=AC.currentTime,lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=2600;lp.connect(g);g.connect(master);env(g,t,.015,v,1.8);
+function stinger(v=.42){if(!AC)return;if(playBuf('stinger',Math.min(1.1,.35+v*1.6),{rate:.96+Math.random()*.08}))return;const t=AC.currentTime,lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=2600;lp.connect(g);g.connect(master);env(g,t,.015,v,1.8);
   [110,116.5,155.6,233.1,246.9,329.6,349.2].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,t);o.frequency.linearRampToValueAtTime(f*.94,t+1.8);o.connect(lp);o.start(t);o.stop(t+2);});
   const n=noise(),hg=AC.createGain();n.connect(hg);hg.connect(master);env(hg,t,.005,.5,.35);n.start(t);n.stop(t+.5);}
 
@@ -665,9 +665,9 @@ function crackDraw(n){const c=$('crack'),g=c.getContext('2d');c.width=innerWidth
     for(let a=0;a<arms;a++){let x=cx,y=cy,ang=r()*6.283;g.lineWidth=1+r()*1.6;g.beginPath();g.moveTo(x,y);const segs=4+Math.floor(r()*6);
       for(let s=0;s<segs;s++){ang+=r()*.8-.4;const l=20+r()*70*(1+k*.15);x+=Math.cos(ang)*l;y+=Math.sin(ang)*l;g.lineTo(x,y);}g.stroke();}
     g.beginPath();g.arc(cx,cy,6+r()*10,0,6.3);g.stroke();}}
-function shutter(){if(!AC)return;const t=AC.currentTime,n=noise(),hp=AC.createBiquadFilter(),g=AC.createGain();hp.type='highpass';hp.frequency.value=2500;n.connect(hp);hp.connect(g);g.connect(master);env(g,t,.002,.6,.06);env(g,t+.09,.002,.4,.05);n.start(t);n.stop(t+.25);
+function shutter(){if(!AC)return;if(playBuf('shutter',.9,{rate:.97+Math.random()*.06}))return;const t=AC.currentTime,n=noise(),hp=AC.createBiquadFilter(),g=AC.createGain();hp.type='highpass';hp.frequency.value=2500;n.connect(hp);hp.connect(g);g.connect(master);env(g,t,.002,.6,.06);env(g,t+.09,.002,.4,.05);n.start(t);n.stop(t+.25);
   const o=AC.createOscillator(),og=AC.createGain();o.type='square';o.frequency.setValueAtTime(900,t+.12);o.frequency.linearRampToValueAtTime(1500,t+.6);o.connect(og);og.connect(master);og.gain.setValueAtTime(0,t+.12);og.gain.linearRampToValueAtTime(.025,t+.18);og.gain.linearRampToValueAtTime(0,t+.6);o.start(t+.12);o.stop(t+.65);}
-function glitchSound(){if(!AC)return;const t=AC.currentTime,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=.7;lfo.type='square';lfo.frequency.value=17;lg.gain.value=.5;lfo.connect(lg);lg.connect(g.gain);
+function glitchSound(){if(!AC)return;if(playBuf('glitch',1))return;const t=AC.currentTime,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=.7;lfo.type='square';lfo.frequency.value=17;lg.gain.value=.5;lfo.connect(lg);lg.connect(g.gain);
   n.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(.5,t);g.gain.linearRampToValueAtTime(0,t+1.4);n.start(t);lfo.start(t);n.stop(t+1.5);lfo.stop(t+1.5);}
 function camUI(){$('vf').style.display=CAM.up?'block':'none';$('shots').textContent=CAM.broken?'':'EXP '+CAM.shots;$('crack').style.display=(CAM.up||CAM.brokenShow)?'block':'none';$('cross').style.display=CAM.up?'none':'block';}
 function raiseCam(){if(!CAM.has||CAM.broken||CAM.seq||!INTRO.done||switching||mapOpen||E.phase!=='idle')return;if(LIFT.in){note('The camera will not wind down here. The shutter is jammed shut.',3500);return;}CAM.up=!CAM.up;camUI();
@@ -727,7 +727,7 @@ function updateCam(dt){if(CAM.cool>0)CAM.cool-=dt;CAM.flash=Math.max(0,CAM.flash
 /* ================= rule II: the Passage and its doors ================= */
 const PASS={tried:{},rule2:false};
 function breakRule2(){}
-function rattle2(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<6;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=900+Math.random()*500;bp.Q.value=6;n.connect(bp);bp.connect(g);g.connect(master);env(g,t+k*.09,.003,.5,.06);n.start(t+k*.09);n.stop(t+k*.09+.12);}}
+function rattle2(){if(!AC)return;{const b=SFX.buf.door_rattle;if(b&&playBuf('door_rattle',.9,{off:Math.random()*(b.duration-1.5),dur:1.3,rate:.95+Math.random()*.1}))return;}const t=AC.currentTime;for(let k=0;k<6;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=900+Math.random()*500;bp.Q.value=6;n.connect(bp);bp.connect(g);g.connect(master);env(g,t+k*.09,.003,.5,.06);n.start(t+k*.09);n.stop(t+k*.09+.12);}}
 function scratch(){if(!AC)return;{const b=SFX.buf.scratch;if(b&&playBuf('scratch',.9,{at:.6,off:Math.random()*(b.duration-2.6),dur:2.4}))return;}const t=AC.currentTime+.6,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=2400;bp.Q.value=2;n.connect(bp);bp.connect(g);g.connect(master);
   g.gain.setValueAtTime(0,t);for(let k=0;k<5;k++){g.gain.linearRampToValueAtTime(.18,t+k*.32+.05);g.gain.linearRampToValueAtTime(0,t+k*.32+.26);}n.start(t);n.stop(t+1.8);}
 function lockedDoor(which){if(PASS.busy)return;PASS.busy=true;rattle2();breakRule2();
@@ -1138,10 +1138,10 @@ function startKnock(){KNOCK.pat=knockPattern();KNOCK.state='listen';const ms=pla
 function knockTap(){if(KNOCK.state!=='answer')return;const now=performance.now();if(KNOCK.cur>0&&now-KNOCK.last>900){KNOCK.input.push(KNOCK.cur);KNOCK.cur=0;}KNOCK.cur++;KNOCK.last=now;
   if(AC&&!playBuf('knock',.75,{rate:1.18}))if(AC){const t=AC.currentTime,ns=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=190;bp.Q.value=2.5;ns.connect(bp);bp.connect(g);g.connect(master);env(g,t,.004,1.1,.13);ns.start(t);ns.stop(t+.25);}
   handR.position.copy(R_TOUCH);setTimeout(()=>handR.position.copy(R_IDLE),140);}
-function updateKnock(){if(KNOCK.state!=='answer')return;if(KNOCK.cur>0&&performance.now()-KNOCK.last>2200){KNOCK.input.push(KNOCK.cur);KNOCK.cur=0;
+function updateKnock(){if(KNOCK.state!=='answer'||!KNOCK.pat)return;if(KNOCK.cur>0&&performance.now()-KNOCK.last>2200){KNOCK.input.push(KNOCK.cur);KNOCK.cur=0;
     const ok=KNOCK.input.length===KNOCK.pat.length&&KNOCK.input.every((n,i)=>n===KNOCK.pat[i]);KNOCK.state='idle';
     if(ok){giveKey('knock','Silence. Then a key slides out under door II and stops against your shoe.');}
-    else{KNOCK.tries++;rattle2();thud();OMEN.towerT=3;strike('passage','Wrong. Door II is pounded from the other side until the bulbs go out. Knock on it again when you dare.','Door II opened. Whatever had been knocking came through it.');}}}
+    else{KNOCK.tries++;if(!playBuf('door_pound',1))rattle2();thud();OMEN.towerT=3;strike('passage','Wrong. Door II is pounded from the other side until the bulbs go out. Knock on it again when you dare.','Door II opened. Whatever had been knocking came through it.');}}}
 function knockSpot(){if(roomId!=='passage'||KEY.have.knock)return null;const d=Math.hypot(-4.2-cam.position.x,0-cam.position.z);if(d>1.2)return null;cam.getWorldDirection(tmpV2);if((tmpV2.x*(-4.2-cam.position.x)+tmpV2.z*(-cam.position.z))/Math.max(d,.01)<.75)return null;
   if(KNOCK.state==='answer')return {label:'Knock',go:knockTap};if(KNOCK.state==='listen'||QS.go)return null;return {label:'Knock on door II',go:startKnock};}
 /* --- parlour: Edgar's game, higher or lower, four in a row --- */
@@ -1304,7 +1304,7 @@ async function gameOver(room,why){if(QS.go||END.on)return;QS.go=true;QS.room=roo
 function showGameOver(room,title,why){QS.go=true;QS.room=room;QS.deaths++;switching=true;try{document.exitPointerLock();}catch(_){}
   $('goTitle').textContent=title;$('goWhy').textContent=why;
   $('goWhere').textContent=(room==='lift'?'THE PASSAGE':ROOMS[room].name.toUpperCase())+' · DEATHS SO FAR: '+QS.deaths+' · KEYS KEPT: '+keyCount()+' OF 6';
-  $('gameover').style.display='flex';$('tui').classList.remove('on');$('goRetry').focus();}
+  $('gameover').style.display='flex';$('tui').classList.remove('on');playBuf('game_over',.9);$('goRetry').focus();}
 async function retryRoom(){if(!QS.go)return;const room=QS.room,back=room==='lift'?'passage':room;$('gameover').style.display='none';
   resetTrial(room);if(room==='lift'){END.on=false;LIFT.in=false;LIFT.shake=0;liftGate.visible=false;$('lift').style.display='none';}
   const F=$('fade');F.style.background='#000';F.style.opacity=1;
@@ -1546,7 +1546,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>

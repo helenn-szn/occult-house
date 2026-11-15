@@ -57,7 +57,7 @@ You are the only guest tonight, and the front door locks behind you. It has six 
 - With a game controller: left stick to walk, right stick to look, A to use things (hold A for the clock), B to close, X to raise the camera, RT or RB to take a photo, Y or View for the map, Start for How to play, D-pad up and down for Edgar's game
 - On a phone or tablet (best held sideways): a joystick appears under your left thumb to walk, drag on the right to look, tap to continue or take a photo, and on-screen buttons for using things, the camera and the map
 
-Headphones recommended. The house ambience, whispers, door creaks, footsteps, thuds, knocks, scratching, the clock's bell, winding and spring, cards, creaking canvas, breaking glass, Button's giggle, the curator's keys and the death scream are royalty-free recordings (in `assets/sfx/`); the rest of the sound is synthesised in the page, and any recording that fails to load falls back to its synthesised version.
+Headphones recommended. The house ambience, whispers, door creaks, footsteps, thuds, knocks, scratching, the clock's bell, winding and spring, cards, creaking canvas, breaking glass, Button's giggle, the curator's keys, locked-door rattles, door II's pounding, the camera's shutter and glitch, the jump-scare stingers, the death scream and the Game Over sting are royalty-free recordings (in `assets/sfx/`); the rest of the sound is synthesised in the page, and any recording that fails to load falls back to its synthesised version.
 
 ## Run locally
 
@@ -82,7 +82,7 @@ assets/gallery.spz    the Portrait Gallery (compressed Gaussian splats)
 assets/lift.spz       the Lift Landing, behind the STAFF ONLY door (compressed Gaussian splats)
 assets/portrait_*.jpg the gallery's paintings, two versions of each
 assets/map_*.jpg      the map's pictures of each room, cropped from the room panoramas
-assets/sfx/*.mp3      recorded sounds (16): the house ambience (a seamless loop) and the game's effects
+assets/sfx/*.mp3      recorded sounds (22): the house ambience (a seamless loop) and the game's effects
 assets/marigold.glb   Marigold
 assets/hand_right.glb the player's right hand
 assets/curator.glb    the curator, rigged, with idle, talk and walk animations
