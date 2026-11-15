@@ -541,11 +541,11 @@ function showCard(c){const v=$('cardView');v.innerHTML='';const img=document.cre
   requestAnimationFrame(()=>v.classList.add('show'));setTimeout(()=>{v.classList.remove('show');setTimeout(()=>{v.style.display='none';},500);},4800);}
 /* the deck sits on the green table; the board beside it */
 const TABLE={x:-1.25,z:0,y:.77};
-let deckMesh=null,tableCard=null,board=null,planch=null,boardLetters={};
-{const back=cv(128,220),bg=back.getContext('2d');bg.fillStyle='#120c0a';bg.fillRect(0,0,128,220);bg.strokeStyle='#b08a3a';bg.lineWidth=4;bg.strokeRect(8,8,112,204);bg.beginPath();bg.arc(64,110,26,0,6.3);bg.stroke();
- const side=new THREE.MeshStandardMaterial({color:0xd8c9a0,roughness:.9}),top=new THREE.MeshStandardMaterial({map:tx(back),roughness:.7});
- deckMesh=new THREE.Mesh(new THREE.BoxGeometry(.075,.035,.12),[side,side,top,side,side,side]);deckMesh.position.set(TABLE.x+.12,TABLE.y+.018,TABLE.z+.08);deckMesh.rotation.y=.4;parlourGroup.add(deckMesh);
- const rib=new THREE.Mesh(new THREE.BoxGeometry(.078,.037,.012),new THREE.MeshStandardMaterial({color:0x8a1010,roughness:.6}));rib.position.copy(deckMesh.position);rib.rotation.y=.4;parlourGroup.add(rib);}
+let deckMesh=null,tableCard=null,board=null,planch=null;const boardLetters={};
+/* the Vesper Deck and the Parlour Board are Lux3D models */
+const gl=new GLTFLoader();
+function prep(g){g.traverse(o=>{if(o.isMesh&&o.material.map)o.material.map.colorSpace=THREE.SRGBColorSpace;});return g;}
+gl.load('assets/deck.glb',g=>{const m=prep(g.scene);m.scale.setScalar(.55);m.position.set(TABLE.x+.12,TABLE.y+.027,TABLE.z+.08);m.rotation.y=.4;parlourGroup.add(m);deckMesh=m;},undefined,()=>{});
 function boardTex(){const c=cv(1024,700),g=c.getContext('2d'),r=rnd(5);g.fillStyle='#a87a42';g.fillRect(0,0,1024,700);
   for(let i=0;i<160;i++){g.strokeStyle=`rgba(60,30,8,${r()*.2})`;const y=r()*700;g.beginPath();g.moveTo(0,y);g.bezierCurveTo(330,y+r()*24-12,660,y+r()*24-12,1024,y);g.stroke();}
   g.strokeStyle='#2a1706';g.lineWidth=8;g.strokeRect(20,20,984,660);g.fillStyle='#2a1706';g.textAlign='center';g.textBaseline='middle';
@@ -554,14 +554,21 @@ function boardTex(){const c=cv(1024,700),g=c.getContext('2d'),r=rnd(5);g.fillSty
   rows.forEach((str,k)=>{g.font='60px "Special Elite", monospace';const n=str.length;for(let i=0;i<n;i++){const a=(i-(n-1)/2)*.115,R=640,x=512+Math.sin(a)*R,y=cy[k]-Math.cos(a)*R+R;g.save();g.translate(x,y);g.rotate(a);g.fillText(str[i],0,0);g.restore();boardLetters[str[i]]=[x,y];}});
   g.font='52px "Special Elite", monospace';g.fillText('1 2 3 4 5 6 7 8 9 0',512,490);g.font='46px "Special Elite", monospace';g.fillText('GOODBYE',512,600);boardLetters[' ']=[512,430];boardLetters.GOODBYE=[512,600];
   g.beginPath();g.arc(512,100,34,0,6.3);g.stroke();return c;}
-{board=new THREE.Group();board.position.set(TABLE.x+.38,TABLE.y+.012,TABLE.z+.3);board.rotation.y=Math.atan2(.57,1.05);parlourGroup.add(board);
- const bw=.44,bh=.3;const wood=new THREE.MeshStandardMaterial({color:0x5a3418,roughness:.6});const face=new THREE.MeshStandardMaterial({map:tx(boardTex()),roughness:.55});
- const slab=new THREE.Mesh(new THREE.BoxGeometry(bw,.016,bh),[wood,wood,face,wood,wood,wood]);board.add(slab);board.userData={bw,bh};
- const sh=new THREE.Shape();sh.moveTo(0,.075);sh.bezierCurveTo(.07,.055,.065,-.05,0,-.06);sh.bezierCurveTo(-.065,-.05,-.07,.055,0,.075);const hole=new THREE.Path();hole.absarc(0,.012,.016,0,6.3,true);sh.holes.push(hole);
- planch=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:.012,bevelEnabled:true,bevelSize:.003,bevelThickness:.003,bevelSegments:2}),new THREE.MeshStandardMaterial({color:0x3a200c,roughness:.45}));
- planch.rotation.x=-Math.PI/2;planch.position.set(0,.012,.05);board.add(planch);}
-function letterPos(ch){const p=boardLetters[ch]||boardLetters[' '];const {bw,bh}=board.userData;return new THREE.Vector3((p[0]/1024-.5)*bw,.012,(p[1]/700-.5)*bh+.035);}
-const parlourLamp=new THREE.PointLight(0x9cffb0,.55,2.6,2);parlourLamp.position.set(TABLE.x,1.55,TABLE.z);parlourGroup.add(parlourLamp);
+/* the board model stands upright with its face toward +Z; it is laid flat and thinned, and its title is covered by a painted plaque */
+board=new THREE.Group();board.position.set(TABLE.x+.38,TABLE.y+.01,TABLE.z+.3);board.rotation.y=Math.atan2(.57,1.05);parlourGroup.add(board);board.userData={bw:.4,bh:.314};
+const BOARD_TOP=.0105;
+gl.load('assets/board.glb',g=>{const m=prep(g.scene);const flat=new THREE.Group();m.scale.z=.12;flat.add(m);flat.rotation.x=-Math.PI/2;board.add(flat);},undefined,()=>{});
+{const c=cv(512,128),g=c.getContext('2d');g.fillStyle='#6a3c1c';g.fillRect(0,0,512,128);const r=rnd(31);for(let i=0;i<120;i++){g.strokeStyle=`rgba(30,12,4,${r()*.25})`;const y=r()*128;g.beginPath();g.moveTo(0,y);g.lineTo(512,y+r()*6-3);g.stroke();}
+ g.strokeStyle='#e6d6b4';g.lineWidth=4;g.strokeRect(10,10,492,108);g.fillStyle='#ead9b4';g.textAlign='center';g.textBaseline='middle';g.font='64px "Special Elite", monospace';g.fillText('VESPER',256,68);
+ const pl=new THREE.Mesh(new THREE.PlaneGeometry(.2,.05),new THREE.MeshStandardMaterial({map:tx(c),roughness:.7}));pl.rotation.x=-Math.PI/2;pl.position.set(0,BOARD_TOP+.001,-.108);board.add(pl);}
+planch=new THREE.Group();planch.position.set(0,BOARD_TOP,.05);board.add(planch);
+gl.load('assets/planchette.glb',g=>{const m=prep(g.scene);m.scale.setScalar(.38);m.rotation.x=-Math.PI/2;m.position.y=.006;planch.add(m);},undefined,()=>{});
+/* where each letter sits on the board's face, measured from the model (x across, y up the face) */
+{const L1='ABCDEFGHIJKLM',L2='NOPQRSTUVWXYZ';
+ for(let i=0;i<13;i++){const u=(i-6)/6;boardLetters[L1[i]]=[u*.15,.045-u*u*.025];boardLetters[L2[i]]=[u*.15,.005-u*u*.022];}
+ boardLetters[' ']=[0,-.02];boardLetters.GOODBYE=[0,-.128];}
+function letterPos(ch){const p=boardLetters[ch]||boardLetters[' '];return new THREE.Vector3(p[0],BOARD_TOP,-p[1]+.02);}
+const parlourLamp=new THREE.PointLight(0xe0f0c8,.55,2.6,2);parlourLamp.position.set(TABLE.x,1.55,TABLE.z);parlourGroup.add(parlourLamp);
 /* drawing a card: rule I, and an omen */
 function drawCard(){if(OMEN.card){note('The deck is cold now. It will not give you another.',3500);return;}
   const broke=breakRule(1);const pool=CARDS.filter(c=>c.id!=='blank'||Math.random()<.25);const c=pool[Math.floor(Math.random()*pool.length)];OMEN.card=c.id;

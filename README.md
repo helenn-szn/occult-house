@@ -15,6 +15,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 | Panorama edits (lights off, midnight) | Lux3D multimodal to image |
 | Marigold, the rag doll | Lux3D text to 3D (G1) |
 | The player's hand | Lux3D text to 3D (G1) |
+| The Vesper Deck, the spirit board and its pointer | Lux3D text to 3D (G1) |
 | Mr. Ambrose Vane, the curator | Lux3D text to 3D (G1), humanoid auto-rig, and animation retarget (idle, talking, walk) |
 
 Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) for the Gaussian-splat rooms.
@@ -59,6 +60,9 @@ assets/parlour.spz    the Card Parlour (compressed Gaussian splats)
 assets/marigold.glb   Marigold
 assets/hand_right.glb the player's right hand
 assets/curator.glb    the curator, rigged, with idle, talk and walk animations
+assets/deck.glb       the Vesper Deck
+assets/board.glb      the spirit board
+assets/planchette.glb the board's pointer
 ```
 
 All characters, objects and names are invented.
