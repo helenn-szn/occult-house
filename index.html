@@ -978,9 +978,9 @@ const RELICS=[
   {id:'skull',name:'Old Tom',card:'A skull on a brass stand. Lent to the house by a medical school in 1975 and never returned. The candle on its head relights itself.'},
   {id:'ledger',name:'The Ledger of Names',card:'A ledger kept by the house since 1890. Every guest\'s name is written in it before they arrive. The newest name is yours.'}];
 const QUIZ=[
-  {q:'Which object arrived in the same year as the guest who never left?',a:'mirror'},
-  {q:'Which object was taken from the same house as Marigold?',a:'bell'},
-  {q:'Which object should never have been brought into this house?',a:'idol'}];
+  {q:'Which object came into the collection in 1931?',a:'mirror'},
+  {q:'Which object was taken from the Ashby house, where Marigold came from?',a:'bell'},
+  {q:'Which object did no one ask the house to take?',a:'idol'}];
 const STUDY={seen:{},wrong:0,done:false,qi:0,ans:[]};
 /* close looks: the Lux3D relics are held up in front of you while you read their cards */
 const INSPECT=new THREE.Group();INSPECT.position.set(0,.03,-.5);INSPECT.visible=false;cam.add(INSPECT);
@@ -1005,7 +1005,7 @@ function answer(id){STUDY.ans.push(id);STUDY.qi++;if(STUDY.qi<QUIZ.length){slide
 async function studyWrong(){STUDY.wrong++;const w=STUDY.wrong;
   if(w===1){shatter();flash=.5;}else if(w===2){thud();dark01=0;OMEN.towerT=6;whisper(2.6,.2);}
   strike('study',w===1?'Wrong. Somewhere in the study, glass breaks, and the ledger\'s pages go blank.':'Wrong. The lamp dies. Something in the dark is laughing at you.','The idol turned to face you, and something came out of its case. It does not forgive a poor appraisal.');}
-function studySolved(){STUDY.done=true;bell();setTimeout(()=>giveKey('study','Under the signed sheet, at the back of the drawer, is a key with a paper tag: APPRAISED.'),9500);setTimeout(()=>{showClue('The Appraisal: case closed','A drawer in the desk unlocks. Inside is a single sheet, signed in faded ink: "I, Ambrose Vane, agree to keep this house and all within it, until another keeps it for me." Beneath his name is a second line, waiting for a signature.',true);},1200);drawCases();}
+function studySolved(){STUDY.done=true;bell();setTimeout(()=>giveKey('study','A drawer in the desk unlocks. Inside, under a sheet signed "Ambrose Vane", is a key with a paper tag: APPRAISED.'),1200);drawCases();}
 function shatter(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<14;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=3000+Math.random()*5000;bp.Q.value=8;n.connect(bp);bp.connect(g);g.connect(master);const d=k*.035+Math.random()*.05;env(g,t+d,.001,.4,.12+Math.random()*.2);n.start(t+d);n.stop(t+d+.4);}}
 
 $('quizX').onclick=()=>closeQuiz();
@@ -1254,7 +1254,7 @@ const QUESTS={
     p:()=>SEEK.state==='hunt'?'Hiding! '+Math.max(0,Math.ceil(60-SEEK.t))+' seconds left':'Wait for a chair to empty'},
   parlour:{n:'Beat Edgar',d:"Edgar's chair is on the far side of the card table, where the gold light is on the floor (it is on the radar too). Walk up to it and press E to sit. Then guess whether the next card is higher or lower. Win four hands before you lose three.",f:'Lose three hands and you are the stake.',
     p:()=>HL.open?'Wins: '+HL.streak+' of 4':'Find the gold light: Edgar\'s chair · Wins: '+HL.streak+' of 4'},
-  study:{n:'The Appraisal',d:'Examine all five relics in the red cases and read their cards. Then open the curator\'s ledger on the desk and answer its questions.',f:'Three wrong appraisals and the idol comes for you.',
+  study:{n:'The Appraisal',d:'Walk along the five red cases on the left wall and press E at each one to read its card. Then go to the ledger on the desk and press E. Its three questions are answered on the cards.',f:'Three wrong appraisals and the idol comes for you.',
     p:()=>Object.keys(STUDY.seen).length<RELICS.length?'Relics examined: '+Object.keys(STUDY.seen).length+' of '+RELICS.length:'Now open the ledger on the desk'},
   gallery:{n:'The Sitting',d:'Look away from the portraits and one of them changes. Find which one and examine it before it changes back. Do it three times.',f:'Examine the wrong portrait three times and you join them.',
     p:()=>'Changes found: '+Object.keys(SIT.found).length+' of 3'+(SIT.pending?'. Something has changed!':'')},
