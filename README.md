@@ -37,7 +37,7 @@ You are the only guest tonight, and the front door locks behind you. It has six 
   |---|---|---|---|
   | 1 | Front Hall | Wind the clock: face it and hold E until it strikes | the spring tears loose and the clock strikes for you |
   | 2 | Doll Room | Find Button before her 60 seconds run out | the dolls come for you |
-  | 3 | Card Parlour | Beat Edgar at higher or lower: win four hands before you lose three | you are the stake |
+  | 3 | Card Parlour | Sit in Edgar's chair (marked by a gold light on the floor and on the radar) and beat him at higher or lower: win four hands before you lose three | you are the stake |
   | 4 | Antiquities Study | The Appraisal: examine five relics, then answer the ledger | the idol comes out of its case |
   | 5 | Portrait Gallery | The Sitting: catch three portraits changing | you become a portrait by the door |
   | 6 | The Passage | Knock door II's pattern back | door II opens |
@@ -46,6 +46,7 @@ You are the only guest tonight, and the front door locks behind you. It has six 
 - **Leaving**: with all six keys, unlock the front door. The curator sees you out. Two endings: The Guest (you never used the camera) and The Visitor (you did).
 - **The one rule**: no cameras, but there is one in your pocket. Through its lens you see figures and writing on the walls. Every photo cracks the lens and brings them closer; on the eighth the figure comes through, you wake in the Front Hall with the curator standing over you, and from then on the figure follows you.
 - **STAFF ONLY**: a door in the Passage that is never locked. Open it anyway and it locks behind you. On the Lift Landing, a real Aholo room, a brass cage lift waits. Step in, the gate runs shut, and the lift falls past every floor on the dial: TRAPPED. You try again from the Passage.
+- **Light under the doors**: every unlocked door has warm light spilling under it, and the door to your next trial is the brightest. Locked doors stay dark. When a door unlocks, its light flickers on. STAFF ONLY shows a thin red line, and once you hold all six keys, daylight shows under the front door.
 - **Finding your way**: the radar in the top corner shows the room you are in (turned so you always face up), a diamond for every door, and a list of the doors, nearest first, with distances, arrows and which ones are still locked. The next trial's door is marked with ▶. The map (M) shows every room with a picture of it, its place in the order, whether it is locked, and whether its key is taken.
 - **The rooms** are walkable Aholo splat rooms, darkened in code so only red light and your own light show the way. Marigold sits in her cabinet in the Doll Room and turns to face you when you look away; touch the cabinet and the house answers. The Card Parlour's Vesper Deck draws omens and its spirit board spells messages.
 

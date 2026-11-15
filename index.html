@@ -326,6 +326,12 @@ const kill=new SplatEdit({rgbaBlendMode:SplatEditRgbaBlendMode.MULTIPLY,softEdge
 const killSdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:.5,color:new THREE.Color(.35,.3,.3)});kill.addSdf(killSdf);scene.add(kill);
 const lamp=new SplatEdit({rgbaBlendMode:SplatEditRgbaBlendMode.MULTIPLY,softEdge:2.4});
 const lampSdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:.9,color:new THREE.Color(3.3,2.7,2.1)});lamp.addSdf(lampSdf);scene.add(lamp);
+/* light under the doors: a warm strip on the floor at every unlocked door, and the real floor and door bottom brightened there */
+const DOORGLOW={pool:[],list:[],g:new THREE.Group()};scene.add(DOORGLOW.g);
+for(let i=0;i<7;i++){const e=new SplatEdit({rgbaBlendMode:SplatEditRgbaBlendMode.MULTIPLY,softEdge:.5});const sdf=new SplatEditSdf({type:SplatEditSdfType.SPHERE,radius:.3,color:new THREE.Color(1,1,1)});e.addSdf(sdf);e.visible=false;scene.add(e);DOORGLOW.pool.push({e,sdf});}
+const spillTex=(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const g=c.getContext('2d');const im=g.createImageData(128,128);
+  for(let y=0;y<128;y++)for(let x=0;x<128;x++){const v=1-y/127,u=x/127,side=Math.min(1,Math.min(u,1-u)*5);const a=Math.pow(v,2.2)*side*side*(v>.97?1:1);const i=(y*128+x)*4;im.data[i]=255;im.data[i+1]=230;im.data[i+2]=190;im.data[i+3]=Math.round(255*a);}
+  g.putImageData(im,0,0);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;})();
 const hemi=new THREE.HemisphereLight(0x6e2418,0x0a0303,.4);scene.add(hemi);
 const lanternL=new THREE.PointLight(0xff9a60,.5,4.5,2);scene.add(lanternL);
 
@@ -440,6 +446,34 @@ function clampToRoom(x,z){let best=null,bd=1e9;for(const r of ROOMS[roomId].rect
 function waitInit(m){return new Promise(res=>{const t0=performance.now();(function chk(){if(m.isInitialized||performance.now()-t0>45000)res();else setTimeout(chk,100);})();});}
 function preload(id){if(MESH[id])return MESH[id].ready;const R=ROOMS[id];const m=new SplatMesh({url:R.url});m.rotation.x=-Math.PI/2;m.position.y=-R.floorZ;if(R.mirror)m.scale.set(-1,1,1);m.visible=false;scene.add(m);
   MESH[id]={m,ready:waitInit(m)};return MESH[id].ready;}
+function glowExits(id){const R=ROOMS[id];const ex=(R.doors||[]).map(d=>({to:d.to,p:d.p}));
+  if(id==='hall'){ex.push({to:'gallery',p:[-2.35,-1.15]});ex.push({to:'out',p:[-3.4,0]});}
+  if(id==='passage')ex.push({to:'lift',p:[-.25,-1.45]});return ex;}
+function layoutDoorGlows(id){for(const d of DOORGLOW.list){DOORGLOW.g.remove(d.m);d.m.material.dispose();}DOORGLOW.list=[];DOORGLOW.pool.forEach(q=>q.e.visible=false);
+  if(id==='nine'||id==='lift'||!ROOMS[id])return;
+  glowExits(id).forEach((x,i)=>{if(i>=DOORGLOW.pool.length)return;
+    /* the nearest wall of the walkable floor to the door: the light lies along it and spills into the room */
+    let best=null;for(const r of ROOMS[id].rects){const cx=Math.max(r.x0,Math.min(r.x1,x.p[0])),cz=Math.max(r.z0,Math.min(r.z1,x.p[1])),d=Math.hypot(cx-x.p[0],cz-x.p[1]);if(!best||d<best.d)best={d,cx,cz,r};}
+    const {cx,cz,r}=best;const e=[[cx-r.x0,1,0],[r.x1-cx,-1,0],[cz-r.z0,0,1],[r.z1-cz,0,-1]].sort((a,b)=>a[0]-b[0])[0];
+    const nx=e[1],nz=e[2],ex=nx===1?r.x0:nx===-1?r.x1:cx,ez=nz===1?r.z0:nz===-1?r.z1:cz;
+    const geo=new THREE.PlaneGeometry(x.to==='out'?1.0:.8,.75);geo.rotateX(-Math.PI/2);geo.translate(0,0,.375);
+    const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:spillTex,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,color:x.to==='lift'?0xff2a14:x.to==='out'?0xfff4e0:0xffb070}));
+    m.position.set(ex-nx*.12,.012,ez-nz*.12);m.rotation.y=Math.atan2(nx,nz);m.renderOrder=5;DOORGLOW.g.add(m);
+    const q=DOORGLOW.pool[i];q.sdf.position.set(ex-nx*.1,.06,ez-nz*.1);
+    DOORGLOW.list.push({to:x.to,m,q,l:0,flick:0});});}
+function updateDoorGlows(dt,t){if(!DOORGLOW.list.length)return;const st=stage(),nxt=QSEQ[st]?QSEQ[st].room:null,doneHere=questDone(roomId)||!QUESTS[roomId];
+  for(const d of DOORGLOW.list){let want=0;
+    if(d.to==='out')want=keyCount()>=6?1.15:0;
+    else if(d.to==='lift')want=.45;
+    else if(roomOpen(d.to)){const isNext=nxt&&(d.to===nxt||(d.to==='hall'&&doneHere&&nxt!==roomId));want=isNext?1:.5;}
+    if(want>0&&d.l<.02&&!d.flick)d.flick=1.1;  /* a light coming on flickers first */
+    if(want===0)d.flick=0;
+    d.l+=(want-d.l)*Math.min(1,dt*2.2);
+    let k=d.l*(1+Math.sin(t*2.1+d.m.position.x*7)*.06+(Math.random()-.5)*.05);
+    if(d.flick>0){d.flick=Math.max(0,d.flick-dt);k*=Math.random()>.45?1:.08;}
+    d.m.material.opacity=Math.min(1,k*.95);d.m.visible=k>.01;
+    const c=d.to==='lift'?[1+3.2*k,1+.25*k,1+.2*k]:d.to==='out'?[1+5.5*k,1+5*k,1+4*k]:[1+5*k,1+3.1*k,1+1.4*k];
+    d.q.sdf.color.setRGB(c[0],c[1],c[2]);d.q.e.visible=k>.01;}}
 async function showRoom(id,spawn){
   await preload(id);
   for(const k in MESH)MESH[k].m.visible=(k===id);roomId=id;VISITED[id]=true;try{spark.setDirty();await spark.update({scene,camera:cam});}catch(_){}
@@ -447,7 +481,7 @@ async function showRoom(id,spawn){
   if(R.kill){killSdf.position.set(...R.kill.p);killSdf.radius=R.kill.r;}
   const sp=spawn||R.spawn;cam.position.set(sp.x,1.2,sp.z);yaw=sp.yaw;pitch=-.05;
   dollGroup.visible=id==='doll';nineGroup.visible=id==='nine';parlourGroup.visible=id==='parlour';galleryGroup.visible=id==='gallery';$('bMap').disabled=id==='nine';curator.visible=id==='hall'&&CUR.present&&CUR.loaded;
-  $('roomName').textContent=R.name;drawMap();
+  $('roomName').textContent=R.name;layoutDoorGlows(id);drawMap();
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* walking through a doorway: a step forward into the dark, footsteps and a door, then the next room fades up */
@@ -1109,7 +1143,16 @@ function hlGuess(up){if(!HL.open||QS.go)return;const next=hlDeal();const win=nex
     if(HL.losses>=3){closeHL();stinger(.2);flash=.5;}
     strike('parlour','Edgar takes the hand.'+(next===was?' Ties go to the house.':''),'The lamp swung, and there was a man in the chair across from you, smiling. Edgar Hollowmere never loses. Tonight, you were the stake.');}}
 function closeHL(){HL.open=false;$('hl').style.display='none';}
-function hlSpot(){if(roomId!=='parlour'||KEY.have.cards)return null;const p=[-1.25,-1.1];const d=Math.hypot(p[0]-cam.position.x,p[1]-cam.position.z);if(d>1.4)return null;cam.getWorldDirection(tmpV2);if((tmpV2.x*(p[0]-cam.position.x)+tmpV2.z*(p[1]-cam.position.z))/Math.max(d,.01)<.8)return null;return {label:'Sit down for Edgar\'s game',go:openHL};}
+const CHAIR=[-1.25,-1.15];
+function hlSpot(){if(roomId!=='parlour'||KEY.have.cards)return null;const d=Math.hypot(CHAIR[0]-cam.position.x,CHAIR[1]-cam.position.z);if(d>1.5)return null;return {label:'Sit in Edgar\'s chair and play',go:sitEdgar};}
+/* sitting down: you are moved into his chair, facing the table, and the game begins */
+async function sitEdgar(){if(QS.go||switching)return;slide();const from=cam.position.clone(),to=new THREE.Vector3(CHAIR[0],cam.position.y,CHAIR[1]-.12),y0=yaw,y1=Math.PI,t0=performance.now();
+  let dy=y1-y0;dy=Math.atan2(Math.sin(dy),Math.cos(dy));
+  while(performance.now()-t0<600){const k=Math.min(1,(performance.now()-t0)/600),e=k*k*(3-2*k);cam.position.lerpVectors(from,to,e);yaw=y0+dy*e;pitch=-.05-.25*e;await sleep(16);}
+  cam.position.copy(to);yaw=y1;pitch=-.3;openHL();}
+/* a pool of candlelight on the floor where Edgar's chair stands, until his game is won */
+const chairMark=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');const gr=g.createRadialGradient(64,64,4,64,64,62);gr.addColorStop(0,'rgba(255,215,140,1)');gr.addColorStop(.45,'rgba(255,170,70,.45)');gr.addColorStop(1,'rgba(255,140,40,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(.85,.85),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(CHAIR[0],.015,CHAIR[1]);m.renderOrder=5;parlourGroup.add(m);return m;})();
 /* --- the restricted door in the Passage --- */
 function elevatorDoor(){if(QS.staffWarn&&performance.now()-QS.staffWarn<20000){QS.staffWarn=0;openStaffDoor();return;}
   QS.staffWarn=performance.now();doorCreak();note('A brass plate: STAFF ONLY. NO GUESTS BEYOND THIS POINT. The handle moves. It is not locked. (Press again to open it anyway.)',7000);}
@@ -1155,7 +1198,7 @@ async function enterElevator(){if(END.on)return;END.on=true;closeMap();if(casesO
 /* ================= room introductions: the first time you enter each room ================= */
 const INTROS={
   doll:{no:'TRIAL 2 OF 6',lines:['The Doll Room. Every one of them was somebody\'s. Mind Marigold, in the cabinet at the back.','Your trial: when one of the little chairs is empty, Button is hiding. Find her before she stops giggling. The others do not like it when you lose.']},
-  parlour:{no:'TRIAL 3 OF 6',lines:['The Card Parlour. Edgar Hollowmere played at that table every night for forty years, and never once lost.','Your trial: sit in his chair and play him at higher or lower. Win four hands before you lose three.']},
+  parlour:{no:'TRIAL 3 OF 6',lines:['The Card Parlour. Edgar Hollowmere played at that table every night for forty years, and never once lost.','Your trial: his chair is on the far side of the table, where the light falls. Sit in it and play him at higher or lower. Win four hands before you lose three.']},
   study:{no:'TRIAL 4 OF 6',lines:['The Antiquities Study. The oldest pieces in the collection, and the most dangerous.','Your trial: read the card on every relic in the red cases, then answer the ledger on my desk. Three poor appraisals, and the idol will want a word.']},
   gallery:{no:'TRIAL 5 OF 6',lines:['The Portrait Gallery. Every face on these walls once stood where you are standing.','Your trial: look away, and one of them will change. Find which one and examine it. Catch three of them at it.']},
   passage:{no:'TRIAL 6 OF 6',lines:['The Passage. The last trial. Door II, at the end, will knock to you. Knock back exactly what you hear.','And the door marked Staff Only is not for guests. It is not for anyone.']},
@@ -1209,8 +1252,8 @@ const QUESTS={
     p:()=>CLOCK.holding?'Winding... '+Math.round(Math.min(1,CLOCK.hold/4)*100)+'%':'Not wound yet'},
   doll:{n:'Find Button',d:'Wait for one of the little chairs to empty: Button has gone to hide. Follow her giggle and the Listener dial, and pick her up before the time runs out.',f:'Lose her three times and the dolls come for you.',
     p:()=>SEEK.state==='hunt'?'Hiding! '+Math.max(0,Math.ceil(60-SEEK.t))+' seconds left':'Wait for a chair to empty'},
-  parlour:{n:'Beat Edgar',d:"Sit in Edgar's chair at the card table and guess whether the next card is higher or lower. Win four hands before you lose three.",f:'Lose three hands and you are the stake.',
-    p:()=>'Wins: '+HL.streak+' of 4'},
+  parlour:{n:'Beat Edgar',d:"Edgar's chair is on the far side of the card table, where the gold light is on the floor (it is on the radar too). Walk up to it and press E to sit. Then guess whether the next card is higher or lower. Win four hands before you lose three.",f:'Lose three hands and you are the stake.',
+    p:()=>HL.open?'Wins: '+HL.streak+' of 4':'Find the gold light: Edgar\'s chair · Wins: '+HL.streak+' of 4'},
   study:{n:'The Appraisal',d:'Examine all five relics in the red cases and read their cards. Then open the curator\'s ledger on the desk and answer its questions.',f:'Three wrong appraisals and the idol comes for you.',
     p:()=>Object.keys(STUDY.seen).length<RELICS.length?'Relics examined: '+Object.keys(STUDY.seen).length+' of '+RELICS.length:'Now open the ledger on the desk'},
   gallery:{n:'The Sitting',d:'Look away from the portraits and one of them changes. Find which one and examine it before it changes back. Do it three times.',f:'Examine the wrong portrait three times and you join them.',
@@ -1275,11 +1318,12 @@ function openHelp(){if(helpOpen)return;if(QS.go)$('gameover').style.display='non
 function closeHelp(){if(!helpOpen)return;helpOpen=false;$('help').style.display='none';if(QS.go){$('gameover').style.display='flex';return;}if(QS.firstHelp){QS.firstHelp=false;setTimeout(startIntro,700);}if(started&&!touch&&!QS.go&&!END.on)lock();}
 $('bHelp').onclick=()=>helpOpen?closeHelp():openHelp();$('helpClose').onclick=()=>closeHelp();$('titleHelp').onclick=()=>openHelp();
 /* ================= distances: radar + map ================= */
-const ROOMNAME={hall:'Front Hall',doll:'Doll Room',passage:'The Passage',parlour:'Card Parlour',study:'Antiquities Study',gallery:'Portrait Gallery',lift:'Restricted',cage:'The lift'};
+const ROOMNAME={hall:'Front Hall',doll:'Doll Room',passage:'The Passage',parlour:'Card Parlour',study:'Antiquities Study',gallery:'Portrait Gallery',lift:'Restricted',cage:'The lift',chair:'Edgar\'s chair'};
 function exitsOf(id){const R=ROOMS[id];if(!R)return[];const ex=(R.doors||[]).map(d=>({to:d.to,p:d.p,spawn:d.spawn}));
   if(id==='hall')ex.push({to:'gallery',p:[-2.35,-1.15],spawn:ROOMS.gallery.spawn,stairs:true});
   if(id==='passage')ex.push({to:'lift',p:[-.25,-1.45],spawn:ROOMS.lift.spawn});
-  if(id==='lift')ex.push({to:'cage',p:[-.45,0],spawn:null});return ex;}
+  if(id==='lift')ex.push({to:'cage',p:[-.45,0],spawn:null});
+  if(id==='parlour'&&!KEY.have.cards)ex.push({to:'chair',p:CHAIR,spawn:null});return ex;}
 /* shortest walk (in metres) from x,z in room `from` to the door of room T, going through other rooms if needed */
 function routeTo(T,from,x,z,seen){seen=seen||new Set([from]);let best=null;
   for(const e of exitsOf(from)){const d0=Math.hypot(e.p[0]-x,e.p[1]-z);let d=null;
@@ -1306,7 +1350,7 @@ function drawRadar(dt){const el=$('radar');const show=started&&INTRO.done&&!END.
   g.font='22px "Special Elite", monospace';g.textAlign='center';g.textBaseline='middle';
   for(const e of ex){let [x,y]=P(e.p[0],e.p[1]);const vx=x-C,vy=y-C,L=Math.hypot(vx,vy),out=L>RAD-18;if(out){x=C+vx/L*(RAD-18);y=C+vy/L*(RAD-18);}
     const near=e.d<1.0,pulse=near?1+Math.sin(RADAR.t*7)*.25:1,sz=(out?9:12)*pulse;
-    g.save();g.translate(x,y);g.rotate(out?Math.atan2(vy,vx)+Math.PI/4:Math.PI/4);g.fillStyle=!roomOpen(e.to)?'#5a4a44':(e.to==='lift'||e.to==='cage')?'#b08a3a':near?'#ff5a3c':'#c0392b';g.strokeStyle='#000';g.lineWidth=3;g.fillRect(-sz,-sz,sz*2,sz*2);g.strokeRect(-sz,-sz,sz*2,sz*2);g.restore();
+    g.save();g.translate(x,y);g.rotate(out?Math.atan2(vy,vx)+Math.PI/4:Math.PI/4);g.fillStyle=!roomOpen(e.to)?'#5a4a44':(e.to==='lift'||e.to==='cage'||e.to==='chair')?'#e0b050':near?'#ff5a3c':'#c0392b';g.strokeStyle='#000';g.lineWidth=3;g.fillRect(-sz,-sz,sz*2,sz*2);g.strokeRect(-sz,-sz,sz*2,sz*2);g.restore();
 }
   /* you: a dot with a cone for where you're looking */
   g.beginPath();g.moveTo(C,C);g.arc(C,C,S*1.4,-Math.PI/2-.5,-Math.PI/2+.5);g.closePath();const gr=g.createRadialGradient(C,C,0,C,C,S*1.4);gr.addColorStop(0,'rgba(255,200,160,.45)');gr.addColorStop(1,'rgba(255,200,160,0)');g.fillStyle=gr;g.fill();
@@ -1315,7 +1359,7 @@ function drawRadar(dt){const el=$('radar');const show=started&&INTRO.done&&!END.
   /* the list under the radar: every door, nearest first, with an arrow pointing the way */
   if(RADAR.t-(RADAR.last||0)>.2){RADAR.last=RADAR.t;const AR=['↑','↗','→','↘','↓','↙','←','↖'];
     const txt=ex.map(e=>{const dx=e.p[0]-px,dz=e.p[1]-pz,ang=Math.atan2(dx*cy-dz*sy,-(dx*sy+dz*cy));const a=AR[((Math.round(ang/(Math.PI/4))%8)+8)%8];
-      const near=e.d<1.0,lk=!roomOpen(e.to),nx=QSEQ[stage()]&&QSEQ[stage()].room===e.to;return `<div class="${near?'near':''}" style="${lk?'opacity:.55':''}">${nx?'▶ ':''}${ROOMNAME[e.to]}${lk?' (locked)':''} · ${near?'here':e.d.toFixed(1)+' m'} <span class="ar">${near?'◆':a}</span></div>`;}).join('');
+      const near=e.d<1.0,lk=!roomOpen(e.to),nx=(QSEQ[stage()]&&QSEQ[stage()].room===e.to)||e.to==='chair';return `<div class="${near?'near':''}" style="${lk?'opacity:.55':''}">${nx?'▶ ':''}${ROOMNAME[e.to]}${lk?' (locked)':''} · ${near?'here':e.d.toFixed(1)+' m'} <span class="ar">${near?'◆':a}</span></div>`;}).join('');
     if(txt!==RADAR.txt){RADAR.txt=txt;$('radarT').innerHTML=txt;}}}
 /* ================= game controller ================= */
 const PAD={prev:[],on:false};
@@ -1486,7 +1530,7 @@ renderer.setAnimationLoop(()=>{
     if(awayFor>1.5){const local=cab.worldToLocal(cam.position.clone());dollYaw=Math.max(-1.1,Math.min(1.1,Math.atan2(local.x,local.z)));}
     doll.rotation.y+=(dollYaw-doll.rotation.y)*Math.min(1,dt*(seen?0:3));
   }
-  current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
+  current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
 window.__t={QS,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
