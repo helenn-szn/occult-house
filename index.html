@@ -572,12 +572,12 @@ let handReady=false;
 let AC=null,master=null;
 function audioOn(){if(AC){AC.resume();return;}try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=S.snd?1:0;master.connect(AC.destination);drone();loadSfx();}catch(e){AC=null;}}
 /* recorded sounds: each one replaces its synthesised version as soon as it has loaded; until then (or if it fails) the synth plays */
-const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps'],droneG:null,amb:null};
+const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps','knock','bell','glass','giggle'],droneG:null,amb:null};
 function loadSfx(){for(const n of SFX.files)fetch('assets/sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject(r.status)).then(a=>new Promise((ok,no)=>AC.decodeAudioData(a,ok,no))).then(b=>{SFX.buf[n]=b;if(n==='ambience')startAmbience();}).catch(()=>{});}
 function startAmbience(){if(SFX.amb||!SFX.buf.ambience)return;const src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=SFX.buf.ambience;src.loop=true;src.loopStart=.05;src.loopEnd=SFX.buf.ambience.duration-.05;
   src.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+4);src.start(t,.05);SFX.amb={src,g};
   if(SFX.droneG){SFX.droneG.gain.cancelScheduledValues(t);SFX.droneG.gain.setValueAtTime(SFX.droneG.gain.value,t);SFX.droneG.gain.linearRampToValueAtTime(.012,t+4);}}
-function playBuf(name,vol,opt={}){const b=SFX.buf[name];if(!b||!AC)return false;const t=AC.currentTime,src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;if(opt.rate)src.playbackRate.value=opt.rate;
+function playBuf(name,vol,opt={}){const b=SFX.buf[name];if(!b||!AC)return false;const t=opt.when!=null?opt.when:AC.currentTime+(opt.at||0),src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;if(opt.rate)src.playbackRate.value=opt.rate;
   let out=g;if(opt.pan!=null&&AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=opt.pan;g.connect(pn);out=pn;}src.connect(g);out.connect(master);
   const off=opt.off||0,dur=opt.dur||b.duration-off;if(opt.dur){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+Math.min(.35,dur*.3));g.gain.setValueAtTime(vol,t+Math.max(.36,dur-.5));g.gain.linearRampToValueAtTime(0,t+dur);}else g.gain.value=vol;
   src.start(t,off,opt.dur?dur+.05:undefined);return true;}
@@ -586,7 +586,7 @@ function env(g,t0,a,peak,dec){g.gain.setValueAtTime(0,t0);g.gain.linearRampToVal
 function drone(){const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=170;const g=AC.createGain();g.gain.value=.05;SFX.droneG=g;lp.connect(g);g.connect(master);
   [49,51.7,73.4].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;o.connect(lp);o.start();});
   const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=.07;lg.gain.value=60;lfo.connect(lg);lg.connect(lp.frequency);lfo.start();}
-function knock(){if(!AC)return;const t=AC.currentTime;[0,.26,.47].forEach(d=>{const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=150;bp.Q.value=2.5;n.connect(bp);bp.connect(g);g.connect(master);env(g,t+d,.004,1.6,.16);n.start(t+d);n.stop(t+d+.3);});}
+function knock(){if(!AC)return;if(SFX.buf.knock){[0,.26,.47].forEach((d,i)=>playBuf('knock',1-i*.08,{at:d,rate:.96+Math.random()*.08}));return;}const t=AC.currentTime;[0,.26,.47].forEach(d=>{const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=150;bp.Q.value=2.5;n.connect(bp);bp.connect(g);g.connect(master);env(g,t+d,.004,1.6,.16);n.start(t+d);n.stop(t+d+.3);});}
 function rattle(){if(!AC)return;const t=AC.currentTime+.05,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain(),am=AC.createGain(),lfo=AC.createOscillator();bp.type='bandpass';bp.frequency.value=3200;bp.Q.value=5;
   lfo.type='square';lfo.frequency.value=26;lfo.connect(am.gain);am.gain.value=.5;n.connect(bp);bp.connect(am);am.connect(g);g.connect(master);env(g,t,.02,.35,.9);n.start(t);lfo.start(t);n.stop(t+1.1);lfo.stop(t+1.1);}
 function whisper(dur=2.2,vol=.14){if(!AC)return;{const b=SFX.buf.whisper;if(b){const d=Math.min(Math.max(dur,.8),b.duration-.2);if(playBuf('whisper',Math.min(1.6,vol*7),{off:Math.random()*(b.duration-d-.1),dur:d,pan:(Math.random()-.5)*1.2,rate:.92+Math.random()*.14}))return;}}const t=AC.currentTime,n=noise(),b1=AC.createBiquadFilter(),b2=AC.createBiquadFilter(),g=AC.createGain(),am=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();
@@ -745,7 +745,7 @@ async function leaveNine(){if(switching)return;switching=true;
   if(!PASS.nineDone){PASS.nineDone=true;note('You are back in the Passage. Door III is shut, and you do not remember closing it.',6000);}}
 /* Room Nine hints: the house nudges you towards the doll if you wander too long */
 const NINE={t:0,hint:0};
-function giggle(pan){if(!AC)return;const t=AC.currentTime,bp=AC.createBiquadFilter(),g=AC.createGain(),pn=AC.createStereoPanner?AC.createStereoPanner():null;bp.type='bandpass';bp.frequency.value=1100;bp.Q.value=3;
+function giggle(pan){if(!AC)return;if(playBuf('giggle',.8,{pan:pan==null?0:Math.max(-1,Math.min(1,pan)),rate:.92+Math.random()*.22}))return;const t=AC.currentTime,bp=AC.createBiquadFilter(),g=AC.createGain(),pn=AC.createStereoPanner?AC.createStereoPanner():null;bp.type='bandpass';bp.frequency.value=1100;bp.Q.value=3;
   if(pn){pn.pan.value=pan;bp.connect(g);g.connect(pn);pn.connect(master);}else{bp.connect(g);g.connect(master);}g.gain.value=.35;
   [0,.16,.3,.46].forEach((d,i)=>{const o=AC.createOscillator(),og=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(820-i*40,t+d);o.frequency.exponentialRampToValueAtTime(560-i*30,t+d+.12);o.connect(og);og.connect(bp);env(og,t+d,.01,.5,.13);o.start(t+d);o.stop(t+d+.18);});}
 function updateNine(dt){if(roomId!=='nine'||switching)return;NINE.t+=dt;
@@ -929,7 +929,7 @@ let casesOpen=false;function toggleCases(){casesOpen=!casesOpen;drawCases();$('c
    Leave by the front door whenever you like, or the house calls you back once every rule is broken
    or every case is closed. The curator is waiting by the door, and what happens depends on your visit. */
 const END={on:false,called:false,t0:performance.now()};
-function bell(){if(!AC)return;const t=AC.currentTime;[0,1.6,3.2].forEach(d=>{[[220,.5],[440,.25],[553,.12],[661,.1],[880,.06]].forEach(([f,v])=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.connect(g);g.connect(master);env(g,t+d,.005,v*.5,2.4);o.start(t+d);o.stop(t+d+2.6);});});}
+function bell(){if(!AC)return;if(SFX.buf.bell){[0,1.6,3.2].forEach((d,i)=>playBuf('bell',.9-i*.15,{at:d}));return;}const t=AC.currentTime;[0,1.6,3.2].forEach(d=>{[[220,.5],[440,.25],[553,.12],[661,.1],[880,.06]].forEach(([f,v])=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.connect(g);g.connect(master);env(g,t+d,.005,v*.5,2.4);o.start(t+d);o.stop(t+d+2.6);});});}
 function endingKind(){return CAM.used?'A2':'A';const cases=CASES.every(c=>INV.cases[c.id].done)&&STUDY.done&&SIT.done,rules=Object.keys(RB).length;
   if(cases)return 'C';if(rules>=3)return 'B';if(rules===0)return 'A';return 'A2';}
 function checkCalled(dt){return;if(END.on||!INTRO.done||LIFT.in)return;
@@ -1016,7 +1016,7 @@ async function studyWrong(){STUDY.wrong++;const w=STUDY.wrong;
   if(w===1){shatter();flash=.5;}else if(w===2){thud();dark01=0;OMEN.towerT=6;whisper(2.6,.2);}
   strike('study',w===1?'Wrong. Somewhere in the study, glass breaks, and the ledger\'s pages go blank.':'Wrong. The lamp dies. Something in the dark is laughing at you.','The idol turned to face you, and something came out of its case. It does not forgive a poor appraisal.');}
 function studySolved(){STUDY.done=true;bell();setTimeout(()=>giveKey('study','A drawer in the desk unlocks. Inside, under a sheet signed "Ambrose Vane", is a key with a paper tag: APPRAISED.'),1200);drawCases();}
-function shatter(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<14;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=3000+Math.random()*5000;bp.Q.value=8;n.connect(bp);bp.connect(g);g.connect(master);const d=k*.035+Math.random()*.05;env(g,t+d,.001,.4,.12+Math.random()*.2);n.start(t+d);n.stop(t+d+.4);}}
+function shatter(){if(!AC)return;if(playBuf('glass',.95,{rate:.95+Math.random()*.1}))return;const t=AC.currentTime;for(let k=0;k<14;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=3000+Math.random()*5000;bp.Q.value=8;n.connect(bp);bp.connect(g);g.connect(master);const d=k*.035+Math.random()*.05;env(g,t+d,.001,.4,.12+Math.random()*.2);n.start(t+d);n.stop(t+d+.4);}}
 
 $('quizX').onclick=()=>closeQuiz();
 
@@ -1129,11 +1129,11 @@ function seekSpot(){if(SEEK.state!=='hunt'||roomId!=='doll')return null;const d=
 /* --- passage: door II knocks a pattern; knock it back --- */
 const KNOCK={state:'idle',pat:null,input:[],cur:0,last:0,tries:0};
 function knockPattern(){const p=[];for(let i=0;i<3;i++)p.push(1+Math.floor(Math.random()*3));return p;}
-function playPattern(p){if(!AC)return 0;let t=AC.currentTime+.2;for(const n of p){for(let k=0;k<n;k++){const ns=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=150;bp.Q.value=2.5;ns.connect(bp);bp.connect(g);g.connect(master);env(g,t,.004,1.6,.16);ns.start(t);ns.stop(t+.3);t+=.28;}t+=.75;}return (t-AC.currentTime)*1000;}
+function playPattern(p){if(!AC)return 0;let t=AC.currentTime+.2;for(const n of p){for(let k=0;k<n;k++){if(playBuf('knock',1,{when:t,rate:.97+Math.random()*.06})){t+=.28;continue;}const ns=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=150;bp.Q.value=2.5;ns.connect(bp);bp.connect(g);g.connect(master);env(g,t,.004,1.6,.16);ns.start(t);ns.stop(t+.3);t+=.28;}t+=.75;}return (t-AC.currentTime)*1000;}
 function startKnock(){KNOCK.pat=knockPattern();KNOCK.state='listen';const ms=playPattern(KNOCK.pat);note('Door II answers with a pattern of knocks. Listen.',3500);
   setTimeout(()=>{if(KNOCK.state!=='listen')return;KNOCK.state='answer';KNOCK.input=[];KNOCK.cur=0;KNOCK.last=performance.now();note('Knock it back. One press of E is one knock; pause between groups.',6000);},ms+300);}
 function knockTap(){if(KNOCK.state!=='answer')return;const now=performance.now();if(KNOCK.cur>0&&now-KNOCK.last>900){KNOCK.input.push(KNOCK.cur);KNOCK.cur=0;}KNOCK.cur++;KNOCK.last=now;
-  if(AC){const t=AC.currentTime,ns=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=190;bp.Q.value=2.5;ns.connect(bp);bp.connect(g);g.connect(master);env(g,t,.004,1.1,.13);ns.start(t);ns.stop(t+.25);}
+  if(AC&&!playBuf('knock',.75,{rate:1.18}))if(AC){const t=AC.currentTime,ns=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=190;bp.Q.value=2.5;ns.connect(bp);bp.connect(g);g.connect(master);env(g,t,.004,1.1,.13);ns.start(t);ns.stop(t+.25);}
   handR.position.copy(R_TOUCH);setTimeout(()=>handR.position.copy(R_IDLE),140);}
 function updateKnock(){if(KNOCK.state!=='answer')return;if(KNOCK.cur>0&&performance.now()-KNOCK.last>2200){KNOCK.input.push(KNOCK.cur);KNOCK.cur=0;
     const ok=KNOCK.input.length===KNOCK.pat.length&&KNOCK.input.every((n,i)=>n===KNOCK.pat[i]);KNOCK.state='idle';
@@ -1543,7 +1543,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
