@@ -1,6 +1,6 @@
 # Occult House
 
-A first-person haunted museum that runs in the browser. You walk through the rooms of an old investigator's house at night, study the cursed objects in their collection, and break the curator's rules at your own risk.
+A first-person haunted museum that runs in the browser. You are locked in an old house of cursed objects at night. Pass a trial in each of its six rooms to earn the six keys to the front door. Fail three times and the house keeps you.
 
 Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 
@@ -24,29 +24,36 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 
 Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) for the Gaussian-splat rooms.
 
-## What is playable now
+## How it plays
 
-- **The welcome**: ring the bell, sign the visitor agreement, and meet the curator, Mr. Ambrose Vane, in the Front Hall. He gives you three rules and a map.
-- **The Front Hall**, **the Doll Room**, **the Card Parlour** and **the Passage**: walkable splat rooms, darkened in code so only red light and your own light show the way.
-- **Marigold**: she sits in a locked cabinet and turns to face you when you look away.
-- **The first rule**: touch her cabinet and the house answers. Knocks, a blackout, an empty cabinet, and something behind you.
-- **The Card Parlour**: draw a card from the Vesper Deck and it becomes an omen that comes true later in your visit. The Tower puts every light out at the next doorway, The Moon sets the figure on your trail, The Lovers brings Marigold to sit across the table from you, and the blank card waits. Put your hand on the spirit board's pointer and it spells a message about your visit. Both count as touching the exhibits.
-- **Ghosts and investigations**: a ghost appears, waits to be seen, and leaves the room. Follow it, and the Listener (a needle meter in the corner) leads you to what it wants you to find. Each clue moves the trail to another room; the last one closes the case. Two cases so far: The Tall Guest, about the curator, and The Light in the Doll Room, about Marigold's owner. Press J for the case files.
-- **The Antiquities Study**: examine the five relics in their red cases and read each provenance card, then answer the curator's ledger. Its three questions can only be answered with what you found elsewhere in the house. Wrong answers have consequences; right ones open a drawer and close the case.
-- **The Portrait Gallery**: six portraits. Look away and one of them changes; find which and examine it before it changes back. Catch three changes to close the case. Pick wrong and the gallery notices you.
-- **A challenge in every room, and a key in four pieces**: wind the stopped clock in the Front Hall (hold E while the hall goes dark), find Button the doll by her giggling before time runs out, knock back door II's pattern in the Passage, and beat Edgar at higher or lower in the Card Parlour. Each gives a piece of a brass key.
-- **The restricted lift**: the door marked STAFF ONLY in the Passage takes the whole key. It opens onto the Lift Landing, a real Aholo room, and locks behind you. At the far end a brass cage lift is waiting. Step in, the gate runs shut, and the lift falls past every floor on the dial. No one is allowed in, and there is no way back.
-- **The map** shows every room with a picture of it, the doors between them, and where you are. You travel by opening doors. Each room on the map shows how far a walk it is from where you stand.
-- **The radar** in the top corner shows the room you're in, turned so you always face up, with a diamond for every door. Under it, each door is listed nearest first, with its distance in metres and an arrow pointing the way.
-- **The endings**: leave by the front door at any time, or the house calls you back once every rule is broken or every case is closed. The curator is waiting. Five endings: The Lift (you took the restricted lift), The Guest (no rules broken), The Visitor (one or two), The Exhibit (all three: you wake inside Marigold's cabinet) and The Curator (all four cases closed: he hands you his keys). An end card sums up your visit.
-- **The second rule**: down in the Passage, three doors at the end say DO NOT OPEN. Two will not open, and something answers from the other side. The third lets you into Room Nine: the front hall again, the wrong way round, and the only way out is to find what does not belong.
-- **The third rule**: the curator says no cameras, but there is one in your pocket. Through its lens you see what the eye cannot: figures in the rooms and writing on the walls. Every photo cracks the lens and brings them closer. On the eighth photo the figure comes through the lens. You wake in the Front Hall with the curator standing over you, and from then on the figure follows you through the house, waiting behind you until you turn around.
+You are the only guest tonight, and the front door locks behind you. It has six locks. Every room holds a trial, and passing it earns a key and unlocks the next room. Fail a trial three times and you die. Bring all six keys back to the front door to leave.
+
+- **How to play** opens after the visitor agreement, before the curator's welcome, and again any time with H (Start on a controller). It covers the goal, every trial in order, what happens when you fail, how to find your way, the one rule and the controls.
+- **The welcome**: the curator, Mr. Ambrose Vane, explains the six keys, the three chances and his one rule: no cameras.
+- **The trial panel** in the top-left corner always says what to do next: the current trial, how to do it, your progress, your chances left (three red dots) and what happens if you fail. Between trials it tells you which room is next and how to get there.
+- **The trials, in order**: each room's door stays locked until the trial before it is passed.
+
+  | # | Room | Trial | Fail three times and... |
+  |---|---|---|---|
+  | 1 | Front Hall | Wind the clock: face it and hold E until it strikes | the spring tears loose and the clock strikes for you |
+  | 2 | Doll Room | Find Button before her 60 seconds run out | the dolls come for you |
+  | 3 | Card Parlour | Beat Edgar at higher or lower: win four hands before you lose three | you are the stake |
+  | 4 | Antiquities Study | The Appraisal: examine five relics, then answer the ledger | the idol comes out of its case |
+  | 5 | Portrait Gallery | The Sitting: catch three portraits changing | you become a portrait by the door |
+  | 6 | The Passage | Knock door II's pattern back | door II opens |
+
+- **Dying**: the thing that follows you through the house comes for you, then a Game Over screen says how you died. Try again puts you back at the start of that room's trial with three fresh chances; keys you have already won stay yours.
+- **Leaving**: with all six keys, unlock the front door. The curator sees you out. Two endings: The Guest (you never used the camera) and The Visitor (you did).
+- **The one rule**: no cameras, but there is one in your pocket. Through its lens you see figures and writing on the walls. Every photo cracks the lens and brings them closer; on the eighth the figure comes through, you wake in the Front Hall with the curator standing over you, and from then on the figure follows you.
+- **STAFF ONLY**: a door in the Passage that is never locked. Open it anyway and it locks behind you. On the Lift Landing, a real Aholo room, a brass cage lift waits. Step in, the gate runs shut, and the lift falls past every floor on the dial: TRAPPED. You try again from the Passage.
+- **Finding your way**: the radar in the top corner shows the room you are in (turned so you always face up), a diamond for every door, and a list of the doors, nearest first, with distances, arrows and which ones are still locked. The next trial's door is marked with ▶. The map (M) shows every room with a picture of it, its place in the order, whether it is locked, and whether its key is taken.
+- **The rooms** are walkable Aholo splat rooms, darkened in code so only red light and your own light show the way. Marigold sits in her cabinet in the Doll Room and turns to face you when you look away; touch the cabinet and the house answers. The Card Parlour's Vesper Deck draws omens and its spirit board spells messages.
 
 ## Controls
 
 - W A S D to walk, mouse to look (click to capture the mouse, Esc to release)
-- E to interact, J for the case files, C to raise the camera (click or Space takes a photo), M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
-- With a game controller: left stick to walk, right stick to look, A to use things (hold A for the clock), B to close, X to raise the camera, RT or RB to take a photo, Y or View for the map, LB for the case files, D-pad up and down for Edgar's game
+- E to interact (hold E when the prompt says hold), C to raise the camera (click or Space takes a photo), M for the map, H for How to play, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
+- With a game controller: left stick to walk, right stick to look, A to use things (hold A for the clock), B to close, X to raise the camera, RT or RB to take a photo, Y or View for the map, Start for How to play, D-pad up and down for Edgar's game
 - On a phone or tablet (best held sideways): a joystick appears under your left thumb to walk, drag on the right to look, tap to continue or take a photo, and on-screen buttons for using things, the camera and the map
 
 Headphones recommended. All sound is synthesised in the page.
