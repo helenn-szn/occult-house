@@ -1254,7 +1254,7 @@ const QUESTS={
     p:()=>SEEK.state==='hunt'?'Hiding! '+Math.max(0,Math.ceil(60-SEEK.t))+' seconds left':'Wait for a chair to empty'},
   parlour:{n:'Beat Edgar',d:"Edgar's chair is on the far side of the card table, where the gold light is on the floor (it is on the radar too). Walk up to it and press E to sit. Then guess whether the next card is higher or lower. Win four hands before you lose three.",f:'Lose three hands and you are the stake.',
     p:()=>HL.open?'Wins: '+HL.streak+' of 4':'Find the gold light: Edgar\'s chair · Wins: '+HL.streak+' of 4'},
-  study:{n:'The Appraisal',d:'Walk along the five red cases on the left wall and press E at each one to read its card. Then go to the ledger on the desk and press E. Its three questions are answered on the cards.',f:'Three wrong appraisals and the idol comes for you.',
+  study:{n:'The Appraisal',d:'The five red cases are on the far wall, facing you as you come in. Walk up to each one and press E to read its card. Then go to the ledger on the desk and press E. Its three questions are answered on the cards.',f:'Three wrong appraisals and the idol comes for you.',
     p:()=>Object.keys(STUDY.seen).length<RELICS.length?'Relics examined: '+Object.keys(STUDY.seen).length+' of '+RELICS.length:'Now open the ledger on the desk'},
   gallery:{n:'The Sitting',d:'Look away from the portraits and one of them changes. Find which one and examine it before it changes back. Do it three times.',f:'Examine the wrong portrait three times and you join them.',
     p:()=>'Changes found: '+Object.keys(SIT.found).length+' of 3'+(SIT.pending?'. Something has changed!':'')},
