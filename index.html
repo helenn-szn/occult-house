@@ -264,7 +264,20 @@ const ROOMS={
            {to:'passage',p:[.62,.85],r:.6,label:'Go down to the Passage',spawn:{x:.3,z:0,yaw:Math.PI/2}},
            {to:'parlour',p:[-.4,1.12],r:.55,label:'Enter the Card Parlour',spawn:{x:-.3,z:1.35,yaw:.63}},
            {to:'study',p:[-1.8,1.12],r:.55,label:'Enter the Antiquities Study',spawn:{x:.55,z:1.15,yaw:Math.PI/2+.3}}],
-    spots:[{p:[-3.4,0],r:.85,label:'Leave the house',act:()=>startEnding()}]},
+    spots:[{p:[-3.4,0],r:.85,label:'Leave the house',act:()=>startEnding()},
+           {p:[-2.35,-1.15],r:.75,label:'Go up the stairs to the Portrait Gallery',act:()=>travel('gallery')}]},
+  gallery:{name:'The Portrait Gallery',url:'assets/gallery.spz',floorZ:-1.369,night:[.26,.15,.14],
+    rects:[{x0:-4.3,x1:3.0,z0:-.55,z1:.4}],
+    spawn:{x:2.6,z:0,yaw:Math.PI/2},
+    glow:{p:[-2.6,2.3,0],r:1,c:[1.7,1.1,1.05]},kill:null,
+    obstacles:[{x:-1.35,z:-.52,r:.32}],
+    doors:[{to:'hall',p:[3.0,0],r:.6,label:'Go back down to the Front Hall',spawn:{x:-2.0,z:-.6,yaw:-Math.PI/2+.4}}],
+    spots:[{p:[-1.55,.6],r:1.5,label:'Examine The Widow of Ashby Lane',act:()=>examinePortrait('widow')},
+           {p:[-1.55,-.78],r:1.5,label:'Examine The Empty Chair',act:()=>examinePortrait('chair')},
+           {p:[-2.65,.6],r:1.5,label:'Examine Family of Five',act:()=>examinePortrait('family')},
+           {p:[-2.65,-.78],r:1.5,label:'Examine The Lamplighter',act:()=>examinePortrait('lamp')},
+           {p:[-3.75,.6],r:1.5,label:'Examine Portrait of a Young Man, 1931',act:()=>examinePortrait('young')},
+           {p:[-3.75,-.78],r:1.5,label:'Examine The Next Guest',act:()=>examinePortrait('next')}]},
   study:{name:'The Antiquities Study',url:'assets/study.spz',floorZ:-1.412,night:[.27,.16,.14],
     rects:[{x0:-.85,x1:1.0,z0:-2.6,z1:1.45},{x0:-2.3,x1:-.85,z0:-2.85,z1:-1.55}],
     spawn:{x:.55,z:1.15,yaw:Math.PI/2+.3},
@@ -307,7 +320,7 @@ const ROOMS={
     kill:null,
     doors:[{to:'hall',p:[.45,0],r:.6,label:'Return to the Front Hall',spawn:{x:.35,z:-.55,yaw:Math.PI/2-.35}}]}
 };
-const VISITED={hall:true,doll:false,passage:false,nine:false,parlour:false,study:false};
+const VISITED={hall:true,doll:false,passage:false,nine:false,parlour:false,study:false,gallery:false};
 let roomId=null,switching=false;const MESH={};
 function clampToRoom(x,z){let best=null,bd=1e9;for(const r of ROOMS[roomId].rects){const cx=Math.max(r.x0,Math.min(r.x1,x)),cz=Math.max(r.z0,Math.min(r.z1,z)),d=Math.hypot(cx-x,cz-z);if(d<bd){bd=d;best=[cx,cz];}}return best;}
 function waitInit(m){return new Promise(res=>{const t0=performance.now();(function chk(){if(m.isInitialized||performance.now()-t0>45000)res();else setTimeout(chk,100);})();});}
@@ -319,7 +332,7 @@ async function showRoom(id,spawn){
   const R=ROOMS[id];glowSdf.position.set(...R.glow.p);glowSdf.radius=R.glow.r;glowBase=R.glow.c;
   if(R.kill){killSdf.position.set(...R.kill.p);killSdf.radius=R.kill.r;}
   const sp=spawn||R.spawn;cam.position.set(sp.x,1.2,sp.z);yaw=sp.yaw;pitch=-.05;
-  dollGroup.visible=id==='doll';nineGroup.visible=id==='nine';parlourGroup.visible=id==='parlour';$('bMap').disabled=id==='nine';curator.visible=id==='hall'&&CUR.present&&CUR.loaded;
+  dollGroup.visible=id==='doll';nineGroup.visible=id==='nine';parlourGroup.visible=id==='parlour';galleryGroup.visible=id==='gallery';$('bMap').disabled=id==='nine';curator.visible=id==='hall'&&CUR.present&&CUR.loaded;
   $('roomName').textContent=R.name;drawMap();
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -745,6 +758,7 @@ function drawCases(){const box=$('casesBody');if(!box)return;let h='';
   for(const c of CASES){const st=INV.cases[c.id];if(st.step<0){h+='<div class="case locked"><h4>? ? ?</h4><p>Not yet found.</p></div>';continue;}
     h+=`<div class="case"><h4>${c.title}${st.done?' <span>closed</span>':''}</h4>`+st.found.map(f=>`<p>${f.replace(/</g,'&lt;')}</p>`).join('')+(st.done?`<p class="rev">${c.reveal}</p>`:`<p class="next">${st.found.length} of ${c.steps.length} clues found.</p>`)+'</div>';}
   {const n=Object.keys(STUDY.seen).length;h+=STUDY.done?'<div class="case"><h4>The Appraisal <span>closed</span></h4><p class="rev">The curator\'s contract: "I, Ambrose Vane, agree to keep this house and all within it, until another keeps it for me." A second line waits for a signature.</p></div>':n?`<div class="case"><h4>The Appraisal</h4><p class="next">${n} of 5 objects examined. The answers to the ledger are somewhere else in the house.</p></div>`:'<div class="case locked"><h4>? ? ?</h4><p>Not yet found.</p></div>';}
+  {const n=Object.keys(SIT.found).length;h+=SIT.done?'<div class="case"><h4>The Sitting <span>closed</span></h4><p class="rev">Every painting in the gallery was once a guest who broke the rules. The frame by the door is empty, and its plate is blank.</p></div>':n?`<div class="case"><h4>The Sitting</h4><p class="next">${n} of 3 changes caught.</p></div>`:'<div class="case locked"><h4>? ? ?</h4><p>Not yet found.</p></div>';}
   box.innerHTML=h;}
 let casesOpen=false;function toggleCases(){casesOpen=!casesOpen;drawCases();$('cases').style.display=casesOpen?'flex':'none';if(casesOpen){try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}}
 
@@ -753,9 +767,9 @@ let casesOpen=false;function toggleCases(){casesOpen=!casesOpen;drawCases();$('c
    or every case is closed. The curator is waiting by the door, and what happens depends on your visit. */
 const END={on:false,called:false,t0:performance.now()};
 function bell(){if(!AC)return;const t=AC.currentTime;[0,1.6,3.2].forEach(d=>{[[220,.5],[440,.25],[553,.12],[661,.1],[880,.06]].forEach(([f,v])=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.connect(g);g.connect(master);env(g,t+d,.005,v*.5,2.4);o.start(t+d);o.stop(t+d+2.6);});});}
-function endingKind(){const cases=CASES.every(c=>INV.cases[c.id].done)&&STUDY.done,rules=Object.keys(RB).length;
+function endingKind(){const cases=CASES.every(c=>INV.cases[c.id].done)&&STUDY.done&&SIT.done,rules=Object.keys(RB).length;
   if(cases)return 'C';if(rules>=3)return 'B';if(rules===0)return 'A';return 'A2';}
-function checkCalled(){if(END.on||END.called||!INTRO.done)return;const cases=CASES.every(c=>INV.cases[c.id].done)&&STUDY.done,rules=Object.keys(RB).length;
+function checkCalled(){if(END.on||END.called||!INTRO.done)return;const cases=CASES.every(c=>INV.cases[c.id].done)&&STUDY.done&&SIT.done,rules=Object.keys(RB).length;
   if(cases||rules>=3){END.called=true;setTimeout(()=>{if(END.on)return;bell();note('The clock in the hall is striking. The curator is waiting for you by the front door.',7000);},9000);
     setTimeout(()=>{if(!END.on&&!switching&&E.phase==='idle'&&!CAM.seq)startEnding();},45000);}}
 async function startEnding(){if(END.on)return;END.on=true;closeMap();if(casesOpen)toggleCases();if(CAM.up){CAM.up=false;camUI();}HAUNT.on=false;if(follower)follower.visible=false;
@@ -788,10 +802,10 @@ function jingle(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<7;k++){cons
 const ENDINGS={A:['The Guest','You followed every rule, and the house let you go.'],A2:['The Visitor','You bent the rules, and the house kept a little of you.'],
   B:['The Exhibit','You broke every rule. Now you are behind glass.'],C:['The Curator','You uncovered the house\'s secrets, and it gave you the keys.']};
 function endCard(kind){try{speechSynthesis.cancel();}catch(_){}try{document.exitPointerLock();}catch(_){}
-  const mins=Math.max(1,Math.round((performance.now()-END.t0)/60000)),cases=CASES.filter(c=>INV.cases[c.id].done).length+(STUDY.done?1:0);
+  const mins=Math.max(1,Math.round((performance.now()-END.t0)/60000)),cases=CASES.filter(c=>INV.cases[c.id].done).length+(STUDY.done?1:0)+(SIT.done?1:0);
   const card=OMEN.card?({tower:'The Tower',moon:'The Moon',lovers:'The Lovers',blank:'the blank card'})[OMEN.card]:null;
   $('endTitle').textContent='ENDING '+(kind==='A2'?'A':kind==='C'?'C':kind)+(kind==='A2'?'′':'')+': '+ENDINGS[kind][0].toUpperCase();$('endText').textContent=ENDINGS[kind][1];
-  $('endStats').innerHTML=`Rules broken: ${Object.keys(RB).length} of 3<br>Cases closed: ${cases} of ${CASES.length+1}<br>`+(card?`Card drawn: ${card}${OMEN.card==='blank'?'. It now bears your name.':''}<br>`:'')+(CAM.used?`Photographs taken: ${8-CAM.shots}<br>`:'')+`Time in the house: ${mins} minute${mins>1?'s':''}`;
+  $('endStats').innerHTML=`Rules broken: ${Object.keys(RB).length} of 3<br>Cases closed: ${cases} of ${CASES.length+2}<br>`+(card?`Card drawn: ${card}${OMEN.card==='blank'?'. It now bears your name.':''}<br>`:'')+(CAM.used?`Photographs taken: ${8-CAM.shots}<br>`:'')+`Time in the house: ${mins} minute${mins>1?'s':''}`;
   $('ending').style.display='flex';$('bar').style.display='none';$('tui').classList.remove('on');$('rules').style.display='none';$('listener').style.display='none';}
 $('again').onclick=()=>location.reload();
 
@@ -838,11 +852,78 @@ function studySolved(){STUDY.done=true;bell();setTimeout(()=>{showClue('The Appr
 function shatter(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<14;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=3000+Math.random()*5000;bp.Q.value=8;n.connect(bp);bp.connect(g);g.connect(master);const d=k*.035+Math.random()*.05;env(g,t+d,.001,.4,.12+Math.random()*.2);n.start(t+d);n.stop(t+d+.4);}}
 
 $('quizX').onclick=()=>closeQuiz();
+
+/* ================= the Portrait Gallery: The Sitting =================
+   Six portraits. Look away and one of them changes. Find which, and examine it, before it changes back.
+   Each painting can use a Lux3D image (assets/portrait_<id>_a.jpg / _b.jpg); until then it is painted in code. */
+const galleryGroup=new THREE.Group();galleryGroup.visible=false;scene.add(galleryGroup);
+const PORTRAITS=[
+  {id:'widow',name:'The Widow of Ashby Lane',side:1,x:-1.55,frag:'Her hand is out of the frame now, reaching. On the back of the canvas: "Mrs. E. Ashby, who came to ask for her daughter\'s doll back, 1962."'},
+  {id:'chair',name:'The Empty Chair',side:-1,x:-1.55,frag:'A small girl in a yellow raincoat is sitting in the chair, facing away from you. The brass plate now reads: "Clara, waiting."'},
+  {id:'family',name:'Family of Five',side:1,x:-2.65,frag:'There are six of them now. The sixth stands behind the parents: tall, thin, pale, in a dark suit. No one in the painting has noticed him.'},
+  {id:'lamp',name:'The Lamplighter',side:-1,x:-2.65,frag:'The lamp is out and he has turned his back. Scratched into the paint at his feet: "the first curator, 1890 to 1931."'},
+  {id:'young',name:'Portrait of a Young Man, 1931',side:1,x:-3.75,frag:'He has aged forty years in a moment: grey, gaunt, exactly as he looks tonight. The date on the plate has been scratched out.'},
+  {id:'next',name:'The Next Guest',side:-1,x:-3.75,frag:'Someone is standing in the painted doorway now. It is wearing a coat very like yours.'}];
+const SIT={state:{},pending:null,pendT:0,next:6,found:{},wrong:0,done:false,lookAway:{}};
+function oil(w,h,seed,base){const c=cv(w,h),g=c.getContext('2d'),r=rnd(seed);const gr=g.createRadialGradient(w/2,h*.4,20,w/2,h/2,h*.75);gr.addColorStop(0,base[0]);gr.addColorStop(1,base[1]);g.fillStyle=gr;g.fillRect(0,0,w,h);
+  for(let i=0;i<1400;i++){g.fillStyle=`rgba(${r()>.5?'255,230,190':'0,0,0'},${r()*.05})`;g.fillRect(r()*w,r()*h,2+r()*14,1+r()*4);}return [c,g,r];}
+function crack(g,w,h,r){g.strokeStyle='rgba(20,12,6,.35)';g.lineWidth=1;for(let i=0;i<70;i++){let x=r()*w,y=r()*h;g.beginPath();g.moveTo(x,y);for(let k=0;k<5;k++){x+=r()*30-15;y+=r()*30-15;g.lineTo(x,y);}g.stroke();}}
+function face(g,x,y,s,col){g.fillStyle=col||'#c9b49a';g.beginPath();g.ellipse(x,y,s*.8,s,0,0,6.3);g.fill();}
+function paintPortrait(id,v){const W=384,H=512;let c,g,r;
+  if(id==='widow'){[c,g,r]=oil(W,H,3,['#3a2a22','#0d0907']);g.fillStyle='#0a0808';g.beginPath();g.moveTo(90,512);g.quadraticCurveTo(110,230,192,210);g.quadraticCurveTo(274,230,294,512);g.fill();face(g,192,170,42);g.fillStyle='#120c0a';g.beginPath();g.ellipse(192,140,52,40,0,Math.PI,0);g.fill();
+    if(v==='b'){g.fillStyle='#fff';[[176,168],[208,168]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,5,0,6.3);g.fill();});g.fillStyle='#0a0606';[[176,168],[208,168]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,2.4,0,6.3);g.fill();});
+      g.fillStyle='#c9b49a';g.beginPath();g.ellipse(300,420,40,26,-.5,0,6.3);g.fill();g.fillRect(250,400,60,30);}else{g.fillStyle='#2a1a14';g.fillRect(170,166,14,4);g.fillRect(200,166,14,4);face(g,192,400,22,'#b8a088');}}
+  if(id==='chair'){[c,g,r]=oil(W,H,5,['#2c2a24','#090807']);g.fillStyle='#5a5040';g.fillRect(230,60,110,200);g.fillStyle='#3a1414';g.fillRect(220,50,24,230);g.fillRect(326,50,24,230);
+    g.fillStyle='#24160c';g.fillRect(80,250,180,40);g.fillRect(80,140,30,250);g.fillRect(230,140,30,250);g.fillRect(80,360,30,120);g.fillRect(230,360,30,120);g.fillRect(80,290,180,70);
+    if(v==='b'){g.fillStyle='#c9a020';g.beginPath();g.moveTo(130,300);g.quadraticCurveTo(130,180,170,175);g.quadraticCurveTo(210,180,210,300);g.fill();g.fillStyle='#3a2414';g.beginPath();g.arc(170,165,24,0,6.3);g.fill();}}
+  if(id==='family'){[c,g,r]=oil(W,H,7,['#3a3028','#0c0907']);const P=[[120,250,1],[264,250,1],[100,360,.7],[192,370,.65],[284,360,.7]];
+    if(v==='b'){g.fillStyle='#0b0a0c';g.fillRect(170,90,52,260);face(g,196,80,22,'#d8d0c8');}
+    P.forEach(([x,y,s])=>{g.fillStyle='#120c0a';g.fillRect(x-36*s,y,72*s,512-y);face(g,x,y-20*s,26*s);});}
+  if(id==='lamp'){[c,g,r]=oil(W,H,11,['#3a3a36','#0c0c0b']);g.fillStyle='rgba(200,200,190,.08)';for(let i=0;i<8;i++)g.fillRect(0,r()*512,384,30);g.fillStyle='#14100e';g.beginPath();g.moveTo(130,512);g.lineTo(150,220);g.lineTo(240,220);g.lineTo(260,512);g.fill();
+    g.fillStyle='#14100e';g.beginPath();g.arc(195,195,30,0,6.3);g.fill();
+    if(v==='a'){face(g,195,198,24);const gl=g.createRadialGradient(290,170,4,290,170,90);gl.addColorStop(0,'rgba(255,220,140,1)');gl.addColorStop(1,'rgba(255,160,60,0)');g.fillStyle=gl;g.fillRect(190,70,200,200);g.fillStyle='#14100e';g.fillRect(240,180,50,10);}
+    else{g.fillStyle='#14100e';g.fillRect(240,180,50,10);g.fillStyle='#2a2420';g.fillRect(280,160,20,30);}}
+  if(id==='young'){[c,g,r]=oil(W,H,13,['#2e2a30','#0a090b']);g.fillStyle='#0d0c10';g.beginPath();g.moveTo(80,512);g.quadraticCurveTo(100,270,192,250);g.quadraticCurveTo(284,270,304,512);g.fill();g.fillStyle='#e6e0d6';g.beginPath();g.moveTo(180,262);g.lineTo(192,320);g.lineTo(204,262);g.fill();
+    face(g,192,190,v==='a'?44:40,v==='a'?'#d2bca2':'#b8aa9c');g.fillStyle=v==='a'?'#120c08':'#8a8680';g.beginPath();g.ellipse(192,158,46,26,0,Math.PI,0);g.fill();
+    g.fillStyle='#2a1a14';g.fillRect(172,186,14,4);g.fillRect(198,186,14,4);if(v==='b'){g.strokeStyle='rgba(60,40,30,.6)';g.lineWidth=2;[[170,210,190,214],[194,214,214,210],[176,226,208,226]].forEach(([a,b,c2,d])=>{g.beginPath();g.moveTo(a,b);g.lineTo(c2,d);g.stroke();});}}
+  if(id==='next'){[c,g,r]=oil(W,H,17,['#201a16','#070505']);g.fillStyle='#4a3e2c';g.fillRect(120,90,144,330);const gl=g.createLinearGradient(0,90,0,420);gl.addColorStop(0,'#c8b890');gl.addColorStop(1,'#6a5a40');g.fillStyle=gl;g.fillRect(132,102,120,318);
+    if(v==='b'){g.fillStyle='#0a0808';g.beginPath();g.moveTo(150,420);g.lineTo(162,200);g.quadraticCurveTo(192,180,222,200);g.lineTo(234,420);g.fill();g.beginPath();g.arc(192,175,24,0,6.3);g.fill();}}
+  crack(g,W,H,r);return c;}
+const PT={};
+{const frameT=(()=>{const c=cv(256,256),g=c.getContext('2d');const gr=g.createLinearGradient(0,0,256,256);gr.addColorStop(0,'#8a6a2a');gr.addColorStop(.5,'#d8b860');gr.addColorStop(1,'#6a4a1a');g.fillStyle=gr;g.fillRect(0,0,256,256);const r=rnd(2);for(let i=0;i<400;i++){g.fillStyle=`rgba(40,20,0,${r()*.3})`;g.fillRect(r()*256,r()*256,2,2);}return tx(c);})();
+ const gold=new THREE.MeshStandardMaterial({map:frameT,roughness:.45,metalness:.6});
+ for(const P of PORTRAITS){const g=new THREE.Group();const z=P.side>0?.6:-.78;g.position.set(P.x,1.4,z);g.rotation.y=P.side>0?Math.PI:0;galleryGroup.add(g);
+   const W=.54,H=.72,b=.06;[[0,H/2+b/2,W+2*b,b],[0,-H/2-b/2,W+2*b,b],[-W/2-b/2,0,b,H],[W/2+b/2,0,b,H]].forEach(([x,y,w,h])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,.05),gold);m.position.set(x,y,.01);g.add(m);});
+   const back=new THREE.Mesh(new THREE.PlaneGeometry(W+.2,H+.2),new THREE.MeshBasicMaterial({color:0x050302}));back.position.z=-.012;g.add(back);
+   const texA=tx(paintPortrait(P.id,'a')),texB=tx(paintPortrait(P.id,'b'));const mat=new THREE.MeshStandardMaterial({map:texA,roughness:.85,emissive:0xffffff,emissiveMap:texA,emissiveIntensity:.5});
+   const canvas=new THREE.Mesh(new THREE.PlaneGeometry(W,H),mat);canvas.position.z=.008;g.add(canvas);
+   const pl=new THREE.SpotLight(0xff5a40,1.1,1.6,.7,.6,2);pl.position.set(0,.65,.35);pl.target=canvas;g.add(pl);
+   PT[P.id]={P,g,mat,tex:{a:texA,b:texB}};SIT.state[P.id]='a';
+   for(const v of ['a','b'])new THREE.TextureLoader().load('assets/portrait_'+P.id+'_'+v+'.jpg',t=>{t.colorSpace=THREE.SRGBColorSpace;const was=PT[P.id].tex[v];PT[P.id].tex[v]=t;if(mat.map===was){mat.map=t;mat.emissiveMap=t;mat.needsUpdate=true;}},undefined,()=>{});}}
+function setPortrait(id,v){SIT.state[id]=v;const p=PT[id];p.mat.map=p.tex[v];p.mat.emissiveMap=p.tex[v];p.mat.needsUpdate=true;}
+function canvasCreak(){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),bp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(90,t);o.frequency.linearRampToValueAtTime(140,t+.6);bp.type='bandpass';bp.frequency.value=700;bp.Q.value=6;o.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.2);g.gain.linearRampToValueAtTime(0,t+.7);o.start(t);o.stop(t+.75);}
+function inView(id){const p=PT[id].g.getWorldPosition(tmpV);cam.getWorldDirection(tmpV2);return tmpV2.dot(tmpV.sub(cam.position).normalize())>.45;}
+function updateGallery(dt){if(roomId!=='gallery'||SIT.done||switching||END.on||!INTRO_SEEN.gallery)return;
+  if(SIT.pending){SIT.pendT+=dt;if(SIT.pendT>28&&!inView(SIT.pending)){setPortrait(SIT.pending,'a');SIT.pending=null;SIT.next=7;canvasCreak();note('Something in the gallery has quietly been put back the way it was.',4000);}return;}
+  SIT.next-=dt;if(SIT.next>0)return;
+  const cands=PORTRAITS.filter(P=>!SIT.found[P.id]&&!inView(P.id));if(!cands.length){SIT.next=1;return;}
+  const P=cands[Math.floor(Math.random()*cands.length)];setPortrait(P.id,'b');SIT.pending=P.id;SIT.pendT=0;canvasCreak();
+  if(!SIT.told){SIT.told=true;setTimeout(()=>note('Behind you, very faintly, canvas creaks. One of the paintings is not as it was.',5000),600);}}
+function examinePortrait(id){if(SIT.done)return;breakRule(1);const P=PT[id].P;
+  if(SIT.pending===id){SIT.found[id]=true;SIT.pending=null;SIT.next=6;whisper(1.2,.08);const n=Object.keys(SIT.found).length;
+    if(n>=3){SIT.done=true;showClue(P.name,P.frag);setTimeout(()=>{showClue('The Sitting: case closed','Every painting in this gallery was once a guest. The Widow came for a doll. The young man came in 1931. The first curator came in 1890. They all broke the rules, and the house hung them on its walls. The frame by the door is empty, and the plate beneath it is blank.',true);stinger(.2);},6500);}
+    else{showClue(P.name+' ('+n+' of 3)',P.frag);}drawCases();}
+  else{SIT.wrong++;const w=SIT.wrong;
+    if(w===1){whisper(1.8,.18);flash=.3;note('Nothing has changed in this one. But the Widow\'s eyes have followed you across the room.',5000);setPortrait('widow','b');setTimeout(()=>{if(SIT.pending!=='widow')setPortrait('widow','a');},5000);}
+    else if(w===2){thud();OMEN.towerT=4;note('Wrong again. The picture lights go out, one by one.',5000);}
+    else{stinger(.3);flash=.8;for(const P of PORTRAITS)setPortrait(P.id,'b');setTimeout(()=>{for(const P of PORTRAITS)if(SIT.pending!==P.id&&!SIT.found[P.id])setPortrait(P.id,'a');},2500);note('Every face in the gallery turns towards you at once.',5000);SIT.wrong=0;}}}
+
 /* ================= room introductions: the first time you enter each room ================= */
 const INTROS={
   doll:{no:'EXHIBIT ROOM II',lines:['The Doll Room. Every one of them was somebody\'s, and most of their owners begged us never to send them back.','Mind Marigold, in the cabinet at the back. She does not like to be stared at, and she does not like to be ignored.']},
   parlour:{no:'EXHIBIT ROOM III',lines:['The Card Parlour. Edgar Hollowmere played at that table every night for forty years, and never once lost.','The deck will tell your fortune, if you ask it. It is always right.']},
   study:{no:'EXHIBIT ROOM IV',lines:['The Antiquities Study. The oldest pieces in the collection, and the most dangerous.','Each one comes with its paperwork. Read it carefully. The house is fond of tests.']},
+  gallery:{no:'EXHIBIT ROOM V',lines:['The Portrait Gallery. Every face on these walls once stood where you are standing.','They do not like to be watched. They like even less to be forgotten. Keep an eye on them.']},
   passage:{no:'BELOW STAIRS',lines:['The Passage. The house was built around those three doors.','I have never opened them. I would not start tonight.']},
   nine:{no:'NOT ON ANY MAP',title:'ROOM NINE',voice:'A WHISPER',lines:['Everything here is the wrong way round. Find what does not belong, and it will let you go.']}};
 const INTRO_SEEN={};let introTok=0;
@@ -891,7 +972,7 @@ function advance(){if(INTRO.on){try{speechSynthesis.cancel();}catch(_){}nextLine
 const MAPROOMS=[
   {id:'hall',label:'Front Hall',x:270,y:220,w:170,h:110},
   {id:'doll',label:'Doll Room',x:450,y:220,w:150,h:110},
-  {id:null,label:'Portrait Gallery',x:270,y:110,w:330,h:100},
+  {id:'gallery',label:'Portrait Gallery',x:270,y:110,w:330,h:100},
   {id:'parlour',label:'Card Parlour',x:90,y:220,w:170,h:110},
   {id:'study',label:'Antiquities Study',x:90,y:110,w:170,h:100},
   {id:null,label:'Cellar Monitors',x:90,y:20,w:170,h:80},
@@ -999,7 +1080,7 @@ renderer.setAnimationLoop(()=>{
   cam.rotation.set(pitch,yaw,0);
   const fl=1+Math.sin(t*9)*.05+Math.sin(t*23.3)*.04+(Math.sin(t*1.3)>.99?-.6:0);
   if(OMEN.towerT>0){OMEN.towerT-=dt;dark01=Math.min(dark01,OMEN.towerT>1?.03:1-OMEN.towerT);}
-  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);updateInvest(dt);updateInspect(dt);checkCalled();if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
+  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);updateInvest(dt);updateInspect(dt);updateGallery(dt);checkCalled();if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
   const spark_=E.phase==='shake'?(Math.random()>.5?2.2:0):1;
   night.visible=S.dark||dark01<1||CAM.up;if(CAM.up)nightSdf.color.setRGB(.42*dark01+.004,.52*dark01+.004,.5*dark01+.004);else{const nc=ROOMS[roomId].night||[.3,.16,.16];nightSdf.color.setRGB((S.dark?nc[0]:1)*dark01+.004,(S.dark?nc[1]:1)*dark01+.002,(S.dark?nc[2]:1)*dark01+.002);}
   glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
@@ -1025,7 +1106,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={SIT,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
