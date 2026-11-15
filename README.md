@@ -28,13 +28,14 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 - **Marigold**: she sits in a locked cabinet and turns to face you when you look away.
 - **The first rule**: touch her cabinet and the house answers. Knocks, a blackout, an empty cabinet, and something behind you.
 - **The Card Parlour**: draw a card from the Vesper Deck and it becomes an omen that comes true later in your visit. The Tower puts every light out at the next doorway, The Moon sets the figure on your trail, The Lovers brings Marigold to sit across the table from you, and the blank card waits. Put your hand on the spirit board's pointer and it spells a message about your visit. Both count as touching the exhibits.
+- **Ghosts and investigations**: a ghost appears, waits to be seen, and leaves the room. Follow it, and the Listener (a needle meter in the corner) leads you to what it wants you to find. Each clue moves the trail to another room; the last one closes the case. Two cases so far: The Tall Guest, about the curator, and The Light in the Doll Room, about Marigold's owner. Press J for the case files.
 - **The second rule**: down in the Passage, three doors at the end say DO NOT OPEN. Two will not open, and something answers from the other side. The third lets you into Room Nine: the front hall again, the wrong way round, and the only way out is to find what does not belong.
 - **The third rule**: the curator says no cameras, but there is one in your pocket. Through its lens you see what the eye cannot: figures in the rooms and writing on the walls. Every photo cracks the lens and brings them closer. On the eighth photo the figure comes through the lens. You wake in the Front Hall with the curator standing over you, and from then on the figure follows you through the house, waiting behind you until you turn around.
 
 ## Controls
 
 - W A S D to walk, mouse to look (click to capture the mouse, Esc to release)
-- E to interact, C to raise the camera (click or Space takes a photo), M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
+- E to interact, J for the case files, C to raise the camera (click or Space takes a photo), M for the map, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
 - On a phone or tablet (best held sideways): a joystick appears under your left thumb to walk, drag on the right to look, tap to continue or take a photo, and on-screen buttons for using things, the camera and the map
 
 Headphones recommended. All sound is synthesised in the page.

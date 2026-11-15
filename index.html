@@ -66,6 +66,25 @@
   @keyframes dead{0%{transform:translate(0,0);filter:invert(0)}50%{transform:translate(6px,-4px);filter:invert(1)}}
   #crack{display:none;position:fixed;inset:0;z-index:2;pointer-events:none}
   #camflash{position:fixed;inset:0;z-index:4;background:#fff;opacity:0;pointer-events:none}
+  #listener{display:none;position:fixed;left:max(18px,env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));z-index:3;width:120px;height:78px;background:#1c1714;border:2px solid #5a4630;border-radius:8px 8px 4px 4px;box-shadow:0 4px 16px #000;pointer-events:none}
+  #listener .dial{position:absolute;left:10px;right:10px;top:8px;height:46px;background:#d9cba6;border-radius:50px 50px 4px 4px;overflow:hidden}
+  #lNeedle{position:absolute;left:calc(50% - 1px);bottom:-2px;width:2px;height:42px;background:#7a1010;transform-origin:50% 100%;transform:rotate(-70deg)}
+  #lBulb{position:absolute;right:10px;bottom:6px;width:12px;height:12px;border-radius:50%;background:#ff3a20;box-shadow:0 0 10px #ff3a20;opacity:.25}
+  #listener span{position:absolute;left:10px;bottom:5px;font-family:'Special Elite',monospace;font-size:.62rem;letter-spacing:.1em;color:#cbb994}
+  body.touch #listener{bottom:auto;top:110px}
+  #clueView{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;width:min(520px,88vw);flex-direction:column;gap:6px;background:#d8ccb2;color:#1b1410;border:1px solid #6e5a3c;box-shadow:0 10px 50px #000;padding:20px 24px;pointer-events:none}
+  #clueView h3{margin:0;font-family:'Special Elite',monospace;font-weight:400;font-size:.95rem;letter-spacing:.1em;color:#5a0d0d}
+  #clueView p{margin:0;font-size:1.08rem;line-height:1.5}
+  #clueView.final{border-color:#7a1616;box-shadow:0 0 0 3px #7a1616,0 10px 50px #000}
+  #cases{display:none;position:fixed;inset:0;z-index:7;background:rgba(2,1,1,.86);align-items:center;justify-content:center;padding:16px}
+  #cases .paper{position:relative;width:min(640px,96vw);max-height:86vh;overflow:auto;background:#cfc1a2;color:#1b1410;border:1px solid #6e5a3c;box-shadow:0 10px 50px #000;padding:20px 24px}
+  #cases h2{font-family:'Special Elite',monospace;font-weight:400;letter-spacing:.12em;margin:0 0 10px;font-size:1.1rem;color:#5a0d0d}
+  #cases .case{border-top:1px solid #8a7a5c;padding:10px 0}
+  #cases h4{margin:0 0 6px;font-family:'Special Elite',monospace;font-weight:400;font-size:.95rem}
+  #cases h4 span{color:#7a1616;font-size:.75rem;letter-spacing:.1em;margin-left:6px;text-transform:uppercase}
+  #cases p{margin:.3em 0;font-size:1rem;line-height:1.45}
+  #cases .locked{opacity:.55}#cases .next{font-style:italic;opacity:.7}#cases .rev{font-style:italic;color:#4a0c0c}
+  #cases .close{position:absolute;right:12px;top:12px;font-size:.7rem;padding:.4em .8em}
   #cardView{display:none;position:fixed;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(2,1,1,.7);pointer-events:none;opacity:0;transition:opacity .5s}
   #cardView.show{opacity:1}
   #cardView .cardImg{width:min(190px,32vw,30vh);height:auto;display:block;box-shadow:0 10px 40px #000;transform:rotateY(0);animation:flip .7s ease-out}
@@ -103,11 +122,15 @@
   <button id="bMap">Map (M)</button>
   <button id="bLan" class="on">Light</button>
   <button id="bDark" class="on">Night</button>
+  <button id="bCases" style="display:none">Cases (J)</button>
   <button id="bCam" style="display:none">Camera (C)</button>
   <button id="bSnd" class="on">Sound</button>
 </div>
 <div id="vf"><div class="rec"><b>●</b> <span id="shots"></span></div></div><canvas id="crack"></canvas><div id="camflash"></div>
 <div id="cardView" aria-live="polite"></div>
+<div id="listener" aria-hidden="true"><div class="dial"><div id="lNeedle"></div></div><div id="lBulb"></div><span>LISTENER</span></div>
+<div id="clueView" role="status"><h3></h3><p></p></div>
+<div id="cases" role="dialog" aria-label="Case files"><div class="paper"><button class="close" id="casesClose">Close (J)</button><h2>CASE FILES</h2><div id="casesBody"></div></div></div>
 <div id="fade"></div>
 
 <div class="scr" id="title">
@@ -323,7 +346,7 @@ new GLTFLoader().load('assets/curator.glb',g=>{const m=g.scene;m.position.y=.9;
   for(const c of g.animations){
     if(c.name==='walk'){for(const tr of c.tracks){if(/Hips\.position$/.test(tr.name)){const v=tr.values;for(let k=0;k<v.length;k+=3){v[k]=v[0];v[k+2]=v[2];}}}}
     CUR.act[c.name]=CUR.mixer.clipAction(c);}
-  makeGhost(g,'hall',new THREE.Vector3(-1.15,0,.95));makeGhost(g,'doll',new THREE.Vector3(-1.9,0,.15));makeFollower(g);{const nineMat=ghostMat.clone();nineMat.opacity=.1;nineMat.side=THREE.FrontSide;nineMat.color.set(0xb08c8c);const ng=SkeletonUtils.clone(g.scene);ng.position.y=.9;ng.traverse(o=>{if(o.isMesh){o.material=nineMat;o.frustumCulled=false;o.renderOrder=999;}});const h=new THREE.Group();h.position.set(1.15,0,.95);h.rotation.y=Math.atan2(-1.15,-.95);h.add(ng);nineGroup.add(h);const mx=new THREE.AnimationMixer(ng);const c=g.animations.find(c=>c.name==='idle');if(c)mx.clipAction(c).play();ghostMixers.push(mx);}
+  makeGhost(g,'hall',new THREE.Vector3(-1.15,0,.95));makeGhost(g,'doll',new THREE.Vector3(-1.9,0,.15));makeFollower(g);makeTallGhost(g);{const nineMat=ghostMat.clone();nineMat.opacity=.1;nineMat.side=THREE.FrontSide;nineMat.color.set(0xb08c8c);const ng=SkeletonUtils.clone(g.scene);ng.position.y=.9;ng.traverse(o=>{if(o.isMesh){o.material=nineMat;o.frustumCulled=false;o.renderOrder=999;}});const h=new THREE.Group();h.position.set(1.15,0,.95);h.rotation.y=Math.atan2(-1.15,-.95);h.add(ng);nineGroup.add(h);const mx=new THREE.AnimationMixer(ng);const c=g.animations.find(c=>c.name==='idle');if(c)mx.clipAction(c).play();ghostMixers.push(mx);}
   play('idle',0);CUR.loaded=true;curator.visible=roomId==='hall'&&CUR.present;},undefined,()=>{CUR.loaded=true;});
 function play(name,fade=.35){const a=CUR.act[name];if(!a||CUR.cur===a)return;a.reset().setEffectiveWeight(1).play();if(CUR.cur)CUR.cur.crossFadeTo(a,fade,false);CUR.cur=a;}
 
@@ -599,6 +622,87 @@ function reach(after,stay){const t0=performance.now(),from=handR.position.clone(
   (function step(){const k=Math.min(1,(performance.now()-t0)/450);handR.position.lerpVectors(from,to,k*k*(3-2*k));handR.rotation.x=-.9*k;
     if(k<1)requestAnimationFrame(step);else{after();if(!stay)setTimeout(()=>{const t1=performance.now();(function back(){const q=Math.min(1,(performance.now()-t1)/450);handR.position.lerpVectors(to,R_IDLE,q);handR.rotation.x=-.9*(1-q);if(q<1)requestAnimationFrame(back);})();},300);}})();}
 
+/* ================= ghosts and investigations =================
+   A ghost appears, waits to be seen, then leaves the room. Follow it: in each room it leads you to,
+   the Listener picks up something it wants you to find. Examine it to move the trail on.
+   The last clue opens the case file. */
+const CASES=[
+  {id:'guest',title:'The Tall Guest',ghost:'tall',startAfter:30,
+   steps:[
+    {room:'hall',ghost:[-2.75,.1],exit:[.62,.85],hint:'It went down the stairs to the Passage.',
+     clue:{p:[-1.3,-.85],text:'The guest book. The last entry is in a tall, careful hand: "Ambrose Vane, 31 October 1931." Under "Departed" someone has written: never.'}},
+    {room:'passage',ghost:[-3.1,.4],exit:[1.6,-.3],hint:'It went back up, towards the Card Parlour.',
+     clue:{p:[-3.25,-.6],text:'Door III. Scratched into the wood at the height of a seated man: HE WAS A GUEST TOO.'}},
+    {room:'parlour',ghost:[-1.85,-1.05],exit:[-.3,2.0],hint:null,
+     clue:{p:[-.7,-1.25],text:'Pinned inside the card cabinet, a photograph: the Hollowmeres at this table with a tall, thin young man. On the back: "Mr Vane, who broke every rule, and stayed."'}}],
+   reveal:'Ambrose Vane came to this house as a guest in 1931. He touched what he should not have, opened what asked not to be opened, and photographed what did not want to be seen. He never left. He has been the curator ever since, and he is always looking for someone to take his place.'},
+  {id:'clara',title:'The Light in the Doll Room',ghost:'wisp',startAfter:0,needs:'doll',
+   steps:[
+    {room:'doll',ghost:[-2.7,0],exit:[.45,0],hint:'The light drifted out, towards the Front Hall.',
+     clue:{p:[-2.55,.15],text:'A label on the base of Marigold\'s cabinet: "Taken from the Ashby house, 1962. Owner: Clara, aged seven."'}},
+    {room:'hall',ghost:[-2.7,.9],exit:[-.4,1.12],hint:'It went into the Card Parlour.',
+     clue:{p:[-2.75,.95],text:'Among the coats on the stand, a child\'s yellow raincoat. It is still wet.'}},
+    {room:'parlour',ghost:[-1.25,.95],exit:[-1.25,.2],hint:null,
+     clue:{p:[-1.25,1.05],text:'Carved into the table\'s edge, low down where a child would sit: CLARA. Beside it, smaller: I LOST.'}}],
+   reveal:'In 1962 a girl called Clara was brought to this house with her doll. The curator invited her to play a hand of cards. She lost, and Marigold was the stake. Clara went home. The doll did not, and something of Clara stayed with her.'}];
+const INV={cases:{},timer:0,ghostObj:{},act:null};
+for(const c of CASES)INV.cases[c.id]={step:-1,phase:'wait',found:[],done:false};
+/* ghost bodies: the Tall Guest is the curator model, pale and cold; the wisp is a light */
+function makeTallGhost(gltf){const g=SkeletonUtils.clone(gltf.scene);g.position.y=.9;const mat=ghostMat.clone();mat.color.set(0xa8c8ff);mat.opacity=0;
+  g.traverse(o=>{if(o.isMesh){o.material=mat;o.frustumCulled=false;o.renderOrder=999;}});const h=new THREE.Group();h.add(g);h.visible=false;scene.add(h);
+  const mx=new THREE.AnimationMixer(g);ghostMixers.push(mx);const A={};for(const c of gltf.animations)A[c.name]=mx.clipAction(c);A.idle&&A.idle.play();
+  INV.ghostObj.tall={h,mat,A,cur:A.idle,base:.32};}
+{const c=cv(128,128),g=c.getContext('2d'),gr=g.createRadialGradient(64,64,2,64,64,64);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.2,'rgba(200,225,255,.9)');gr.addColorStop(1,'rgba(120,160,255,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);
+ const mat=new THREE.SpriteMaterial({map:tx(c),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:0});const sp=new THREE.Sprite(mat);sp.scale.set(.32,.32,1);sp.renderOrder=999;
+ const h=new THREE.Group();h.add(sp);const l=new THREE.PointLight(0x9cc0ff,0,2.5,2);h.add(l);h.visible=false;scene.add(h);INV.ghostObj.wisp={h,mat,light:l,base:.9};}
+function ghostPlay(G,name){if(!G.A||!G.A[name]||G.cur===G.A[name])return;G.A[name].reset().play();if(G.cur)G.cur.crossFadeTo(G.A[name],.4,false);G.cur=G.A[name];}
+function caseOf(id){return CASES.find(c=>c.id===id);}
+function activeStep(){/* the case whose ghost or clue is in this room right now */
+  for(const c of CASES){const st=INV.cases[c.id];if(st.done||st.step<0)continue;const s=c.steps[st.step];if(s.room===roomId)return {c,st,s};}return null;}
+function startCase(c){const st=INV.cases[c.id];if(st.step>=0)return;st.step=0;st.phase='ghost';st.t=0;drawCases();}
+function updateInvest(dt){if(!INTRO.done)return;INV.timer+=dt;
+  for(const c of CASES){const st=INV.cases[c.id];if(st.step<0&&INV.timer>c.startAfter&&(!c.needs||roomId===c.needs)&&!switching)startCase(c);}
+  for(const k in INV.ghostObj)INV.ghostObj[k].h.visible=false;
+  const a=activeStep();INV.act=a;listener(a,dt);if(!a||switching||CAM.seq)return;
+  const G=INV.ghostObj[a.c.ghost];if(!G)return;const st=a.st,s=a.s;
+  if(st.phase==='ghost'||st.phase==='leave'){G.h.visible=true;st.t=(st.t||0)+dt;
+    if(!st.pos){st.pos=new THREE.Vector3(s.ghost[0],0,s.ghost[1]);st.op=0;if(a.c.ghost==='wisp')giggle(0);else whisper(1.6,.08);}
+    G.h.position.copy(st.pos);if(a.c.ghost==='wisp'){G.h.position.y=1.1+Math.sin(performance.now()/400)*.08;}
+    if(st.phase==='ghost'){st.op=Math.min(1,st.op+dt*.8);
+      if(G.A){let d=Math.atan2(cam.position.x-st.pos.x,cam.position.z-st.pos.z)-G.h.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));G.h.rotation.y+=d*Math.min(1,dt*3);ghostPlay(G,'idle');}
+      tmpV.set(st.pos.x,1.4,st.pos.z);cam.getWorldDirection(tmpV2);const dist=tmpV.distanceTo(cam.position);
+      if(st.t>1.2&&dist<7&&tmpV2.dot(tmpV.sub(cam.position).normalize())>.86){st.phase='leave';st.lt=0;
+        if(!st.found&&st.step===0&&!INV.cases[a.c.id].seenOnce){INV.cases[a.c.id].seenOnce=true;note(a.c.ghost==='wisp'?'A small cold light. It wants you to follow.':'A tall, pale figure. It turns away. Follow it.',4500);}}}
+    else{st.lt+=dt;const ex=new THREE.Vector3(s.exit[0],0,s.exit[1]);const to=ex.clone().sub(st.pos);const L=to.length();
+      if(G.A){G.h.rotation.y=Math.atan2(to.x,to.z);ghostPlay(G,'walk');}
+      if(L>.05)st.pos.addScaledVector(to.normalize(),Math.min(L,(a.c.ghost==='wisp'?1.1:.8)*dt));
+      if(L<.3||st.lt>5)st.op=Math.max(0,st.op-dt*1.2);
+      if(st.op<=0){st.phase='clue';st.pos=null;G.h.visible=false;note('Something in this room is calling. Watch the Listener.',4000);}}
+    if(G.mat)G.mat.opacity=G.base*st.op;if(G.light)G.light.intensity=.6*st.op;}
+}
+/* the Listener: a needle that rises as you near what the ghost wants you to find */
+let LST={v:0,click:0};
+function listener(a,dt){const el=$('listener');const on=a&&a.st.phase==='clue';el.style.display=on?'block':'none';if(!on){LST.v=0;return;}
+  const d=Math.hypot(a.s.clue.p[0]-cam.position.x,a.s.clue.p[1]-cam.position.z);const target=Math.max(0,Math.min(1,1-(d-.4)/4));
+  LST.v+=(target-LST.v)*Math.min(1,dt*3)+(Math.random()-.5)*.03*target;$('lNeedle').style.transform=`rotate(${-70+140*Math.max(0,Math.min(1,LST.v))}deg)`;
+  $('lBulb').style.opacity=.25+.75*(LST.v>.8?(Math.sin(performance.now()/90)>0?1:.3):LST.v);
+  LST.click-=dt;if(LST.click<=0&&AC){LST.click=.9-.78*LST.v;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=1400+600*LST.v;o.connect(g);g.connect(master);env(g,t,.001,.035,.03);o.start(t);o.stop(t+.05);}}
+function clueSpot(){const a=INV.act;if(!a||a.st.phase!=='clue')return null;const p=a.s.clue.p;if(Math.hypot(p[0]-cam.position.x,p[1]-cam.position.z)>1.1)return null;
+  return {label:'Examine',go:()=>examine(a)};}
+function examine(a){const st=a.st,c=a.c;st.found.push(a.s.clue.text);whisper(1.2,.08);showClue(c.title,a.s.clue.text);
+  st.step++;st.phase='ghost';st.t=0;
+  if(st.step>=c.steps.length){st.done=true;st.phase='done';setTimeout(()=>{showClue(c.title+': case closed',c.reveal,true);stinger(.2);},6500);}
+  else if(a.s.hint)setTimeout(()=>note(a.s.hint,5000),6200);
+  drawCases();}
+function showClue(title,text,final){const v=$('clueView');v.querySelector('h3').textContent=title;v.querySelector('p').textContent=text;v.classList.toggle('final',!!final);v.style.display='flex';
+  clearTimeout(showClue.t);showClue.t=setTimeout(()=>{v.style.display='none';},final?14000:6000);}
+/* the case files */
+function drawCases(){const box=$('casesBody');if(!box)return;let h='';
+  for(const c of CASES){const st=INV.cases[c.id];if(st.step<0){h+='<div class="case locked"><h4>? ? ?</h4><p>Not yet found.</p></div>';continue;}
+    h+=`<div class="case"><h4>${c.title}${st.done?' <span>closed</span>':''}</h4>`+st.found.map(f=>`<p>${f.replace(/</g,'&lt;')}</p>`).join('')+(st.done?`<p class="rev">${c.reveal}</p>`:`<p class="next">${st.found.length} of ${c.steps.length} clues found.</p>`)+'</div>';}
+  box.innerHTML=h;}
+let casesOpen=false;function toggleCases(){casesOpen=!casesOpen;drawCases();$('cases').style.display=casesOpen?'flex':'none';if(casesOpen){try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}}
+
 /* ================= the Curator's welcome ================= */
 const LINES=[
   ["Good evening. You're our only guest tonight. The house prefers it that way."],
@@ -617,7 +721,7 @@ function nextLine(){if(!INTRO.on)return;INTRO.i++;if(INTRO.i>=LINES.length){fini
 function startIntro(){if(INTRO.done||INTRO.on)return;INTRO.on=true;INTRO.i=0;showLine(0);$('skip').style.display='block';$('bMap').style.display='none';}
 /* he turns away and walks off down the hall, into the dark */
 function finishIntro(){if(INTRO.done)return;INTRO.on=false;INTRO.done=true;$('sub').style.opacity=0;$('skip').style.display='none';
-  ['r1','r2','r3'].forEach(r=>$(r).classList.add('show'));$('bMap').style.display='';
+  ['r1','r2','r3'].forEach(r=>$(r).classList.add('show'));$('bMap').style.display='';$('bCases').style.display='';
   if(curator.visible&&CUR.loaded){CUR.leaving=true;CUR.leaveT=0;play('walk',.4);setTimeout(()=>whisper(2.2,.09),900);}else{CUR.present=false;curator.visible=false;}
   setTimeout(()=>note('You have the map. Press M to open it, or find the Doll Room yourself.',5000),900);
   setTimeout(()=>{CAM.has=true;$('bCam').style.display='';note('Something heavy is in your coat pocket. An old camera. Press C.',6000);},14000);}
@@ -650,6 +754,7 @@ function drawMap(){const svg=$('mapSvg');let h='<defs><pattern id="hatch" width=
   $('mapRules').textContent='Rules broken: '+E.broken+' of 3';}
 let mapOpen=false;
 function openMap(){if(!INTRO.done||switching)return;if(roomId==='nine'){note('The map is blank here.',2500);return;}if(CAM.up){CAM.up=false;camUI();}mapOpen=true;drawMap();$('map').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}
+$('bCases').onclick=()=>toggleCases();$('casesClose').onclick=()=>{if(casesOpen)toggleCases();};
 function closeMap(){mapOpen=false;$('map').style.display='none';}
 $('bMap').onclick=()=>mapOpen?closeMap():openMap();$('mapClose').onclick=closeMap;
 
@@ -663,6 +768,8 @@ addEventListener('keydown',e=>{keys[e.code]=true;if(!started)return;
   if(e.code==='Escape'&&mapOpen)closeMap();
   if(mapOpen)return;
   if(e.code==='Space'&&INTRO.on){e.preventDefault();advance();return;}
+  if(e.code==='KeyJ'){toggleCases();return;}
+  if(casesOpen)return;
   if(e.code==='KeyC')raiseCam();
   if(e.code==='Space'&&CAM.up){e.preventDefault();takePhoto();return;}
   if(e.code==='KeyL')toggle('bLan','lan');if(e.code==='KeyN')toggle('bDark','dark');if(e.code==='KeyE')interact();});
@@ -696,11 +803,12 @@ function updateTouchUI(){if(!touch||!started)return;const sh=(id,v)=>$(id).class
 $('bCam').onclick=()=>{raiseCam();};$('bLan').onclick=()=>toggle('bLan','lan');$('bDark').onclick=()=>toggle('bDark','dark');
 $('bSnd').onclick=()=>{toggle('bSnd','snd');if(master)master.gain.value=S.snd?1:0;if(!S.snd)try{speechSynthesis.cancel();}catch(_){}};
 const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;if(touch)document.body.classList.add('touch');addEventListener('resize',()=>{if(touch&&!tMove)stickHome();});
-$('keysP').textContent=touch?'Left thumb walks, right thumb looks. Tap to continue, or to use what is in front of you. Best held sideways, with headphones.':'W A S D to walk. Click, then move the mouse to look. E to interact, M for the map, C for the camera, Space to hurry the curator along. Esc frees the mouse.';
+$('keysP').textContent=touch?'Left thumb walks, right thumb looks. Tap to continue, or to use what is in front of you. Best held sideways, with headphones.':'W A S D to walk. Click, then move the mouse to look. E to interact, M for the map, J for case files, C for the camera, Space to hurry the curator along. Esc frees the mouse.';
 
 /* interactions: doors between rooms, and Marigold's cabinet */
 let current=null;
-function findInteract(){if(!started||!INTRO.done||switching||mapOpen||E.phase!=='idle'||CAM.up||SPELL)return null;
+function findInteract(){if(!started||!INTRO.done||switching||mapOpen||casesOpen||E.phase!=='idle'||CAM.up||SPELL)return null;
+  {const cs=clueSpot();if(cs)return cs;}
   for(const d of ROOMS[roomId].doors){if(Math.hypot(cam.position.x-d.p[0],cam.position.z-d.p[1])<d.r)return {label:d.label,go:()=>travel(d.to,d.spawn)};}
   {let best=null,bs=-1;cam.getWorldDirection(tmpV2);for(const sp of (ROOMS[roomId].spots||[])){const dx=sp.p[0]-cam.position.x,dz=sp.p[1]-cam.position.z,d=Math.hypot(dx,dz);if(d<sp.r){const f=(tmpV2.x*dx+tmpV2.z*dz)/Math.max(d,.01);if(f>.55&&f>bs){bs=f;best=sp;}}}if(best)return {label:best.label,go:best.act};}
   if(roomId==='doll'&&canTouch())return {label:'Touch the cabinet',go:startTouch};
@@ -723,7 +831,7 @@ let awayFor=0,ready=false;
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
   if(!roomId){renderer.render(scene,cam);return;}
-  const frozen=E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
+  const frozen=E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
   let mv=0;
   if(started&&!frozen){
     let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x;
@@ -737,7 +845,7 @@ renderer.setAnimationLoop(()=>{
   cam.rotation.set(pitch,yaw,0);
   const fl=1+Math.sin(t*9)*.05+Math.sin(t*23.3)*.04+(Math.sin(t*1.3)>.99?-.6:0);
   if(OMEN.towerT>0){OMEN.towerT-=dt;dark01=Math.min(dark01,OMEN.towerT>1?.03:1-OMEN.towerT);}
-  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
+  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);updateInvest(dt);if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
   const spark_=E.phase==='shake'?(Math.random()>.5?2.2:0):1;
   night.visible=S.dark||dark01<1||CAM.up;if(CAM.up)nightSdf.color.setRGB(.42*dark01+.004,.52*dark01+.004,.5*dark01+.004);else{const nc=ROOMS[roomId].night||[.3,.16,.16];nightSdf.color.setRGB((S.dark?nc[0]:1)*dark01+.004,(S.dark?nc[1]:1)*dark01+.002,(S.dark?nc[2]:1)*dark01+.002);}
   glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
@@ -763,7 +871,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
