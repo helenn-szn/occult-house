@@ -16,6 +16,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 | The Antiquities Study | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
 | The study's relics: the Brine Mirror, the Bell of St. Orrin, the Hollow Idol, Old Tom and the Ledger of Names | Lux3D text to 3D (G1) |
 | The Card Parlour | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
+| The Lift Landing (behind STAFF ONLY) | Aholo World API, generated from a 360° panorama |
 | Panorama edits (lights off, midnight) | Lux3D multimodal to image |
 | Marigold, the rag doll | Lux3D text to 3D (G1) |
 | The player's hand | Lux3D text to 3D (G1) |
