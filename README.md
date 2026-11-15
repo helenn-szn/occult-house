@@ -12,6 +12,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 | The Doll Room | Aholo World API, generated from a text prompt and an edited 360° panorama |
 | The Passage | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
 | The Portrait Gallery | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
+| The gallery's twelve portraits (each painting and its changed version) | Lux3D multimodal to image, then cropped, darkened and aged into oil paintings |
 | The Antiquities Study | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
 | The study's relics: the Brine Mirror, the Bell of St. Orrin, Old Tom and the Ledger of Names | Lux3D text to 3D (G1) |
 | The Card Parlour | Aholo World API, generated from a 360° panorama made with Lux3D multimodal to image |
@@ -66,6 +67,7 @@ assets/passage.spz    the Passage (compressed Gaussian splats)
 assets/parlour.spz    the Card Parlour (compressed Gaussian splats)
 assets/study.spz      the Antiquities Study (compressed Gaussian splats)
 assets/gallery.spz    the Portrait Gallery (compressed Gaussian splats)
+assets/portrait_*.jpg the gallery's paintings, two versions of each
 assets/marigold.glb   Marigold
 assets/hand_right.glb the player's right hand
 assets/curator.glb    the curator, rigged, with idle, talk and walk animations
