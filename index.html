@@ -107,6 +107,28 @@
   #roomCard h2{margin:0;font-family:'Special Elite',monospace;font-weight:400;font-size:clamp(1.6rem,5vw,2.6rem);letter-spacing:.16em;color:#d23a2a;text-shadow:0 0 18px #000,0 0 4px #000}
   #roomCard .rule{width:90px;height:1px;background:#7a1616;margin:10px auto 0}
   @media (max-height:520px){#sub{font-size:1rem;bottom:5%}#roomCard{top:18%}}
+  #keys{display:none;position:fixed;left:18px;top:142px;z-index:3;gap:4px;align-items:center;font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.08em;color:#cbb994;pointer-events:none}
+  #keys i{display:inline-block;width:16px;height:8px;border:1px solid #8a7040;border-radius:2px}
+  #keys i.got{background:#c9a24a;box-shadow:0 0 6px #c9a24a}
+  body.touch #keys{top:120px}
+  #holdBar{display:none;position:fixed;left:50%;bottom:22%;transform:translateX(-50%);width:220px;height:8px;border:1px solid #c0392b;background:rgba(0,0,0,.6);z-index:3}
+  #holdFill{height:100%;width:0;background:#c0392b}
+  #seekT{display:none;position:fixed;right:18px;bottom:120px;z-index:3;font-family:'Special Elite',monospace;font-size:2rem;color:#d23a2a;text-shadow:0 0 10px #000;pointer-events:none}
+  #hl{display:none;position:fixed;inset:0;z-index:7;background:rgba(2,1,1,.86);align-items:center;justify-content:center;padding:16px}
+  #hl .paper{width:min(420px,92vw);background:#123018;color:#efe5cf;border:2px solid #6e5a3c;box-shadow:0 10px 50px #000;padding:22px;text-align:center}
+  #hl h2{font-family:'Special Elite',monospace;font-weight:400;letter-spacing:.12em;margin:0 0 8px;font-size:1rem;color:#e6c86a}
+  #hlCard{display:inline-block;margin:10px 0;width:120px;height:170px;line-height:170px;background:#e2d3ad;color:#3a2410;border-radius:6px;font-family:'Special Elite',monospace;font-size:1.3rem;box-shadow:0 6px 20px #000}
+  #hl p{margin:6px 0}
+  #hl .row{display:flex;gap:10px;justify-content:center;margin-top:10px}
+  #hl .row button{font-size:.85rem}
+  #lift{display:none;position:fixed;inset:0;z-index:4;background:radial-gradient(ellipse at 50% 18%,#3a2210 0%,#0a0604 55%,#000 100%);flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8vh;pointer-events:none}
+  #lift .cage{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(150,110,50,.18) 0 3px,transparent 3px 46px);}
+  #liftBulb{width:22px;height:22px;border-radius:50%;background:#ffd28a;box-shadow:0 0 40px 18px rgba(255,190,110,.55);margin-bottom:5vh}
+  #liftBulb.flick{animation:flick 1.3s steps(6) infinite}
+  @keyframes flick{0%{opacity:1}20%{opacity:.3}35%{opacity:1}60%{opacity:.85}70%{opacity:.1}80%{opacity:1}}
+  #liftDial{position:relative;width:240px;height:130px;border-radius:130px 130px 0 0;background:#b89a5a;border:4px solid #5a4020;overflow:hidden}
+  #liftNeedle{position:absolute;left:calc(50% - 2px);bottom:0;width:4px;height:110px;background:#2a0a06;transform-origin:50% 100%;transition:transform 1s}
+  #liftFloor{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-family:'Special Elite',monospace;font-size:1.4rem;color:#2a0a06}
   #cardView{display:none;position:fixed;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(2,1,1,.7);pointer-events:none;opacity:0;transition:opacity .5s}
   #cardView.show{opacity:1}
   #cardView .cardImg{width:min(190px,32vw,30vh);height:auto;display:block;box-shadow:0 10px 40px #000;transform:rotateY(0);animation:flip .7s ease-out}
@@ -150,6 +172,11 @@
 </div>
 <div id="vf"><div class="rec"><b>●</b> <span id="shots"></span></div></div><canvas id="crack"></canvas><div id="camflash"></div>
 <div id="roomCard" aria-live="polite"><small id="roomNo"></small><h2 id="roomTitle"></h2><div class="rule"></div></div>
+<div id="keys" aria-label="Key pieces">KEY <i></i><i></i><i></i><i></i></div>
+<div id="holdBar"><div id="holdFill"></div></div>
+<div id="seekT" aria-live="off"></div>
+<div id="hl" role="dialog" aria-label="Edgar's game"><div class="paper"><h2>EDGAR'S GAME</h2><p id="hlMsg"></p><div id="hlCard"></div><p id="hlStreak"></p><p style="opacity:.7">Will the next card be higher or lower?</p><div class="row"><button id="hlUp">Higher</button><button id="hlDown">Lower</button></div><div class="row"><button id="hlX" style="font-size:.7rem">Leave the table</button></div></div></div>
+<div id="lift" aria-hidden="true"><div class="cage"></div><div id="liftBulb"></div><div id="liftDial"><div id="liftNeedle"></div><div id="liftFloor"></div></div></div>
 <div id="cardView" aria-live="polite"></div>
 <div id="quiz" role="dialog" aria-label="The curator's ledger"><div class="paper"><h2>THE APPRAISAL</h2><p class="n" id="quizN"></p><p id="quizQ"></p><div id="quizA"></div><button class="x" id="quizX">Close the ledger</button></div></div>
 <div id="listener" aria-hidden="true"><div class="dial"><div id="lNeedle"></div></div><div id="lBulb"></div><span>LISTENER</span></div>
@@ -187,8 +214,8 @@
   <div class="paper">
     <button class="close" id="mapClose">Close (M)</button>
     <h2>THE HOUSE</h2>
-    <svg viewBox="0 0 700 380" id="mapSvg" aria-hidden="false"></svg>
-    <div class="legend"><span id="mapRules"></span><span>Click an open room to go there.</span></div>
+    <svg viewBox="0 0 700 372" id="mapSvg" aria-hidden="false"></svg>
+    <div class="legend"><span id="mapRules"></span><span>Rooms are reached through their doors. Dashed lines show the doors you know.</span></div>
   </div>
 </div>
 
@@ -302,8 +329,9 @@ const ROOMS={
     spawn:{x:.3,z:0,yaw:Math.PI/2},
     glow:{p:[-3.3,2.0,0],r:.5,c:[2.4,1.2,1.0]},kill:null,
     doors:[{to:'hall',p:[1.7,-.3],r:.7,label:'Go back up to the Front Hall',spawn:{x:.35,z:.55,yaw:Math.PI/2+.35}}],
-    spots:[{p:[-4.2,.58],r:1.2,label:'Open door I',act:()=>lockedDoor(1)},
-           {p:[-4.2,0],r:1.2,label:'Open door II',act:()=>lockedDoor(2)},
+    spots:[{p:[-.25,-1.45],r:.85,label:'Try the door marked STAFF ONLY',act:()=>elevatorDoor()},
+           {p:[-4.2,.58],r:1.2,label:'Open door I',act:()=>lockedDoor(1)},
+           {p:[-4.2,0],r:1.2,label:'Open door II',act:()=>{if(PASS.tried2)return;PASS.tried2=true;lockedDoor(2);if(!KEY.have.knock)setTimeout(()=>note('Knock back, if you dare.',3500),5600);}},
            {p:[-4.2,-.6],r:1.2,label:'Open door III',act:()=>openDoorIII()}]},
   nine:{name:'Room Nine',url:'assets/front_hall.spz',floorZ:-1.33,mirror:true,night:[.34,.07,.07],
     rects:[{x0:-.62,x1:3.0,z0:-1.0,z1:1.12}],
@@ -339,17 +367,21 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* walking through a doorway: a step forward into the dark, footsteps and a door, then the next room fades up */
 async function travel(id,spawn){
   if(switching||id===roomId)return;switching=true;introTok++;if(!INTRO.on)$('sub').style.opacity=0;$('roomCard').classList.remove('show');try{if(!INTRO.on)speechSynthesis.cancel();}catch(_){}closeMap();if(CAM.up){CAM.up=false;camUI();}
-  const F=$('fade');F.style.transition='opacity .7s ease-in';F.style.opacity=1;
-  footsteps();setTimeout(doorCreak,250);
+  const ready=preload(id);
+  /* push the door: the hand goes out, the latch clicks, the hinge creaks */
+  handR.position.copy(R_IDLE);const h0=performance.now();
+  while(performance.now()-h0<320){const k=(performance.now()-h0)/320;handR.position.lerpVectors(R_IDLE,R_TOUCH,k*k*(3-2*k));await sleep(16);}
+  doorCreak();footsteps();
+  const F=$('fade');F.style.transition='opacity .55s ease-in';F.style.opacity=1;
   const from=cam.position.clone(),dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),t0=performance.now();
-  while(performance.now()-t0<700){const k=(performance.now()-t0)/700;cam.position.copy(from).addScaledVector(dir,.45*k*k);await sleep(16);}
-  try{await showRoom(id,spawn);}catch(e){note('That room could not be loaded.',4000);}
-  const sp=cam.position.clone();cam.position.addScaledVector(new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),-.35);
-  await sleep(300);
-  F.style.transition='opacity 1.1s ease-out';F.style.opacity=0;
+  while(performance.now()-t0<560){const k=(performance.now()-t0)/560;cam.position.copy(from).addScaledVector(dir,.55*k);handR.position.lerpVectors(R_TOUCH,R_IDLE,Math.min(1,k*1.6));await sleep(16);}
+  try{await ready;await showRoom(id,spawn);}catch(e){note('That room could not be loaded.',4000);}
+  const sp=cam.position.clone(),d2=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));cam.position.addScaledVector(d2,-.5);
+  F.style.transition='opacity .8s ease-out';F.style.opacity=0;
   const t1=performance.now(),st=cam.position.clone();
-  while(performance.now()-t1<900){const k=(performance.now()-t1)/900;cam.position.lerpVectors(st,sp,1-Math.pow(1-k,3));await sleep(16);}
-  cam.position.copy(sp);switching=false;
+  while(performance.now()-t1<800){const k=(performance.now()-t1)/800;cam.position.lerpVectors(st,sp,k);await sleep(16);}
+  cam.position.copy(sp);switching=false;setTimeout(()=>{if(AC)thud();},60);
+  for(const d of ROOMS[id].doors||[])preload(d.to);
   if(OMEN.towerArmed){OMEN.towerArmed=false;OMEN.towerT=9;thud();whisper(2.4,.14);note('The Tower. Every light in the house has gone out.',5000);}
   roomIntro(id);
 }
@@ -800,11 +832,12 @@ async function startEnding(){if(END.on)return;END.on=true;closeMap();if(casesOpe
     F.style.transition='opacity 2s';F.style.opacity=1;await sleep(2100);endCard(kind);}}
 function jingle(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<7;k++){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=2600+Math.random()*1800;o.connect(g);g.connect(master);env(g,t+k*.07+Math.random()*.03,.002,.05,.25);o.start(t+k*.07);o.stop(t+k*.07+.35);}}
 const ENDINGS={A:['The Guest','You followed every rule, and the house let you go.'],A2:['The Visitor','You bent the rules, and the house kept a little of you.'],
+  D:['The Lift','You went where no one is allowed. The lift is still going down.'],
   B:['The Exhibit','You broke every rule. Now you are behind glass.'],C:['The Curator','You uncovered the house\'s secrets, and it gave you the keys.']};
 function endCard(kind){try{speechSynthesis.cancel();}catch(_){}try{document.exitPointerLock();}catch(_){}
   const mins=Math.max(1,Math.round((performance.now()-END.t0)/60000)),cases=CASES.filter(c=>INV.cases[c.id].done).length+(STUDY.done?1:0)+(SIT.done?1:0);
   const card=OMEN.card?({tower:'The Tower',moon:'The Moon',lovers:'The Lovers',blank:'the blank card'})[OMEN.card]:null;
-  $('endTitle').textContent='ENDING '+(kind==='A2'?'A':kind==='C'?'C':kind)+(kind==='A2'?'′':'')+': '+ENDINGS[kind][0].toUpperCase();$('endText').textContent=ENDINGS[kind][1];
+  $('endTitle').textContent='ENDING '+(kind==='A2'?'A':kind)+(kind==='A2'?'′':'')+': '+ENDINGS[kind][0].toUpperCase();$('endText').textContent=ENDINGS[kind][1];
   $('endStats').innerHTML=`Rules broken: ${Object.keys(RB).length} of 3<br>Cases closed: ${cases} of ${CASES.length+2}<br>`+(card?`Card drawn: ${card}${OMEN.card==='blank'?'. It now bears your name.':''}<br>`:'')+(CAM.used?`Photographs taken: ${8-CAM.shots}<br>`:'')+`Time in the house: ${mins} minute${mins>1?'s':''}`;
   $('ending').style.display='flex';$('bar').style.display='none';$('tui').classList.remove('on');$('rules').style.display='none';$('listener').style.display='none';}
 $('again').onclick=()=>location.reload();
@@ -829,7 +862,7 @@ const INSPECT=new THREE.Group();INSPECT.position.set(0,.03,-.5);INSPECT.visible=
 const inspL=new THREE.PointLight(0xffe2c4,1.4,1.4,2);inspL.position.set(.15,.2,.35);INSPECT.add(inspL);
 const inspR=new THREE.PointLight(0xff3020,.8,1.2,2);inspR.position.set(-.25,-.05,-.1);INSPECT.add(inspR);
 const RELIC_M={};let inspT=0;
-for(const id of ['mirror','bell','skull','ledger'])gl.load('assets/relic_'+id+'.glb',g=>{const m=prep(g.scene);const b=new THREE.Box3().setFromObject(m),sz=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());
+for(const id of ['mirror','bell','skull','ledger','idol'])gl.load('assets/relic_'+id+'.glb',g=>{const m=prep(g.scene);const b=new THREE.Box3().setFromObject(m),sz=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());
   m.position.sub(c);const w=new THREE.Group();w.add(m);w.scale.setScalar(.23/Math.max(sz.x,sz.y,sz.z));w.visible=false;INSPECT.add(w);RELIC_M[id]=w;},undefined,()=>{});
 function inspect(id){for(const k in RELIC_M)RELIC_M[k].visible=(k===id);INSPECT.visible=!!RELIC_M[id];INSPECT.rotation.set(0,0,0);inspT=6;}
 function updateInspect(dt){if(!INSPECT.visible)return;inspT-=dt;INSPECT.children.forEach(c=>{if(c.isGroup)c.rotation.y+=dt*.7;});if(inspT<=0||roomId!=='study')INSPECT.visible=false;}
@@ -918,13 +951,101 @@ function examinePortrait(id){if(SIT.done)return;breakRule(1);const P=PT[id].P;
     else if(w===2){thud();OMEN.towerT=4;note('Wrong again. The picture lights go out, one by one.',5000);}
     else{stinger(.3);flash=.8;for(const P of PORTRAITS)setPortrait(P.id,'b');setTimeout(()=>{for(const P of PORTRAITS)if(SIT.pending!==P.id&&!SIT.found[P.id])setPortrait(P.id,'a');},2500);note('Every face in the gallery turns towards you at once.',5000);SIT.wrong=0;}}}
 
+/* ================= room challenges and the four pieces of the brass key =================
+   Hall: wind the stopped clock. Doll Room: find Button before the giggling stops.
+   Passage: knock back door II's pattern. Parlour: beat Edgar at higher or lower.
+   Each gives a piece of a brass key. Together they open the restricted elevator. */
+const KEY={have:{}};
+function keyCount(){return Object.keys(KEY.have).length;}
+function giveKey(id,msg){if(KEY.have[id])return;KEY.have[id]=true;bell();const n=keyCount();
+  $('keys').style.display='flex';[...$('keys').querySelectorAll('i')].forEach((el,i)=>el.classList.toggle('got',i<n));
+  showClue('A piece of a brass key ('+n+' of 4)',msg+(n===4?' The four pieces fit together into one heavy key, stamped: STAFF ONLY.':''));drawCases();}
+function listenTo(p,dt){const el=$('listener');el.style.display='block';const d=Math.hypot(p[0]-cam.position.x,p[1]-cam.position.z);const target=Math.max(0,Math.min(1,1-(d-.4)/4));
+  LST.v+=(target-LST.v)*Math.min(1,dt*3);$('lNeedle').style.transform=`rotate(${-70+140*Math.max(0,Math.min(1,LST.v))}deg)`;$('lBulb').style.opacity=.25+.75*LST.v;}
+/* --- hall: the clock. Hold E to wind it; the hall darkens and the whispers rise while you do --- */
+const CLOCK={p:[-1.25,1.2],hold:0,holding:false,done:false,tries:0};
+function clockSpot(){if(CLOCK.done||roomId!=='hall'||!INTRO.done||INTRO.on)return null;const d=Math.hypot(CLOCK.p[0]-cam.position.x,CLOCK.p[1]-cam.position.z);if(d>.95)return null;
+  cam.getWorldDirection(tmpV2);if((tmpV2.x*(CLOCK.p[0]-cam.position.x)+tmpV2.z*(CLOCK.p[1]-cam.position.z))/Math.max(d,.01)<.6)return null;return {label:'Hold to wind the clock',hold:true,go:()=>{}};}
+function updateClock(dt){if(CLOCK.done)return;const near=current&&current.hold;const held=near&&(keys.KeyE||HOLD.touch);
+  if(held){CLOCK.hold+=dt;CLOCK.holding=true;dark01=Math.min(dark01,1-CLOCK.hold/5*.85);if(Math.random()<dt*1.4)whisper(.8,.05+CLOCK.hold*.025);
+    $('holdBar').style.display='block';$('holdFill').style.width=Math.min(100,CLOCK.hold/4*100)+'%';
+    if(CLOCK.hold>=4){CLOCK.done=true;CLOCK.holding=false;$('holdBar').style.display='none';dark01=1;bell();giveKey('clock','The clock strikes. Behind its glass the pendulum swings again, and something drops from inside the case onto the floor.');}}
+  else if(CLOCK.holding){CLOCK.holding=false;CLOCK.tries++;$('holdBar').style.display='none';if(CLOCK.hold>.6){thud();note('You let go. The spring unwinds with a shriek, and the hands spin back to where they were.',4000);}CLOCK.hold=0;}}
+const HOLD={touch:false};
+/* --- doll room: hide and seek with Button --- */
+const SEEK={state:'wait',t:0,spot:null,tries:0,giggleT:0};
+const SEEK_SPOTS=[[-.95,-1.95],[.2,2.3],[-1.15,1.9],[-2.7,.6],[.25,-1.8]];
+const buttonDoll=new THREE.Group();buttonDoll.visible=false;scene.add(buttonDoll);
+{const cloth=new THREE.MeshStandardMaterial({color:0x111012,roughness:1}),eye=new THREE.MeshStandardMaterial({color:0xe8e4da,roughness:.4}),thread=new THREE.MeshBasicMaterial({color:0x8a1010});
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.06,.1,4,10),cloth);body.position.y=.11;buttonDoll.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.06,14,10),cloth);head.position.y=.25;buttonDoll.add(head);
+ const b=new THREE.Mesh(new THREE.CylinderGeometry(.016,.016,.006,12),eye);b.rotation.x=Math.PI/2;b.position.set(-.022,.26,.056);buttonDoll.add(b);
+ const st=new THREE.Mesh(new THREE.BoxGeometry(.03,.003,.003),thread);st.position.set(.024,.262,.058);buttonDoll.add(st);const st2=st.clone();st2.rotation.z=Math.PI/2;buttonDoll.add(st2);st2.position.copy(st.position);
+ [-1,1].forEach(s=>{const a=new THREE.Mesh(new THREE.CapsuleGeometry(.018,.07,3,6),cloth);a.position.set(s*.075,.13,0);a.rotation.z=s*.5;buttonDoll.add(a);});}
+function updateSeek(dt){if(roomId!=='doll'||!INTRO_SEEN.doll||E.phase!=='idle'||switching){if(SEEK.state==='hunt'&&roomId!=='doll'){SEEK.state='wait';buttonDoll.visible=false;}return;}
+  if(KEY.have.doll)return;
+  if(SEEK.state==='wait'){SEEK.t+=dt;if(SEEK.t>(SEEK.tries?6:9)){SEEK.state='hunt';SEEK.t=0;SEEK.giggleT=0;const sp=SEEK_SPOTS[Math.floor(Math.random()*SEEK_SPOTS.length)];SEEK.spot=sp;
+      buttonDoll.position.set(sp[0],0,sp[1]);buttonDoll.rotation.y=Math.random()*6;buttonDoll.visible=true;
+      note('One of the little chairs is empty. Button has gone to hide. Find her before she stops giggling.',5500);}return;}
+  if(SEEK.state==='hunt'){SEEK.t+=dt;SEEK.giggleT-=dt;listenTo(SEEK.spot,dt);
+    if(SEEK.giggleT<=0){SEEK.giggleT=4.5;cam.getWorldDirection(tmpV2);const dx=SEEK.spot[0]-cam.position.x,dz=SEEK.spot[1]-cam.position.z;const right=-tmpV2.z*dx+tmpV2.x*dz;giggle(Math.max(-1,Math.min(1,right/Math.max(.5,Math.hypot(dx,dz)))));}
+    $('seekT').style.display='block';$('seekT').textContent=Math.max(0,Math.ceil(60-SEEK.t))+'';
+    if(SEEK.t>60){SEEK.state='wait';SEEK.t=0;SEEK.tries++;buttonDoll.visible=false;$('seekT').style.display='none';$('listener').style.display='none';stinger(.25);flash=.6;dark01=0;note('The giggling stops. Every doll in the room is looking at you. Button will hide again.',5500);}}}
+function seekSpot(){if(SEEK.state!=='hunt'||roomId!=='doll')return null;const d=Math.hypot(SEEK.spot[0]-cam.position.x,SEEK.spot[1]-cam.position.z);if(d>1)return null;return {label:'Pick up Button',go:()=>{SEEK.state='done';buttonDoll.visible=false;$('seekT').style.display='none';$('listener').style.display='none';breakRule(1);giveKey('doll','Button stops giggling the moment you lift her. Sewn into her back, under a loose seam, is a piece of brass.');}};}
+/* --- passage: door II knocks a pattern; knock it back --- */
+const KNOCK={state:'idle',pat:null,input:[],cur:0,last:0,tries:0};
+function knockPattern(){const p=[];for(let i=0;i<3;i++)p.push(1+Math.floor(Math.random()*3));return p;}
+function playPattern(p){if(!AC)return 0;let t=AC.currentTime+.2;for(const n of p){for(let k=0;k<n;k++){const ns=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=150;bp.Q.value=2.5;ns.connect(bp);bp.connect(g);g.connect(master);env(g,t,.004,1.6,.16);ns.start(t);ns.stop(t+.3);t+=.28;}t+=.75;}return (t-AC.currentTime)*1000;}
+function startKnock(){KNOCK.pat=knockPattern();KNOCK.state='listen';const ms=playPattern(KNOCK.pat);note('Door II answers with a pattern of knocks. Listen.',3500);
+  setTimeout(()=>{if(KNOCK.state!=='listen')return;KNOCK.state='answer';KNOCK.input=[];KNOCK.cur=0;KNOCK.last=performance.now();note('Knock it back. One press of E is one knock; pause between groups.',6000);},ms+300);}
+function knockTap(){if(KNOCK.state!=='answer')return;const now=performance.now();if(KNOCK.cur>0&&now-KNOCK.last>900){KNOCK.input.push(KNOCK.cur);KNOCK.cur=0;}KNOCK.cur++;KNOCK.last=now;
+  if(AC){const t=AC.currentTime,ns=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=190;bp.Q.value=2.5;ns.connect(bp);bp.connect(g);g.connect(master);env(g,t,.004,1.1,.13);ns.start(t);ns.stop(t+.25);}
+  handR.position.copy(R_TOUCH);setTimeout(()=>handR.position.copy(R_IDLE),140);}
+function updateKnock(){if(KNOCK.state!=='answer')return;if(KNOCK.cur>0&&performance.now()-KNOCK.last>2200){KNOCK.input.push(KNOCK.cur);KNOCK.cur=0;
+    const ok=KNOCK.input.length===KNOCK.pat.length&&KNOCK.input.every((n,i)=>n===KNOCK.pat[i]);KNOCK.state='idle';
+    if(ok){giveKey('knock','Silence. Then something slides under door II and stops against your shoe.');}
+    else{KNOCK.tries++;rattle2();thud();OMEN.towerT=3;note('Wrong. Door II is pounded from the other side until the bulbs go out. Try it again when you dare.',5000);}}}
+function knockSpot(){if(roomId!=='passage'||KEY.have.knock)return null;const d=Math.hypot(-4.2-cam.position.x,0-cam.position.z);if(d>1.2)return null;cam.getWorldDirection(tmpV2);if((tmpV2.x*(-4.2-cam.position.x)+tmpV2.z*(-cam.position.z))/Math.max(d,.01)<.75)return null;
+  if(KNOCK.state==='answer')return {label:'Knock',go:knockTap};if(KNOCK.state==='listen')return null;return PASS.tried2?{label:'Knock on door II',go:startKnock}:null;}
+/* --- parlour: Edgar's game, higher or lower, four in a row --- */
+const HL={streak:0,card:0,done:false,losses:0,open:false};
+const RANKS=['Ace','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Jack','Queen','King'];
+function hlDeal(){return 1+Math.floor(Math.random()*13);}
+function openHL(){if(KEY.have.cards){note('Edgar\'s chair is empty now. The game is over.',3000);return;}HL.open=true;HL.streak=0;HL.card=hlDeal();renderHL('Edgar Hollowmere never lost a hand. Beat him four times in a row.');$('hl').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;breakRule(1);}
+function renderHL(msg){$('hlMsg').textContent=msg;$('hlCard').textContent=RANKS[HL.card-1];$('hlStreak').textContent='Wins in a row: '+HL.streak+' of 4';}
+function hlGuess(up){const next=hlDeal();const win=next===HL.card?false:(up?next>HL.card:next<HL.card);slide();
+  if(win){HL.streak++;HL.card=next;if(HL.streak>=4){closeHL();giveKey('cards','Across the table, an unseen hand lays down its last card face up: a piece of a brass key, where the picture should be.');return;}renderHL('The '+RANKS[next-1]+'. You win this one.');}
+  else{HL.losses++;HL.streak=0;const was=HL.card;HL.card=next;renderHL('The '+RANKS[next-1]+'. The house wins.'+(next===was?' Ties go to the house.':''));whisper(1,.1);if(HL.losses%3===0){closeHL();stinger(.2);flash=.5;dark01=.1;note('The lamp swings. For a moment there is a man in the chair across from you, smiling. Then he is gone, and the cards are back in the box.',6000);}}}
+function closeHL(){HL.open=false;$('hl').style.display='none';}
+function hlSpot(){if(roomId!=='parlour'||KEY.have.cards)return null;const p=[-1.25,-1.1];const d=Math.hypot(p[0]-cam.position.x,p[1]-cam.position.z);if(d>1.4)return null;cam.getWorldDirection(tmpV2);if((tmpV2.x*(p[0]-cam.position.x)+tmpV2.z*(p[1]-cam.position.z))/Math.max(d,.01)<.8)return null;return {label:'Sit down for Edgar\'s game',go:openHL};}
+/* --- the restricted door in the Passage --- */
+function elevatorDoor(){if(keyCount()<4){doorCreak();note('A brass plate: STAFF ONLY. NO GUESTS BEYOND THIS POINT. The lock is shaped for a key in four pieces. You have '+keyCount()+'.',6000);return;}enterElevator();}
+
+$('hlUp').onclick=()=>hlGuess(true);$('hlDown').onclick=()=>hlGuess(false);$('hlX').onclick=()=>closeHL();
+/* ================= the restricted lift: no one is allowed, and there is no way back ================= */
+function cableGroan(dur){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),o2=AC.createOscillator(),lp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o2.type='sawtooth';o.frequency.setValueAtTime(48,t);o2.frequency.setValueAtTime(51,t);
+  o.frequency.linearRampToValueAtTime(30,t+dur);o2.frequency.linearRampToValueAtTime(33,t+dur);lp.type='lowpass';lp.frequency.value=260;o.connect(lp);o2.connect(lp);lp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+1);g.gain.setValueAtTime(.12,t+dur-1);g.gain.linearRampToValueAtTime(0,t+dur);o.start(t);o2.start(t);o.stop(t+dur);o2.stop(t+dur);
+  const n=noise(),bp=AC.createBiquadFilter(),ng=AC.createGain();bp.type='bandpass';bp.frequency.value=2200;bp.Q.value=10;n.connect(bp);bp.connect(ng);ng.connect(master);ng.gain.setValueAtTime(0,t);for(let k=0;k<dur;k+=1.7){ng.gain.linearRampToValueAtTime(.06,t+k+.3);ng.gain.linearRampToValueAtTime(0,t+k+1.2);}n.start(t);n.stop(t+dur);}
+function slam(){if(!AC)return;thud();const t=AC.currentTime,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=420;bp.Q.value=1.5;n.connect(bp);bp.connect(g);g.connect(master);env(g,t,.003,1.4,.5);n.start(t);n.stop(t+.7);}
+async function enterElevator(){if(END.on)return;END.on=true;closeMap();if(casesOpen)toggleCases();if(CAM.up){CAM.up=false;camUI();}HAUNT.on=false;if(follower)follower.visible=false;
+  switching=true;introTok++;try{speechSynthesis.cancel();}catch(_){}
+  jingle();await sleep(500);doorCreak();note('The key turns. Behind the door, a brass cage. The lift is waiting, as if it expected you.',4500);await sleep(2200);
+  footsteps();const F=$('fade');F.style.transition='opacity .6s';F.style.opacity=1;await sleep(900);
+  $('lift').style.display='flex';$('liftNeedle').style.transform='rotate(-80deg)';F.style.transition='opacity 1s';F.style.opacity=0;await sleep(1200);
+  slam();await sleep(250);$('liftBulb').classList.add('flick');note('The gates slam shut behind you. There are no buttons on the inside.',4500);await sleep(3200);
+  $('sub').innerHTML='<i>MR. VANE, FROM ABOVE</i>I did say staff only.';$('sub').style.opacity=1;say('I did say staff only.');await sleep(2600);$('sub').style.opacity=0;
+  cableGroan(16);const labels=['G','B','-1','-2','-3','-5','-8','-13','-21'];let k=0;
+  for(const L of labels){$('liftFloor').textContent=L;$('liftNeedle').style.transform=`rotate(${-80+k*20}deg)`;k++;await sleep(1500-k*80);}
+  $('liftFloor').textContent='';whisper(3,.22);note('The needle runs off the end of the dial. The lift keeps falling.',4500);await sleep(4200);
+  $('liftBulb').classList.remove('flick');$('liftBulb').style.opacity=0;stinger(.35);flash=1;slam();await sleep(1600);
+  F.style.transition='opacity .1s';F.style.opacity=1;$('lift').style.display='none';await sleep(1800);endCard('D');}
+
 /* ================= room introductions: the first time you enter each room ================= */
 const INTROS={
-  doll:{no:'EXHIBIT ROOM II',lines:['The Doll Room. Every one of them was somebody\'s, and most of their owners begged us never to send them back.','Mind Marigold, in the cabinet at the back. She does not like to be stared at, and she does not like to be ignored.']},
-  parlour:{no:'EXHIBIT ROOM III',lines:['The Card Parlour. Edgar Hollowmere played at that table every night for forty years, and never once lost.','The deck will tell your fortune, if you ask it. It is always right.']},
+  doll:{no:'EXHIBIT ROOM II',lines:['The Doll Room. Every one of them was somebody\'s, and most of their owners begged us never to send them back.','Mind Marigold, in the cabinet at the back. And if one of the little chairs is empty, Button is playing. She hides very well.']},
+  parlour:{no:'EXHIBIT ROOM III',lines:['The Card Parlour. Edgar Hollowmere played at that table every night for forty years, and never once lost.','The deck will tell your fortune, if you ask it. Edgar will play you for higher stakes, if you sit in his chair.']},
   study:{no:'EXHIBIT ROOM IV',lines:['The Antiquities Study. The oldest pieces in the collection, and the most dangerous.','Each one comes with its paperwork. Read it carefully. The house is fond of tests.']},
   gallery:{no:'EXHIBIT ROOM V',lines:['The Portrait Gallery. Every face on these walls once stood where you are standing.','They do not like to be watched. They like even less to be forgotten. Keep an eye on them.']},
-  passage:{no:'BELOW STAIRS',lines:['The Passage. The house was built around those three doors.','I have never opened them. I would not start tonight.']},
+  passage:{no:'BELOW STAIRS',lines:['The Passage. The house was built around those three doors.','I have never opened them. I would not start tonight. And the door marked Staff Only is not for guests. It is not for anyone.']},
   nine:{no:'NOT ON ANY MAP',title:'ROOM NINE',voice:'A WHISPER',lines:['Everything here is the wrong way round. Find what does not belong, and it will let you go.']}};
 const INTRO_SEEN={};let introTok=0;
 async function roomIntro(id){const I=INTROS[id];if(!I||INTRO_SEEN[id]||END.on)return;INTRO_SEEN[id]=true;const tok=++introTok;
@@ -970,22 +1091,29 @@ function advance(){if(INTRO.on){try{speechSynthesis.cancel();}catch(_){}nextLine
 
 /* ================= map ================= */
 const MAPROOMS=[
-  {id:'hall',label:'Front Hall',x:270,y:220,w:170,h:110},
-  {id:'doll',label:'Doll Room',x:450,y:220,w:150,h:110},
-  {id:'gallery',label:'Portrait Gallery',x:270,y:110,w:330,h:100},
-  {id:'parlour',label:'Card Parlour',x:90,y:220,w:170,h:110},
-  {id:'study',label:'Antiquities Study',x:90,y:110,w:170,h:100},
-  {id:null,label:'Cellar Monitors',x:90,y:20,w:170,h:80},
-  {id:'passage',label:'The Passage',x:270,y:20,w:330,h:80}];
-function drawMap(){const svg=$('mapSvg');let h='<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#8a7a5c" stroke-width="1.4"/></pattern></defs>';
-  for(const r of MAPROOMS){const open=!!r.id,here=r.id===roomId;
-    h+=`<g class="room ${open?'open':''}" ${open?`tabindex="0" role="button" aria-label="Go to the ${r.label}" data-id="${r.id}"`:''}>`+
-      `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${open?'#d9cba9':'url(#hatch)'}" stroke="#3a2a1c" stroke-width="${here?4:2}"/>`+
-      `<text x="${r.x+r.w/2}" y="${r.y+r.h/2+(here?-4:5)}" text-anchor="middle" font-family="Special Elite, monospace" font-size="15" fill="${open?'#1b1410':'#5a4a36'}">${open?r.label:'? ? ?'}</text>`+
-      (here?`<text x="${r.x+r.w/2}" y="${r.y+r.h/2+16}" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="14" fill="#7a1616">you are here</text>`:'')+'</g>';}
-  h+='<text x="355" y="360" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="15" fill="#3a2a1c">front door</text><line x1="330" y1="333" x2="380" y2="333" stroke="#7a1616" stroke-width="5"/>';
-  svg.innerHTML=h;svg.querySelectorAll('.room.open').forEach(g=>{const go=()=>{const id=g.dataset.id;if(id!==roomId)travel(id);else closeMap();};g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
-  $('mapRules').textContent='Rules broken: '+E.broken+' of 3';}
+  {id:'gallery',label:'Portrait Gallery',x:250,y:14,w:200,h:70,note:'up the stairs'},
+  {id:'study',label:'Antiquities Study',x:40,y:110,w:180,h:90},
+  {id:'parlour',label:'Card Parlour',x:40,y:215,w:180,h:90},
+  {id:'hall',label:'Front Hall',x:250,y:130,w:200,h:140},
+  {id:'doll',label:'Doll Room',x:480,y:150,w:180,h:100},
+  {id:'passage',label:'The Passage',x:250,y:300,w:200,h:62,note:'below stairs'},
+  {id:'lift',label:'Restricted',x:480,y:300,w:180,h:62,note:'staff only'}];
+const MAPLINKS=[['hall','gallery'],['hall','study'],['hall','parlour'],['hall','doll'],['hall','passage'],['passage','lift']];
+function drawMap(){const svg=$('mapSvg');const R0=Object.fromEntries(MAPROOMS.map(r=>[r.id,r]));
+  let h='<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#8a7a5c" stroke-width="1.4"/></pattern></defs>';
+  const cx=r=>r.x+r.w/2,cy=r=>r.y+r.h/2;
+  const mids=r=>[[cx(r),r.y],[cx(r),r.y+r.h],[r.x,cy(r)],[r.x+r.w,cy(r)]];
+  for(const [a,b] of MAPLINKS){const A=R0[a],B=R0[b];const known=VISITED[a]&&(b==='lift'?VISITED.passage:true);if(!known)continue;
+    let best=null,bd=1e9;for(const p of mids(A))for(const q of mids(B)){const d=Math.hypot(p[0]-q[0],p[1]-q[1]);if(d<bd){bd=d;best=[p,q];}}
+    const [p,q]=best;h+=`<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#7a1616" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+    const mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2;h+=`<rect x="${mx-7}" y="${my-7}" width="14" height="14" fill="#7a1616" transform="rotate(45 ${mx} ${my})"/>`;}
+  for(const r of MAPROOMS){const seen=r.id==='lift'?VISITED.passage:VISITED[r.id],here=r.id===roomId;
+    h+=`<g><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${seen?(r.id==='lift'?'#c9a99a':'#d9cba9'):'url(#hatch)'}" stroke="#3a2a1c" stroke-width="${here?4:2}"/>`+
+      `<text x="${cx(r)}" y="${cy(r)+(here?-6:(r.note&&seen?-2:5))}" text-anchor="middle" font-family="Special Elite, monospace" font-size="15" fill="${seen?'#1b1410':'#5a4a36'}">${seen?r.label:'? ? ?'}</text>`+
+      (here?`<text x="${cx(r)}" y="${cy(r)+14}" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="14" fill="#7a1616">you are here</text>`:(seen&&r.note?`<text x="${cx(r)}" y="${cy(r)+16}" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="13" fill="#5a4a36">${r.note}</text>`:''))+'</g>';}
+  {const H=R0.hall;h+=`<line x1="${H.x+30}" y1="${H.y+H.h-4}" x2="${H.x+80}" y2="${H.y+H.h-4}" stroke="#7a1616" stroke-width="5"/><text x="${H.x+55}" y="${H.y+H.h-12}" text-anchor="middle" font-family="EB Garamond, serif" font-style="italic" font-size="12" fill="#3a2a1c">front door</text>`;}
+  svg.innerHTML=h;
+  $('mapRules').textContent='Rules broken: '+E.broken+' of 3 · Key pieces: '+keyCount()+' of 4';}
 let mapOpen=false;
 function openMap(){if(!INTRO.done||switching)return;if(roomId==='nine'){note('The map is blank here.',2500);return;}if(CAM.up){CAM.up=false;camUI();}mapOpen=true;drawMap();$('map').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}
 $('bCases').onclick=()=>toggleCases();$('casesClose').onclick=()=>{if(casesOpen)toggleCases();};
@@ -1003,6 +1131,7 @@ addEventListener('keydown',e=>{keys[e.code]=true;if(!started)return;
   if(mapOpen)return;
   if(e.code==='Space'&&INTRO.on){e.preventDefault();advance();return;}
   if(quizOpen){if(e.code==='Escape')closeQuiz();return;}
+  if(HL.open){if(e.code==='Escape')closeHL();if(e.code==='ArrowUp')hlGuess(true);if(e.code==='ArrowDown')hlGuess(false);return;}
   if(e.code==='KeyJ'){toggleCases();return;}
   if(casesOpen)return;
   if(e.code==='KeyC')raiseCam();
@@ -1012,7 +1141,7 @@ addEventListener('keyup',e=>{keys[e.code]=false;});addEventListener('blur',()=>{
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;});
 let drag=false,lx=0,ly=0;
 function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(_){}}
-canvas.addEventListener('mousedown',e=>{if(!started||mapOpen||quizOpen)return;if(INTRO.on&&locked){advance();return;}if(CAM.up&&(locked||touch)){takePhoto();return;}if(locked&&current){interact();return;}drag=true;lx=e.clientX;ly=e.clientY;lock();});
+canvas.addEventListener('mousedown',e=>{if(!started||mapOpen||quizOpen||HL.open)return;if(INTRO.on&&locked){advance();return;}if(CAM.up&&(locked||touch)){takePhoto();return;}if(locked&&current){interact();return;}drag=true;lx=e.clientX;ly=e.clientY;lock();});
 addEventListener('mouseup',()=>{drag=false;});
 addEventListener('mousemove',e=>{if(!started||mapOpen)return;if(locked){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}else if(drag){yaw+=(e.clientX-lx)*.004;pitch+=(e.clientY-ly)*.004;lx=e.clientX;ly=e.clientY;}pitch=Math.max(-1.2,Math.min(1.2,pitch));});
 let tMove=null,tLook=null,tv={x:0,y:0};
@@ -1031,7 +1160,7 @@ canvas.addEventListener('touchend',touchEnd);canvas.addEventListener('touchcance
 /* a tap on the right half does the obvious thing: move the curator along, take a photo, or use what is in front of you */
 function tapAction(){if(mapOpen)return;if(INTRO.on){advance();return;}if(CAM.up){takePhoto();return;}if(current)interact();}
 function bindT(id,fn){const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();fn();},{passive:false});b.addEventListener('click',fn);}
-bindT('tAct',()=>interact());bindT('tShot',()=>takePhoto());bindT('tCam',()=>raiseCam());bindT('tMap',()=>mapOpen?closeMap():openMap());
+bindT('tAct',()=>interact());$('tAct').addEventListener('touchstart',()=>{HOLD.touch=true;},{passive:true});$('tAct').addEventListener('touchend',()=>{HOLD.touch=false;});$('tAct').addEventListener('touchcancel',()=>{HOLD.touch=false;});bindT('tShot',()=>takePhoto());bindT('tCam',()=>raiseCam());bindT('tMap',()=>mapOpen?closeMap():openMap());
 function updateTouchUI(){if(!touch||!started)return;const sh=(id,v)=>$(id).classList.toggle('show',!!v);
   sh('tAct',current&&!CAM.up);if(current)$('tAct').textContent=current.label.toUpperCase();sh('tShot',CAM.up&&!CAM.broken);sh('tCam',CAM.has&&!CAM.broken&&INTRO.done);sh('tMap',INTRO.done&&roomId!=='nine');
   $('lookHint').innerHTML=INTRO.on?'DRAG TO LOOK<br>TAP TO CONTINUE':'DRAG TO LOOK';}
@@ -1042,13 +1171,13 @@ $('keysP').textContent=touch?'Left thumb walks, right thumb looks. Tap to contin
 
 /* interactions: doors between rooms, and Marigold's cabinet */
 let current=null;
-function findInteract(){if(INSPECT.visible||END.on||!started||!INTRO.done||switching||mapOpen||casesOpen||quizOpen||E.phase!=='idle'||CAM.up||SPELL)return null;
-  {const cs=clueSpot();if(cs)return cs;}
+function findInteract(){if(HL.open||INSPECT.visible||END.on||!started||!INTRO.done||switching||mapOpen||casesOpen||quizOpen||E.phase!=='idle'||CAM.up||SPELL)return null;
+  {const cs=clueSpot()||seekSpot()||knockSpot()||clockSpot()||hlSpot();if(cs)return cs;}
   for(const d of ROOMS[roomId].doors){if(Math.hypot(cam.position.x-d.p[0],cam.position.z-d.p[1])<d.r)return {label:d.label,go:()=>travel(d.to,d.spawn)};}
   {let best=null,bs=-1;cam.getWorldDirection(tmpV2);for(const sp of (ROOMS[roomId].spots||[])){const dx=sp.p[0]-cam.position.x,dz=sp.p[1]-cam.position.z,d=Math.hypot(dx,dz);if(d<sp.r){const f=(tmpV2.x*dx+tmpV2.z*dz)/Math.max(d,.01);if(f>.55&&f>bs){bs=f;best=sp;}}}if(best)return {label:best.label,go:best.act};}
   if(roomId==='doll'&&canTouch())return {label:'Touch the cabinet',go:startTouch};
   return null;}
-function interact(){if(current)current.go();}
+function interact(){if(current&&!current.hold)current.go();}
 $('prompt').onclick=()=>interact();
 
 $('enter').onclick=()=>{audioOn();$('title').style.display='none';$('waiver').style.display='flex';$('accept').focus();};
@@ -1060,13 +1189,13 @@ const clock=new THREE.Clock(),fwd=new THREE.Vector3(),toDoll=new THREE.Vector3()
 let awayFor=0,ready=false;
 (async()=>{try{preload('doll');await showRoom('hall');await MESH.doll.ready;}catch(e){fail('The house could not be loaded. Reload the page to try again.');return;}
   const t0=performance.now();while(!(doll&&handReady&&CUR.loaded)&&performance.now()-t0<45000)await sleep(100);
-  ready=true;$('titleP').textContent='A private visit to the Hollowmere collection.';$('enter').style.display='inline-block';$('enter').focus();})();
+  for(const k of ['passage','parlour','study','gallery'])preload(k);ready=true;$('titleP').textContent='A private visit to the Hollowmere collection.';$('enter').style.display='inline-block';$('enter').focus();})();
 {const gc=$('grain'),gg=gc.getContext('2d');gc.width=gc.height=256;const id=gg.createImageData(256,256);for(let i=0;i<id.data.length;i+=4){const v=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}gg.putImageData(id,0,0);gc.style.background='url('+gc.toDataURL()+')';gc.width=gc.height=1;}
 
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
   if(!roomId){renderer.render(scene,cam);return;}
-  const frozen=END.on||E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||quizOpen||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
+  const frozen=END.on||E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||quizOpen||HL.open||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
   let mv=0;
   if(started&&!frozen){
     let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x;
@@ -1080,7 +1209,7 @@ renderer.setAnimationLoop(()=>{
   cam.rotation.set(pitch,yaw,0);
   const fl=1+Math.sin(t*9)*.05+Math.sin(t*23.3)*.04+(Math.sin(t*1.3)>.99?-.6:0);
   if(OMEN.towerT>0){OMEN.towerT-=dt;dark01=Math.min(dark01,OMEN.towerT>1?.03:1-OMEN.towerT);}
-  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);updateInvest(dt);updateInspect(dt);updateGallery(dt);checkCalled();if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
+  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);updateInvest(dt);updateInspect(dt);updateGallery(dt);updateClock(dt);updateSeek(dt);updateKnock();checkCalled();if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
   const spark_=E.phase==='shake'?(Math.random()>.5?2.2:0):1;
   night.visible=S.dark||dark01<1||CAM.up;if(CAM.up)nightSdf.color.setRGB(.42*dark01+.004,.52*dark01+.004,.5*dark01+.004);else{const nc=ROOMS[roomId].night||[.3,.16,.16];nightSdf.color.setRGB((S.dark?nc[0]:1)*dark01+.004,(S.dark?nc[1]:1)*dark01+.002,(S.dark?nc[2]:1)*dark01+.002);}
   glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
@@ -1103,10 +1232,10 @@ renderer.setAnimationLoop(()=>{
     if(awayFor>1.5){const local=cab.worldToLocal(cam.position.clone());dollYaw=Math.max(-1.1,Math.min(1.1,Math.atan2(local.x,local.z)));}
     doll.rotation.y+=(dollYaw-doll.rotation.y)*Math.min(1,dt*(seen?0:3));
   }
-  current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
+  current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={SIT,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
