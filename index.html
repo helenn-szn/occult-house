@@ -85,6 +85,10 @@
   #cases p{margin:.3em 0;font-size:1rem;line-height:1.45}
   #cases .locked{opacity:.55}#cases .next{font-style:italic;opacity:.7}#cases .rev{font-style:italic;color:#4a0c0c}
   #cases .close{position:absolute;right:12px;top:12px;font-size:.7rem;padding:.4em .8em}
+  #ending{display:none;z-index:8;background:#030202;overflow:auto;justify-content:safe center}
+  #ending .stats{font-family:'Special Elite',monospace;font-size:.9rem;line-height:1.8;letter-spacing:.04em;opacity:.85;margin:6px 0}
+  #ending .credits{max-width:560px;font-size:.95rem;line-height:1.55;opacity:.7;border-top:1px solid #5c1a1a;padding-top:14px;margin-top:4px}
+  #ending .credits b{font-family:'Special Elite',monospace;font-weight:400;color:#c0392b;letter-spacing:.08em}
   #cardView{display:none;position:fixed;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(2,1,1,.7);pointer-events:none;opacity:0;transition:opacity .5s}
   #cardView.show{opacity:1}
   #cardView .cardImg{width:min(190px,32vw,30vh);height:auto;display:block;box-shadow:0 10px 40px #000;transform:rotateY(0);animation:flip .7s ease-out}
@@ -131,6 +135,13 @@
 <div id="listener" aria-hidden="true"><div class="dial"><div id="lNeedle"></div></div><div id="lBulb"></div><span>LISTENER</span></div>
 <div id="clueView" role="status"><h3></h3><p></p></div>
 <div id="cases" role="dialog" aria-label="Case files"><div class="paper"><button class="close" id="casesClose">Close (J)</button><h2>CASE FILES</h2><div id="casesBody"></div></div></div>
+<div class="scr" id="ending" role="dialog" aria-label="The end of your visit">
+  <h1 id="endTitle"></h1>
+  <p id="endText"></p>
+  <div class="stats" id="endStats"></div>
+  <button id="again">Visit again</button>
+  <div class="credits"><b>OCCULT HOUSE</b><br>Built for the Manycore Aholo Global 3D AI Hackathon.<br>Rooms: Aholo World API. Objects, the curator and your hand: Lux3D, with humanoid auto-rig and animation retarget.<br>Rendering: three.js and Spark. All names, objects and characters are invented.</div>
+</div>
 <div id="fade"></div>
 
 <div class="scr" id="title">
@@ -231,7 +242,8 @@ const ROOMS={
     kill:{p:[-1.59,2.04,.19],r:.55},
     doors:[{to:'doll',p:[.62,-.78],r:.75,label:'Enter the Doll Room',spawn:{x:0,z:0,yaw:Math.PI/2}},
            {to:'passage',p:[.62,.85],r:.6,label:'Go down to the Passage',spawn:{x:.3,z:0,yaw:Math.PI/2}},
-           {to:'parlour',p:[-.4,1.12],r:.55,label:'Enter the Card Parlour',spawn:{x:-.3,z:1.35,yaw:.63}}]},
+           {to:'parlour',p:[-.4,1.12],r:.55,label:'Enter the Card Parlour',spawn:{x:-.3,z:1.35,yaw:.63}}],
+    spots:[{p:[-3.4,0],r:.85,label:'Leave the house',act:()=>startEnding()}]},
   parlour:{name:'The Card Parlour',url:'assets/parlour.spz',floorZ:-1.235,night:[.27,.17,.15],
     rects:[{x0:-2.05,x1:1.15,z0:-1.4,z1:1.35},{x0:-.85,x1:.25,z0:1.2,z1:2.15}],
     spawn:{x:-.3,z:1.35,yaw:.63},
@@ -660,7 +672,7 @@ function caseOf(id){return CASES.find(c=>c.id===id);}
 function activeStep(){/* the case whose ghost or clue is in this room right now */
   for(const c of CASES){const st=INV.cases[c.id];if(st.done||st.step<0)continue;const s=c.steps[st.step];if(s.room===roomId)return {c,st,s};}return null;}
 function startCase(c){const st=INV.cases[c.id];if(st.step>=0)return;st.step=0;st.phase='ghost';st.t=0;drawCases();}
-function updateInvest(dt){if(!INTRO.done)return;INV.timer+=dt;
+function updateInvest(dt){if(!INTRO.done)return;if(END.on){for(const k in INV.ghostObj)INV.ghostObj[k].h.visible=false;$('listener').style.display='none';return;}INV.timer+=dt;
   for(const c of CASES){const st=INV.cases[c.id];if(st.step<0&&INV.timer>c.startAfter&&(!c.needs||roomId===c.needs)&&!switching)startCase(c);}
   for(const k in INV.ghostObj)INV.ghostObj[k].h.visible=false;
   const a=activeStep();INV.act=a;listener(a,dt);if(!a||switching||CAM.seq)return;
@@ -702,6 +714,53 @@ function drawCases(){const box=$('casesBody');if(!box)return;let h='';
     h+=`<div class="case"><h4>${c.title}${st.done?' <span>closed</span>':''}</h4>`+st.found.map(f=>`<p>${f.replace(/</g,'&lt;')}</p>`).join('')+(st.done?`<p class="rev">${c.reveal}</p>`:`<p class="next">${st.found.length} of ${c.steps.length} clues found.</p>`)+'</div>';}
   box.innerHTML=h;}
 let casesOpen=false;function toggleCases(){casesOpen=!casesOpen;drawCases();$('cases').style.display=casesOpen?'flex':'none';if(casesOpen){try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;}}
+
+/* ================= the endings =================
+   Leave by the front door whenever you like, or the house calls you back once every rule is broken
+   or every case is closed. The curator is waiting by the door, and what happens depends on your visit. */
+const END={on:false,called:false,t0:performance.now()};
+function bell(){if(!AC)return;const t=AC.currentTime;[0,1.6,3.2].forEach(d=>{[[220,.5],[440,.25],[553,.12],[661,.1],[880,.06]].forEach(([f,v])=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.connect(g);g.connect(master);env(g,t+d,.005,v*.5,2.4);o.start(t+d);o.stop(t+d+2.6);});});}
+function endingKind(){const cases=CASES.every(c=>INV.cases[c.id].done),rules=Object.keys(RB).length;
+  if(cases)return 'C';if(rules>=3)return 'B';if(rules===0)return 'A';return 'A2';}
+function checkCalled(){if(END.on||END.called||!INTRO.done)return;const cases=CASES.every(c=>INV.cases[c.id].done),rules=Object.keys(RB).length;
+  if(cases||rules>=3){END.called=true;setTimeout(()=>{if(END.on)return;bell();note('The clock in the hall is striking. The curator is waiting for you by the front door.',7000);},9000);
+    setTimeout(()=>{if(!END.on&&!switching&&E.phase==='idle'&&!CAM.seq)startEnding();},45000);}}
+async function startEnding(){if(END.on)return;END.on=true;closeMap();if(casesOpen)toggleCases();if(CAM.up){CAM.up=false;camUI();}HAUNT.on=false;if(follower)follower.visible=false;
+  const kind=endingKind();switching=true;const F=$('fade');F.style.transition='opacity 1s';F.style.opacity=1;bell();await sleep(1200);
+  const spot=new THREE.Vector3(-2.35,0,.25);CUR.present=true;CUR.fade=0;CUR.leaving=false;curator.position.copy(spot);
+  await showRoom('hall',{x:-1.05,z:.05,yaw:Math.atan2(-(spot.x+1.05),-(spot.z-.05))});pitch=-.05;curator.rotation.y=Math.atan2(cam.position.x-spot.x,cam.position.z-spot.z);play('idle',0);
+  await sleep(500);F.style.transition='opacity 1.6s';F.style.opacity=0;await sleep(1700);
+  const broke=Object.keys(RB).length;
+  if(kind==='A'){await speakSeq(['You touched nothing. You opened nothing. You took no pictures.','The house has no claim on you. Go home, and do not come back.']);
+    doorCreak();F.style.transition='opacity 2.4s';F.style.background='#e9e2d2';F.style.opacity=1;await sleep(2600);endCard(kind);}
+  else if(kind==='A2'){await speakSeq(['You broke '+(broke===1?'one of my rules':'two of my rules')+'. Only '+(broke===1?'one':'two')+'. The house noticed.','You may go. But part of you will stay behind, in a case, with a label.']);
+    doorCreak();F.style.transition='opacity 2.4s';F.style.background='#2a0606';F.style.opacity=1;await sleep(2600);endCard(kind);}
+  else if(kind==='B'){await speakSeq(['Every rule. Every single one.','The house keeps what breaks it. You are part of the collection now.']);
+    stinger(.3);F.style.transition='opacity .2s';F.style.background='#000';F.style.opacity=1;thud();await sleep(1800);
+    /* you wake inside Marigold's cabinet, looking out; she sits on the floor, looking in */
+    OMEN.dollAway=false;door.rotation.y=doorClosed;await showRoom('doll');handR.visible=false;
+    shrine.updateMatrixWorld(true);const inside=shrine.localToWorld(new THREE.Vector3(0,.43,-.02));cam.position.copy(inside);yaw=-Math.PI/2;pitch=-.12;
+    if(doll){scene.attach(doll);doll.scale.multiplyScalar(1.6);doll.position.set(inside.x+1.15,0,inside.z+.05);doll.rotation.set(0,-Math.PI/2,0);OMEN.dollAway=true;}
+    END.lockCam=true;await sleep(600);F.style.transition='opacity 2.5s';F.style.opacity=0;await sleep(2500);giggle(0);
+    note('Exhibit 47. Taken from Occult House, '+new Date().getFullYear()+'. Positively do not open.',8000);await sleep(8000);
+    F.style.transition='opacity 2s';F.style.opacity=1;await sleep(2100);endCard(kind);}
+  else{await speakSeq(['So. You know what I am now, and what she lost, and why.','No one has followed the dead this far in ninety years. You have earned these.','The house needs a curator. I have waited a very long time to leave.']);
+    jingle();note('Mr. Vane presses a heavy ring of keys into your hand.',4500);await sleep(1500);
+    CUR.leaving=true;CUR.leaveT=0;play('walk',.4);await sleep(4500);
+    F.style.transition='opacity 1.2s';F.style.opacity=1;await sleep(1400);knock();await sleep(1500);
+    await showRoom('hall',{x:-1.15,z:.95,yaw:Math.atan2(-(-2.95+1.15),-(0-.95))});F.style.transition='opacity 1.6s';F.style.opacity=0;await sleep(1600);
+    $('sub').innerHTML='<i>YOU</i>Good evening. You are our only guest tonight. The house prefers it that way.';$('sub').style.opacity=1;await sleep(6000);$('sub').style.opacity=0;
+    F.style.transition='opacity 2s';F.style.opacity=1;await sleep(2100);endCard(kind);}}
+function jingle(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<7;k++){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=2600+Math.random()*1800;o.connect(g);g.connect(master);env(g,t+k*.07+Math.random()*.03,.002,.05,.25);o.start(t+k*.07);o.stop(t+k*.07+.35);}}
+const ENDINGS={A:['The Guest','You followed every rule, and the house let you go.'],A2:['The Visitor','You bent the rules, and the house kept a little of you.'],
+  B:['The Exhibit','You broke every rule. Now you are behind glass.'],C:['The Curator','You uncovered the house\'s secrets, and it gave you the keys.']};
+function endCard(kind){try{speechSynthesis.cancel();}catch(_){}try{document.exitPointerLock();}catch(_){}
+  const mins=Math.max(1,Math.round((performance.now()-END.t0)/60000)),cases=CASES.filter(c=>INV.cases[c.id].done).length;
+  const card=OMEN.card?({tower:'The Tower',moon:'The Moon',lovers:'The Lovers',blank:'the blank card'})[OMEN.card]:null;
+  $('endTitle').textContent='ENDING '+(kind==='A2'?'A':kind==='C'?'C':kind)+(kind==='A2'?'′':'')+': '+ENDINGS[kind][0].toUpperCase();$('endText').textContent=ENDINGS[kind][1];
+  $('endStats').innerHTML=`Rules broken: ${Object.keys(RB).length} of 3<br>Cases closed: ${cases} of ${CASES.length}<br>`+(card?`Card drawn: ${card}${OMEN.card==='blank'?'. It now bears your name.':''}<br>`:'')+(CAM.used?`Photographs taken: ${8-CAM.shots}<br>`:'')+`Time in the house: ${mins} minute${mins>1?'s':''}`;
+  $('ending').style.display='flex';$('bar').style.display='none';$('tui').classList.remove('on');$('rules').style.display='none';$('listener').style.display='none';}
+$('again').onclick=()=>location.reload();
 
 /* ================= the Curator's welcome ================= */
 const LINES=[
@@ -807,7 +866,7 @@ $('keysP').textContent=touch?'Left thumb walks, right thumb looks. Tap to contin
 
 /* interactions: doors between rooms, and Marigold's cabinet */
 let current=null;
-function findInteract(){if(!started||!INTRO.done||switching||mapOpen||casesOpen||E.phase!=='idle'||CAM.up||SPELL)return null;
+function findInteract(){if(END.on||!started||!INTRO.done||switching||mapOpen||casesOpen||E.phase!=='idle'||CAM.up||SPELL)return null;
   {const cs=clueSpot();if(cs)return cs;}
   for(const d of ROOMS[roomId].doors){if(Math.hypot(cam.position.x-d.p[0],cam.position.z-d.p[1])<d.r)return {label:d.label,go:()=>travel(d.to,d.spawn)};}
   {let best=null,bs=-1;cam.getWorldDirection(tmpV2);for(const sp of (ROOMS[roomId].spots||[])){const dx=sp.p[0]-cam.position.x,dz=sp.p[1]-cam.position.z,d=Math.hypot(dx,dz);if(d<sp.r){const f=(tmpV2.x*dx+tmpV2.z*dz)/Math.max(d,.01);if(f>.55&&f>bs){bs=f;best=sp;}}}if(best)return {label:best.label,go:best.act};}
@@ -831,7 +890,7 @@ let awayFor=0,ready=false;
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
   if(!roomId){renderer.render(scene,cam);return;}
-  const frozen=E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
+  const frozen=END.on||E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
   let mv=0;
   if(started&&!frozen){
     let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x;
@@ -845,7 +904,7 @@ renderer.setAnimationLoop(()=>{
   cam.rotation.set(pitch,yaw,0);
   const fl=1+Math.sin(t*9)*.05+Math.sin(t*23.3)*.04+(Math.sin(t*1.3)>.99?-.6:0);
   if(OMEN.towerT>0){OMEN.towerT-=dt;dark01=Math.min(dark01,OMEN.towerT>1?.03:1-OMEN.towerT);}
-  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);updateInvest(dt);if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
+  if(started){updateIntro(dt);updateCam(dt);updateNine(dt);updateSpell(dt);updateInvest(dt);checkCalled();if(roomId==='doll')updateEvent(dt,t);else{dark01=Math.min(1,dark01+dt*1.6);}}
   const spark_=E.phase==='shake'?(Math.random()>.5?2.2:0):1;
   night.visible=S.dark||dark01<1||CAM.up;if(CAM.up)nightSdf.color.setRGB(.42*dark01+.004,.52*dark01+.004,.5*dark01+.004);else{const nc=ROOMS[roomId].night||[.3,.16,.16];nightSdf.color.setRGB((S.dark?nc[0]:1)*dark01+.004,(S.dark?nc[1]:1)*dark01+.002,(S.dark?nc[2]:1)*dark01+.002);}
   glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
@@ -871,7 +930,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
