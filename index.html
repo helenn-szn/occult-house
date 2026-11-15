@@ -572,7 +572,7 @@ let handReady=false;
 let AC=null,master=null;
 function audioOn(){if(AC){AC.resume();return;}try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=S.snd?1:0;master.connect(AC.destination);drone();loadSfx();}catch(e){AC=null;}}
 /* recorded sounds: each one replaces its synthesised version as soon as it has loaded; until then (or if it fails) the synth plays */
-const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps','knock','bell','glass','giggle','clock_spring','clock_wind','card_slide','canvas_creak','scratch','death','keys','door_pound','door_rattle','game_over','stinger','shutter','glitch'],wind:null,droneG:null,amb:null};
+const SFX={buf:{},files:['ambience','whisper','door_creak','thud','footsteps','knock','bell','glass','giggle','clock_spring','clock_wind','card_slide','canvas_creak','scratch','death','keys','door_pound','door_rattle','game_over','stinger','shutter','glitch','gate_slam','cable_groan'],wind:null,droneG:null,amb:null};
 function loadSfx(){for(const n of SFX.files)fetch('assets/sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject(r.status)).then(a=>new Promise((ok,no)=>AC.decodeAudioData(a,ok,no))).then(b=>{SFX.buf[n]=b;if(n==='ambience')startAmbience();}).catch(()=>{});}
 function startAmbience(){if(SFX.amb||!SFX.buf.ambience)return;const src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=SFX.buf.ambience;src.loop=true;src.loopStart=.05;src.loopEnd=SFX.buf.ambience.duration-.05;
   src.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+4);src.start(t,.05);SFX.amb={src,g};
@@ -1175,9 +1175,11 @@ async function openStaffDoor(){if(switching||LIFT.in)return;LIFT.in=true;HAUNT.o
 
 $('hlUp').onclick=()=>hlGuess(true);$('hlDown').onclick=()=>hlGuess(false);$('hlX').onclick=()=>closeHL();
 /* ================= the restricted lift: no one is allowed, and there is no way back ================= */
-function cableGroan(dur){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),o2=AC.createOscillator(),lp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o2.type='sawtooth';o.frequency.setValueAtTime(48,t);o2.frequency.setValueAtTime(51,t);
+function cableGroan(dur){if(!AC)return;{const b=SFX.buf.cable_groan;if(b){const t=AC.currentTime,src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.03;src.loopEnd=b.duration-.03;src.playbackRate.value=dur>4?.92:1.05;src.connect(g);g.connect(master);
+  const v=dur>4?.95:.6,fo=Math.min(.8,dur*.35);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+Math.min(.25,dur*.2));g.gain.setValueAtTime(v,t+dur-fo);g.gain.linearRampToValueAtTime(0,t+dur);src.start(t,.03);src.stop(t+dur+.05);return;}}const t=AC.currentTime,o=AC.createOscillator(),o2=AC.createOscillator(),lp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o2.type='sawtooth';o.frequency.setValueAtTime(48,t);o2.frequency.setValueAtTime(51,t);
   o.frequency.linearRampToValueAtTime(30,t+dur);o2.frequency.linearRampToValueAtTime(33,t+dur);lp.type='lowpass';lp.frequency.value=260;o.connect(lp);o2.connect(lp);lp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+1);g.gain.setValueAtTime(.12,t+dur-1);g.gain.linearRampToValueAtTime(0,t+dur);o.start(t);o2.start(t);o.stop(t+dur);o2.stop(t+dur);
   const n=noise(),bp=AC.createBiquadFilter(),ng=AC.createGain();bp.type='bandpass';bp.frequency.value=2200;bp.Q.value=10;n.connect(bp);bp.connect(ng);ng.connect(master);ng.gain.setValueAtTime(0,t);for(let k=0;k<dur;k+=1.7){ng.gain.linearRampToValueAtTime(.06,t+k+.3);ng.gain.linearRampToValueAtTime(0,t+k+1.2);}n.start(t);n.stop(t+dur);}
+function gateSlam(){if(!playBuf('gate_slam',1))slam();}
 function slam(){if(!AC)return;thud();const t=AC.currentTime,n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=420;bp.Q.value=1.5;n.connect(bp);bp.connect(g);g.connect(master);env(g,t,.003,1.4,.5);n.start(t);n.stop(t+.7);}
 const LIFT={in:false,shake:0};
 /* the cage gate that closes in front of you: brass bars, built here because the room's own bars are too close to see clearly */
@@ -1197,7 +1199,7 @@ async function enterElevator(){if(END.on)return;END.on=true;closeMap();if(casesO
   yaw=-Math.PI/2;liftGate.position.set(-.55,0,-1.15);liftGate.visible=true;Fd.style.transition='opacity 1s';Fd.style.opacity=0;await sleep(1300);
   /* the gate runs shut on its own */
   cableGroan(1.2);const t2=performance.now();while(performance.now()-t2<550){const k=Math.min(1,(performance.now()-t2)/550);liftGate.position.z=-1.15*(1-k*k);await sleep(16);}liftGate.position.z=0;
-  slam();LIFT.shake=.02;await sleep(300);LIFT.shake=0;
+  gateSlam();LIFT.shake=.02;await sleep(300);LIFT.shake=0;
   note('The gate slams shut on its own. There are no buttons on the inside.',4500);await sleep(3400);
   $('sub').innerHTML='<i>MR. VANE, FROM ABOVE</i>I did say staff only.';$('sub').style.opacity=1;say('I did say staff only.');await sleep(2600);$('sub').style.opacity=0;
   /* the fall: the landing stays lit through the bars for a moment, then the light shrinks to nothing */
@@ -1205,7 +1207,7 @@ async function enterElevator(){if(END.on)return;END.on=true;closeMap();if(casesO
   cableGroan(16);const F=$('fade');F.style.transition='opacity 1.2s';const labels=['G','B','-1','-2','-3','-5','-8','-13','-21'];let k=0;
   for(const lb of labels){$('liftFloor').textContent=lb;$('liftNeedle').style.transform=`rotate(${-80+k*20}deg)`;k++;LIFT.shake=.006+k*.004;F.style.opacity=Math.min(.82,k*.1)+(Math.random()<.3?.1:0);if(k===3)thud();await sleep(1500-k*80);}
   $('liftFloor').textContent='';whisper(3,.22);note('The needle runs off the end of the dial. The lift keeps falling.',4500);LIFT.shake=.05;F.style.opacity=.9;await sleep(4200);
-  stinger(.35);flash=1;slam();LIFT.shake=.12;await sleep(900);LIFT.shake=0;
+  stinger(.35);flash=1;gateSlam();LIFT.shake=.12;await sleep(900);LIFT.shake=0;
   F.style.transition='opacity .1s';F.style.opacity=1;L.style.display='none';L.classList.remove('inroom');liftGate.visible=false;await sleep(1500);showGameOver('lift','TRAPPED','The lift is still going down. So are you. No one is allowed beyond STAFF ONLY.');}
 
 /* ================= room introductions: the first time you enter each room ================= */
@@ -1546,7 +1548,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={cableGroan,gateSlam,QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
