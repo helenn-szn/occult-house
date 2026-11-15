@@ -35,7 +35,7 @@ Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) 
 - **The Antiquities Study**: examine the five relics in their red cases and read each provenance card, then answer the curator's ledger. Its three questions can only be answered with what you found elsewhere in the house. Wrong answers have consequences; right ones open a drawer and close the case.
 - **The Portrait Gallery**: six portraits. Look away and one of them changes; find which and examine it before it changes back. Catch three changes to close the case. Pick wrong and the gallery notices you.
 - **A challenge in every room, and a key in four pieces**: wind the stopped clock in the Front Hall (hold E while the hall goes dark), find Button the doll by her giggling before time runs out, knock back door II's pattern in the Passage, and beat Edgar at higher or lower in the Card Parlour. Each gives a piece of a brass key.
-- **The restricted lift**: the door marked STAFF ONLY in the Passage takes the whole key. No one is allowed in, and there is no way back.
+- **The restricted lift**: the door marked STAFF ONLY in the Passage takes the whole key. It opens onto the Lift Landing, a real Aholo room, and locks behind you. At the far end a brass cage lift is waiting. Step in, the gate runs shut, and the lift falls past every floor on the dial. No one is allowed in, and there is no way back.
 - **The map** shows every room with a picture of it, the doors between them, and where you are. You travel by opening doors. Each room on the map shows how far a walk it is from where you stand.
 - **The radar** in the top corner shows the room you're in, turned so you always face up, with a diamond for every door. Under it, each door is listed nearest first, with its distance in metres and an arrow pointing the way.
 - **The endings**: leave by the front door at any time, or the house calls you back once every rule is broken or every case is closed. The curator is waiting. Five endings: The Lift (you took the restricted lift), The Guest (no rules broken), The Visitor (one or two), The Exhibit (all three: you wake inside Marigold's cabinet) and The Curator (all four cases closed: he hands you his keys). An end card sums up your visit.
@@ -71,6 +71,7 @@ assets/passage.spz    the Passage (compressed Gaussian splats)
 assets/parlour.spz    the Card Parlour (compressed Gaussian splats)
 assets/study.spz      the Antiquities Study (compressed Gaussian splats)
 assets/gallery.spz    the Portrait Gallery (compressed Gaussian splats)
+assets/lift.spz       the Lift Landing, behind the STAFF ONLY door (compressed Gaussian splats)
 assets/portrait_*.jpg the gallery's paintings, two versions of each
 assets/map_*.jpg      the map's pictures of each room, cropped from the room panoramas
 assets/marigold.glb   Marigold
