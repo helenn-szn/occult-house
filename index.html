@@ -25,7 +25,7 @@
   #sub{position:fixed;left:50%;bottom:9%;transform:translateX(-50%);z-index:3;max-width:min(760px,90vw);text-align:center;font-size:1.3rem;line-height:1.45;color:#efe4d2;text-shadow:0 0 10px #000,0 0 3px #000,0 2px 2px #000;opacity:0;transition:opacity .4s;pointer-events:none}
   #sub i{font-family:'Special Elite',monospace;font-style:normal;color:#c0392b;font-size:.85rem;letter-spacing:.12em;display:block;margin-bottom:.25em}
   #skip{position:fixed;right:16px;bottom:16px;z-index:4;display:none}
-  #prompt{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:3;display:none}
+  #prompt{position:fixed;left:50%;bottom:28%;transform:translateX(-50%);z-index:3;display:none}
   #tui{display:none;position:fixed;inset:0;z-index:3;pointer-events:none}
   #tui.on{display:block}
   #stickBase{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(230,217,200,.35);background:rgba(10,6,7,.35);pointer-events:none;opacity:.55;transition:opacity .2s}
@@ -101,6 +101,12 @@
   #quizA button:hover,#quizA button:focus-visible{background:#7a1616;color:#efe5cf}
   #quiz .x{margin-top:14px;font-size:.7rem;background:transparent;color:#5a0d0d;border:1px solid #6e5a3c}
   @media (max-width:520px){#quizA{grid-template-columns:1fr}}
+  #roomCard{position:fixed;left:50%;top:24%;transform:translateX(-50%);z-index:3;text-align:center;pointer-events:none;opacity:0;transition:opacity 1.2s;width:min(680px,90vw)}
+  #roomCard.show{opacity:1}
+  #roomCard small{display:block;font-family:'Special Elite',monospace;font-size:.75rem;letter-spacing:.3em;color:#b8a888;margin-bottom:6px}
+  #roomCard h2{margin:0;font-family:'Special Elite',monospace;font-weight:400;font-size:clamp(1.6rem,5vw,2.6rem);letter-spacing:.16em;color:#d23a2a;text-shadow:0 0 18px #000,0 0 4px #000}
+  #roomCard .rule{width:90px;height:1px;background:#7a1616;margin:10px auto 0}
+  @media (max-height:520px){#sub{font-size:1rem;bottom:5%}#roomCard{top:18%}}
   #cardView{display:none;position:fixed;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(2,1,1,.7);pointer-events:none;opacity:0;transition:opacity .5s}
   #cardView.show{opacity:1}
   #cardView .cardImg{width:min(190px,32vw,30vh);height:auto;display:block;box-shadow:0 10px 40px #000;transform:rotateY(0);animation:flip .7s ease-out}
@@ -143,6 +149,7 @@
   <button id="bSnd" class="on">Sound</button>
 </div>
 <div id="vf"><div class="rec"><b>●</b> <span id="shots"></span></div></div><canvas id="crack"></canvas><div id="camflash"></div>
+<div id="roomCard" aria-live="polite"><small id="roomNo"></small><h2 id="roomTitle"></h2><div class="rule"></div></div>
 <div id="cardView" aria-live="polite"></div>
 <div id="quiz" role="dialog" aria-label="The curator's ledger"><div class="paper"><h2>THE APPRAISAL</h2><p class="n" id="quizN"></p><p id="quizQ"></p><div id="quizA"></div><button class="x" id="quizX">Close the ledger</button></div></div>
 <div id="listener" aria-hidden="true"><div class="dial"><div id="lNeedle"></div></div><div id="lBulb"></div><span>LISTENER</span></div>
@@ -318,7 +325,7 @@ async function showRoom(id,spawn){
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* walking through a doorway: a step forward into the dark, footsteps and a door, then the next room fades up */
 async function travel(id,spawn){
-  if(switching||id===roomId)return;switching=true;closeMap();if(CAM.up){CAM.up=false;camUI();}
+  if(switching||id===roomId)return;switching=true;introTok++;if(!INTRO.on)$('sub').style.opacity=0;$('roomCard').classList.remove('show');try{if(!INTRO.on)speechSynthesis.cancel();}catch(_){}closeMap();if(CAM.up){CAM.up=false;camUI();}
   const F=$('fade');F.style.transition='opacity .7s ease-in';F.style.opacity=1;
   footsteps();setTimeout(doorCreak,250);
   const from=cam.position.clone(),dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),t0=performance.now();
@@ -331,7 +338,7 @@ async function travel(id,spawn){
   while(performance.now()-t1<900){const k=(performance.now()-t1)/900;cam.position.lerpVectors(st,sp,1-Math.pow(1-k,3));await sleep(16);}
   cam.position.copy(sp);switching=false;
   if(OMEN.towerArmed){OMEN.towerArmed=false;OMEN.towerT=9;thud();whisper(2.4,.14);note('The Tower. Every light in the house has gone out.',5000);}
-  if(id==='doll'&&!seenDoll){seenDoll=true;setTimeout(()=>note('The Doll Room',2500),300);}
+  roomIntro(id);
 }
 let glowBase=[2.4,1.1,1.1],seenDoll=false;
 
@@ -555,7 +562,7 @@ async function openDoorIII(){if(switching)return;switching=true;breakRule2();doo
   const F=$('fade');F.style.transition='opacity 1s ease-in';F.style.opacity=1;footsteps();await sleep(1100);thud();whisper(2.4,.16);
   await preload('nine');await showRoom('nine');NINE.t=0;NINE.hint=0;await sleep(900);
   F.style.transition='opacity 1.8s ease-out';F.style.opacity=0;await sleep(1500);switching=false;
-  note('Room Nine. Everything is the wrong way round. Find the way out.',6000);}
+  roomIntro('nine');}
 async function leaveNine(){if(switching)return;switching=true;
   stinger(.3);flash=.6;const F=$('fade');F.style.transition='opacity .15s';F.style.opacity=1;await sleep(500);knock();await sleep(1200);
   await showRoom('passage',{x:-3.2,z:-.55,yaw:-Math.PI/2});await sleep(500);
@@ -831,6 +838,24 @@ function studySolved(){STUDY.done=true;bell();setTimeout(()=>{showClue('The Appr
 function shatter(){if(!AC)return;const t=AC.currentTime;for(let k=0;k<14;k++){const n=noise(),bp=AC.createBiquadFilter(),g=AC.createGain();bp.type='bandpass';bp.frequency.value=3000+Math.random()*5000;bp.Q.value=8;n.connect(bp);bp.connect(g);g.connect(master);const d=k*.035+Math.random()*.05;env(g,t+d,.001,.4,.12+Math.random()*.2);n.start(t+d);n.stop(t+d+.4);}}
 
 $('quizX').onclick=()=>closeQuiz();
+/* ================= room introductions: the first time you enter each room ================= */
+const INTROS={
+  doll:{no:'EXHIBIT ROOM II',lines:['The Doll Room. Every one of them was somebody\'s, and most of their owners begged us never to send them back.','Mind Marigold, in the cabinet at the back. She does not like to be stared at, and she does not like to be ignored.']},
+  parlour:{no:'EXHIBIT ROOM III',lines:['The Card Parlour. Edgar Hollowmere played at that table every night for forty years, and never once lost.','The deck will tell your fortune, if you ask it. It is always right.']},
+  study:{no:'EXHIBIT ROOM IV',lines:['The Antiquities Study. The oldest pieces in the collection, and the most dangerous.','Each one comes with its paperwork. Read it carefully. The house is fond of tests.']},
+  passage:{no:'BELOW STAIRS',lines:['The Passage. The house was built around those three doors.','I have never opened them. I would not start tonight.']},
+  nine:{no:'NOT ON ANY MAP',title:'ROOM NINE',voice:'A WHISPER',lines:['Everything here is the wrong way round. Find what does not belong, and it will let you go.']}};
+const INTRO_SEEN={};let introTok=0;
+async function roomIntro(id){const I=INTROS[id];if(!I||INTRO_SEEN[id]||END.on)return;INTRO_SEEN[id]=true;const tok=++introTok;
+  $('roomNo').textContent=I.no;$('roomTitle').textContent=I.title||ROOMS[id].name.toUpperCase();const rc=$('roomCard');
+  await sleep(500);if(tok!==introTok)return;rc.classList.add('show');setTimeout(()=>{if(tok===introTok)rc.classList.remove('show');},4200);
+  await sleep(1600);
+  for(const L of I.lines){if(tok!==introTok||END.on||CAM.seq||roomId!==id)break;
+    $('sub').innerHTML='<i>'+(I.voice||'MR. VANE, SOMEWHERE IN THE HOUSE')+'</i>'+L;$('sub').style.opacity=1;
+    let ended=false;const spoke=I.voice?(whisper(2.4,.12),false):say(L,()=>{ended=true;});const d=lineDur(L),t0=performance.now();
+    while(tok===introTok&&roomId===id){const el=(performance.now()-t0)/1000;if(spoke?((ended&&el>1.2)||el>d*2.2):el>d+.6)break;await sleep(100);}
+    await sleep(350);}
+  if(tok===introTok&&!INTRO.on)$('sub').style.opacity=0;}
 /* ================= the Curator's welcome ================= */
 const LINES=[
   ["Good evening. You're our only guest tonight. The house prefers it that way."],
@@ -1000,7 +1025,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();const pr=$('prompt');if(current){pr.textContent=(touch?'':'E · ')+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
