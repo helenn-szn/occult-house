@@ -34,6 +34,9 @@
   #radarT .near{color:#ff8a70}
   #radarT .ar{display:inline-block;width:1.1em;text-align:center;color:#c0392b}
   #radarT b{color:#ff8a70;font-weight:normal}
+  #radarT div{pointer-events:auto;cursor:pointer;padding:1px 2px;border-radius:3px}
+  #radarT div:hover{background:rgba(122,22,22,.45)}
+  body.touch #radarT div{padding:5px 4px}
   body.touch #radar{top:50px;right:10px}
   body.touch #radarC{width:110px;height:110px}
   body.touch #radarT{font-size:.6rem}
@@ -59,7 +62,7 @@
   body.touch #listener{top:250px;bottom:auto;left:auto;right:10px}
   @media (max-height:600px){#quest .qf{display:none}}
   #help{display:none;position:fixed;inset:0;z-index:8;background:rgba(2,1,1,.9);align-items:center;justify-content:center;padding:14px}
-  #help .paper{max-width:760px;width:100%;max-height:92vh;overflow:auto;background:#d8c9a8;color:#2a1a10;padding:22px 28px;border:1px solid #6b5230;box-shadow:0 10px 40px #000;font-family:'EB Garamond',serif;font-size:1.02rem;line-height:1.4}
+  #help .paper{position:relative;max-width:520px;width:100%;max-height:92vh;overflow:auto;background:#d8c9a8;color:#2a1a10;padding:22px 28px;border:1px solid #6b5230;box-shadow:0 10px 40px #000;font-family:'EB Garamond',serif;font-size:1.02rem;line-height:1.4}
   #help h2{font-family:'Special Elite',monospace;color:#6e1010;letter-spacing:.1em;margin:0 0 6px}
   #help h3{font-family:'Special Elite',monospace;font-size:.85rem;letter-spacing:.1em;color:#6e1010;margin:14px 0 4px;border-bottom:1px solid rgba(80,50,20,.3);padding-bottom:2px}
   #help p{margin:4px 0}
@@ -67,12 +70,29 @@
   #help td{padding:3px 6px;vertical-align:top;border-bottom:1px dotted rgba(80,50,20,.25)}
   #help td:first-child{font-family:'Special Elite',monospace;font-size:.8rem;white-space:nowrap;color:#4a2a14}
   #help .row{display:flex;justify-content:flex-end;margin-top:14px}
+  #help .hcard{display:none;min-height:230px}
+  #help .hcard.on{display:block;animation:hin .25s ease-out}
+  @keyframes hin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+  #help .hk{font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.14em;color:#7a3a1a;margin-bottom:6px}
+  #help .hcard h2{font-family:'Special Elite',monospace;font-size:1.55rem;letter-spacing:.04em;margin:.1em 0 .5em;color:#3a0c06}
+  #help .hcard p{font-size:1.12rem;margin:.45em 0}
+  #help .big{font-size:2.4rem;line-height:1;margin:.1em 0 .2em}
+  #help ol.tl{margin:.2em 0 .4em;padding-left:1.4em;font-size:1.08rem;line-height:1.55}
+  #help ol.tl b{font-family:'Special Elite',monospace;font-weight:400;font-size:.92rem;color:#6e1010}
+  #help .hnav{display:flex;align-items:center;justify-content:space-between;margin-top:16px;gap:10px}
+  #help .hdots{display:flex;gap:7px}
+  #help .hdots i{width:9px;height:9px;border-radius:50%;background:#b8a27c;display:block}
+  #help .hdots i.on{background:#6e1010}
+  #help #helpPrev{background:transparent;color:#6e1010;border-color:#8a6a4a}
+  #help #helpX{position:absolute;right:10px;top:8px;background:transparent;border:none;color:#6e1010;font-size:1.6rem;line-height:1;padding:2px 8px;cursor:pointer}
+  body:not(.touch) #help .t-only{display:none}
+  body.touch #help .k-only{display:none}
   #help button{background:#6e1010;color:#f0e2c8;border-color:#3a0808}
   #help .qs td:first-child{font-family:'EB Garamond',serif;font-size:.95rem;font-weight:600;white-space:normal;width:24%}
   #tui{display:none;position:fixed;inset:0;z-index:3;pointer-events:none}
   #tui.on{display:block}
-  #stickBase{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(230,217,200,.35);background:rgba(10,6,7,.35);pointer-events:none;opacity:.55;transition:opacity .2s}
-  #stickKnob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(192,57,43,.75);border:2px solid rgba(230,217,200,.6)}
+  #stickBase{position:fixed;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;border:2px solid rgba(230,217,200,.35);background:rgba(10,6,7,.35);pointer-events:none;opacity:.55;transition:opacity .2s}
+  #stickKnob{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(192,57,43,.75);border:2px solid rgba(230,217,200,.6)}
   #stickHint{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.06em;color:rgba(230,217,200,.55);pointer-events:none}
   #lookHint{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.06em;color:rgba(230,217,200,.55);pointer-events:none;text-align:right}
   .tbtn{position:fixed;pointer-events:auto;width:64px;height:64px;border-radius:50%;padding:0;font-size:.62rem;letter-spacing:.04em;display:none;align-items:center;justify-content:center;text-align:center;line-height:1.1;background:rgba(10,6,7,.7);border:2px solid #7a1616;touch-action:none}
@@ -132,6 +152,11 @@
   #cases .close{position:absolute;right:12px;top:12px;font-size:.7rem;padding:.4em .8em}
   #ending{display:none;z-index:8;background:#030202;overflow:auto;justify-content:safe center}
   #ending .stats{font-family:'Special Elite',monospace;font-size:.9rem;line-height:1.8;letter-spacing:.04em;opacity:.85;margin:6px 0}
+  #keep{margin:14px 0 6px;text-align:center;max-width:560px}
+  #keep .kh{font-family:'Special Elite',monospace;letter-spacing:.12em;font-size:.85rem;color:#c0392b;margin-bottom:8px}
+  #keep img{display:block;width:min(340px,80vw);margin:10px auto;border:1px solid #5c1a1a;box-shadow:0 10px 40px #000}
+  #keep .kc{font-family:'Special Elite',monospace;font-size:.75rem;letter-spacing:.06em;opacity:.7;margin-top:6px}
+  #keep .wait{font-style:italic;opacity:.7}
   #ending .credits{max-width:560px;font-size:.95rem;line-height:1.55;opacity:.7;border-top:1px solid #5c1a1a;padding-top:14px;margin-top:4px}
   #ending .credits b{font-family:'Special Elite',monospace;font-weight:400;color:#c0392b;letter-spacing:.08em}
   #quiz{display:none;position:fixed;inset:0;z-index:7;background:rgba(2,1,1,.86);align-items:center;justify-content:center;padding:16px}
@@ -236,38 +261,32 @@
   <h1 id="endTitle"></h1>
   <p id="endText"></p>
   <div class="stats" id="endStats"></div>
+  <div id="keep"><div class="kh">THE HOUSE LETS YOU TAKE ONE THING HOME</div><button id="keepOpen">Open your parcel</button>
+    <div id="keepOut" style="display:none"><p id="keepName" style="margin:6px 0 0"></p><img id="keepImg" alt="Your keepsake from Occult House"><div><button id="keepDl">Download the picture</button> <button id="keepShare" style="display:none">Share</button></div><div class="kc" id="keepCount"></div></div></div>
   <button id="again">Visit again</button>
   <div class="credits"><b>OCCULT HOUSE</b><br>Built for the Manycore Aholo Global 3D AI Hackathon.<br>Rooms: Aholo World API. Objects, the curator and your hand: Lux3D, with humanoid auto-rig and animation retarget.<br>Rendering: three.js and Spark. All names, objects and characters are invented.</div>
 </div>
 <div id="fade"></div>
 
 <div id="help" role="dialog" aria-label="How to play"><div class="paper">
-<h2>HOW TO PLAY</h2>
-<p>You are the only guest tonight in Ambrose Vane's house of haunted things, and the front door is locked behind you. The only way out is through the house.</p>
-<h3>THE GOAL</h3>
-<p><b>Six rooms. Six trials. Six keys.</b> Every room holds a trial. Pass it and the house gives you a key, and the door to the next room unlocks. The front door has six locks. Bring all six keys back to it and you can leave.</p>
-<h3>THE TRIALS, IN ORDER</h3>
-<table class="qs" id="helpQuests"></table>
-<h3>FAILING</h3>
-<p>Every trial gives you <b>three chances</b> (the red dots in the trial panel). Fail three times and the house takes you: <b>you die</b>. You start that room's trial again from the beginning. Rooms you have already passed stay passed, and their keys stay yours.</p>
-<h3>FINDING YOUR WAY</h3>
-<p>The <b>trial panel</b> on the left always says what to do next and where to go. The <b>radar</b> at the top right shows the doors around you, which way to turn and how far they are; locked doors are marked. The <b>map</b> (M) shows every room, which ones are open, and which trials you have passed. Walk up to a door and press E to go through.</p>
-<h3>THE ONE RULE</h3>
-<p>No cameras. There is a camera in your pocket all the same. Use it and the house will notice. And whatever happens, do not open the door marked STAFF ONLY.</p>
-<h3>CONTROLS</h3>
-<table>
-<tr><td>Keyboard and mouse</td><td>W A S D to walk (hold Shift to hurry). Click the screen, then move the mouse to look. E to use what the prompt names, or hold E when it says hold. M map, C camera, Space or click to take a photo, H this page.</td></tr>
-<tr><td>Phone or tablet</td><td>Hold it sideways. Left thumb: the joystick to walk. Right thumb: drag to look. Tap the round buttons to use things, raise the camera and open the map.</td></tr>
-<tr><td>Game controller</td><td>Left stick walk, right stick look. A use (hold A to hold), B close, X camera, RT photo, Y map, Start this page.</td></tr>
-</table>
-<h3>ON YOUR SCREEN</h3>
-<table>
-<tr><td>Quest (top left)</td><td>What to do in the room you are in, how far you have got, and what happens if you fail.</td></tr>
-<tr><td>Radar (top right)</td><td>The room around you, turned so you always face up. Diamonds are doors. Underneath, each door is listed nearest first, with its distance and which way to turn.</td></tr>
-<tr><td>Map (M)</td><td>Every room, how far a walk it is, which quests you have finished, and where you are.</td></tr>
-<tr><td>Key (top left)</td><td>The key pieces you have found, out of four.</td></tr>
-</table>
-<div class="row"><button id="helpClose">Got it (H)</button></div>
+<button id="helpX" aria-label="Close">×</button>
+<div class="hcard"><div class="hk">HOW TO PLAY · 1 OF 6</div><h2>Six rooms. Six keys.</h2>
+<p>You are locked in a house of haunted things.</p><p>Every room holds a <b>trial</b>. Pass it to win a key and unlock the next room.</p><p>Bring all six keys to the front door to get out.</p></div>
+<div class="hcard"><div class="hk">HOW TO PLAY · 2 OF 6</div><h2>The trials</h2>
+<ol class="tl"><li><b>FRONT HALL</b> wind the clock</li><li><b>DOLL ROOM</b> find Button</li><li><b>CARD PARLOUR</b> beat Edgar at cards</li><li><b>STUDY</b> answer the ledger</li><li><b>GALLERY</b> catch the portraits moving</li><li><b>PASSAGE</b> knock back what you hear</li></ol>
+<p>The panel on the left always explains the one you are on.</p></div>
+<div class="hcard"><div class="hk">HOW TO PLAY · 3 OF 6</div><h2>Three chances</h2>
+<p class="big">● ● ●</p><p>Fail a trial three times and you <b>die</b>.</p><p>You start that room again. The keys you have won stay yours.</p></div>
+<div class="hcard"><div class="hk">HOW TO PLAY · 4 OF 6</div><h2>Finding your way</h2>
+<p><b>Light under a door</b> means it is open. The brightest one leads to your next trial.</p>
+<p class="k-only"><b>Click the floor</b> to walk there, or click a door in the list under the radar (top right).</p>
+<p class="t-only"><b>Tap the floor</b> to walk there, or tap a door in the list under the radar (top right).</p></div>
+<div class="hcard"><div class="hk">HOW TO PLAY · 5 OF 6</div><h2>Controls</h2>
+<div class="k-only"><p><b>W A S D</b> walk · <b>← →</b> turn · <b>mouse</b> look</p><p><b>Click the floor</b> to walk there</p><p><b>E</b> use (hold E when it says hold)</p><p><b>M</b> map · <b>C</b> camera · <b>H</b> this guide</p><p style="font-size:.95rem;opacity:.8">A game controller works too: left stick walk, right stick look, A use.</p></div>
+<div class="t-only"><p><b>Left thumb:</b> joystick to walk</p><p><b>Right thumb:</b> drag to look</p><p><b>Tap the floor</b> to walk there</p><p><b>Red button:</b> use what it names</p></div></div>
+<div class="hcard"><div class="hk">HOW TO PLAY · 6 OF 6</div><h2>One rule</h2>
+<p><b>No cameras.</b> There is one in your pocket anyway.</p><p>And never open the door marked <b>STAFF ONLY</b>.</p></div>
+<div class="hnav"><button id="helpPrev">Back</button><div class="hdots" id="hDots"></div><button id="helpClose">Next</button></div>
 </div></div>
 <div class="scr" id="title">
   <h1>OCCULT HOUSE</h1>
@@ -474,7 +493,7 @@ function updateDoorGlows(dt,t){if(!DOORGLOW.list.length)return;const st=stage(),
     d.m.material.opacity=Math.min(1,k*.95);d.m.visible=k>.01;
     const c=d.to==='lift'?[1+3.2*k,1+.25*k,1+.2*k]:d.to==='out'?[1+5.5*k,1+5*k,1+4*k]:[1+5*k,1+3.1*k,1+1.4*k];
     d.q.sdf.color.setRGB(c[0],c[1],c[2]);d.q.e.visible=k>.01;}}
-async function showRoom(id,spawn){
+async function showRoom(id,spawn){WALK.path=[];WALK.face=null;if(WALK.marker)WALK.marker.visible=false;VEL.x=VEL.z=0;
   await preload(id);
   for(const k in MESH)MESH[k].m.visible=(k===id);roomId=id;VISITED[id]=true;try{spark.setDirty();await spark.update({scene,camera:cam});}catch(_){}
   const R=ROOMS[id];glowSdf.position.set(...R.glow.p);glowSdf.radius=R.glow.r;glowBase=R.glow.c;
@@ -977,8 +996,48 @@ function endCard(kind){try{speechSynthesis.cancel();}catch(_){}try{document.exit
   const card=OMEN.card?({tower:'The Tower',moon:'The Moon',lovers:'The Lovers',blank:'the blank card'})[OMEN.card]:null;
   $('endTitle').textContent='ENDING '+(kind==='A2'?'A':kind)+(kind==='A2'?'′':'')+': '+ENDINGS[kind][0].toUpperCase();$('endText').textContent=ENDINGS[kind][1];
   $('endStats').innerHTML=`Trials passed: ${keyCount()} of 6<br>Deaths: ${QS.deaths}<br>`+(card?`Card drawn: ${card}${OMEN.card==='blank'?'. It now bears your name.':''}<br>`:'')+(CAM.used?`Photographs taken: ${8-CAM.shots}<br>`:'')+`Time in the house: ${mins} minute${mins>1?'s':''}`;
+  KEEP.kind=kind;KEEP.done=false;$('keepOut').style.display='none';$('keepOpen').style.display='';$('keepOpen').disabled=false;$('keepOpen').textContent='Open your parcel';$('keep').style.display=(kind==='A'||kind==='A2')?'':'none';
   $('ending').style.display='flex';$('bar').style.display='none';$('tui').classList.remove('on');$('rules').style.display='none';$('listener').style.display='none';}
 $('again').onclick=()=>location.reload();
+let KEEPSAKES_=null;
+function KS(){return KEEPSAKES_||(KEEPSAKES_=[...RELICS.map(r=>({id:r.id,name:r.name,text:r.card,glb:'assets/relic_'+r.id+'.glb'})),
+  {id:'marigold',name:'Marigold',text:'A porcelain doll in a glass cabinet, taken from the Ashby house in 1962. She turns to face you whenever you look away. Do not touch the glass.',glb:'assets/marigold.glb'},
+  ...PORTRAITS.map(P=>({id:'portrait_'+P.id,name:P.name,text:P.frag,img:'assets/portrait_'+P.id+'_b.jpg'}))]);}
+const KEEP={kind:'A',done:false};
+function keptList(){try{return JSON.parse(localStorage.getItem('occultHouseKept')||'[]');}catch(_){return [];}}
+function keepIt(id){try{const k=keptList();if(!k.includes(id))k.push(id);localStorage.setItem('occultHouseKept',JSON.stringify(k));}catch(_){}}
+async function renderModel(url){const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(1);r.setSize(900,900,false);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.15;
+  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffe8d0,0x1a0606,1.2));const k=new THREE.DirectionalLight(0xffe2c0,2.6);k.position.set(1.4,2,2.6);sc.add(k);const rim=new THREE.DirectionalLight(0xff3020,2.4);rim.position.set(-2.2,1.2,-2);sc.add(rim);
+  const g=await new Promise((ok,no)=>new GLTFLoader().load(url,ok,undefined,no));const m=g.scene;m.traverse(o=>{if(o.isMesh&&o.material){for(const x of [].concat(o.material))if(x.map)x.map.colorSpace=THREE.SRGBColorSpace;}});
+  const bb=new THREE.Box3().setFromObject(m),sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());m.position.sub(c);const w=new THREE.Group();w.add(m);w.scale.setScalar(1/Math.max(sz.x,sz.y,sz.z));w.rotation.y=-.45;sc.add(w);
+  const cm=new THREE.PerspectiveCamera(30,1,.01,50);cm.position.set(0,.2,2.15);cm.lookAt(0,0,0);r.render(sc,cm);
+  const out=document.createElement('canvas');out.width=out.height=900;out.getContext('2d').drawImage(r.domElement,0,0);r.dispose();try{r.forceContextLoss();}catch(_){}return out;}
+function wrapText(g,t,x,y,w,lh,max){const words=t.split(' ');let line='',n=0;for(const wd of words){const tst=line?line+' '+wd:wd;if(g.measureText(tst).width>w&&line){g.fillText(line,x,y+n*lh);n++;line=wd;if(n>=max-1){/* last line: fit what is left */}}else line=tst;}if(line&&n<max)g.fillText(line,x,y+n*lh);}
+async function keepsakeCanvas(it){try{await document.fonts.load('40px "Special Elite"');await document.fonts.load('italic 30px "EB Garamond"');}catch(_){}
+  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.fillStyle='#0a0505';g.fillRect(0,0,W,H);let gr=g.createRadialGradient(540,520,40,540,520,640);gr.addColorStop(0,'rgba(150,24,14,.55)');gr.addColorStop(1,'rgba(150,24,14,0)');g.fillStyle=gr;g.fillRect(0,0,W,H);
+  g.strokeStyle='#6e1414';g.lineWidth=3;g.strokeRect(28,28,W-56,H-56);g.strokeStyle='#3a0b0b';g.lineWidth=1;g.strokeRect(42,42,W-84,H-84);
+  g.textAlign='center';g.fillStyle='#d8c9a8';g.font='34px "Special Elite", monospace';try{g.letterSpacing='8px';}catch(_){}g.fillText('OCCULT HOUSE',540,104);
+  g.font='17px "Special Elite", monospace';try{g.letterSpacing='4px';}catch(_){}g.fillStyle='#8a6a5a';g.fillText('FROM THE COLLECTION OF AMBROSE VANE',540,138);try{g.letterSpacing='0px';}catch(_){}
+  if(it.glb){const im=await renderModel(it.glb);const sh=g.createRadialGradient(540,860,10,540,860,300);sh.addColorStop(0,'rgba(0,0,0,.6)');sh.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=sh;g.fillRect(200,780,680,160);g.drawImage(im,140,150,800,800);}
+  else{const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=it.img;});const fw=560,fh=Math.round(fw*im.height/im.width),fx=540-fw/2,fy=190;
+    const gold=g.createLinearGradient(fx,fy,fx+fw,fy+fh);gold.addColorStop(0,'#6a4a1a');gold.addColorStop(.5,'#c9a24a');gold.addColorStop(1,'#5a3a10');g.fillStyle=gold;g.fillRect(fx-26,fy-26,fw+52,Math.min(fh,700)+52);
+    g.fillStyle='#1a0e06';g.fillRect(fx-8,fy-8,fw+16,Math.min(fh,700)+16);g.save();g.beginPath();g.rect(fx,fy,fw,Math.min(fh,700));g.clip();g.drawImage(im,fx,fy,fw,fh);g.restore();}
+  const lx=140,ly=965,lw=800,lh=270;g.fillStyle='#d8c9a8';g.fillRect(lx,ly,lw,lh);g.strokeStyle='#6b5230';g.lineWidth=2;g.strokeRect(lx+8,ly+8,lw-16,lh-16);
+  g.fillStyle='#3a1208';g.font='38px "Special Elite", monospace';g.fillText(it.name.toUpperCase(),540,ly+62);g.fillStyle='#6b5230';g.fillRect(380,ly+82,320,2);
+  g.fillStyle='#2a1a10';g.font='italic 27px "EB Garamond", Georgia, serif';wrapText(g,it.text,540,ly+124,lw-90,34,4);
+  g.fillStyle='#c0392b';g.font='21px "Special Elite", monospace';g.fillText((KEEP.kind==='A2'?'ENDING A′: THE VISITOR':'ENDING A: THE GUEST')+' · I GOT OUT',540,1282);
+  g.fillStyle='#8a6a5a';g.font='17px "Special Elite", monospace';g.fillText('Taken from Occult House on '+new Date().toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'})+' · occult-house-nine.vercel.app',540,1314);
+  return c;}
+$('keepOpen').onclick=async()=>{if(KEEP.busy||KEEP.done)return;KEEP.busy=true;const kept=keptList(),fresh=KS().filter(k=>!kept.includes(k.id)),pool=fresh.length?fresh:KS(),it=pool[Math.floor(Math.random()*pool.length)];
+  $('keepOpen').textContent='The paper is old, and tied with red cord...';$('keepOpen').disabled=true;
+  try{const c=await keepsakeCanvas(it);const url=c.toDataURL('image/jpeg',.92);KEEP.done=true;keepIt(it.id);
+    $('keepImg').src=url;$('keepName').innerHTML='Inside: <b>'+it.name+'</b>';$('keepOpen').style.display='none';$('keepOut').style.display='block';
+    const n=keptList().length;$('keepCount').textContent=n>=KS().length?'You have taken all '+KS().length+' things the house will part with.':'You have taken '+n+' of '+KS().length+' things from the house. Visit again, and it will give you something else.';
+    const fname='occult-house-'+it.id+'.jpg';$('keepDl').onclick=()=>{const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();};
+    c.toBlob(b=>{try{const f=new File([b],fname,{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[f]})){$('keepShare').style.display='';$('keepShare').onclick=()=>navigator.share({files:[f],title:'Occult House',text:'I got out of Occult House with '+it.name+'. #Manycorehackathon'}).catch(()=>{});}}catch(_){}},'image/jpeg',.92);}
+  catch(e){$('keepOpen').textContent='The parcel will not open. Try again.';$('keepOpen').disabled=false;}
+  KEEP.busy=false;};
 
 /* ================= the Antiquities Study: The Appraisal =================
    Five relics, each with a provenance card. The curator's ledger asks three questions whose answers
@@ -1102,8 +1161,8 @@ function listenTo(p,dt){const el=$('listener');el.style.display='block';const d=
   LST.v+=(target-LST.v)*Math.min(1,dt*3);$('lNeedle').style.transform=`rotate(${-70+140*Math.max(0,Math.min(1,LST.v))}deg)`;$('lBulb').style.opacity=.25+.75*LST.v;}
 /* --- hall: the clock. Hold E to wind it; the hall darkens and the whispers rise while you do --- */
 const CLOCK={p:[-1.25,1.2],hold:0,holding:false,done:false,tries:0};
-function clockSpot(){if(CLOCK.done||roomId!=='hall'||!INTRO.done||INTRO.on)return null;const d=Math.hypot(CLOCK.p[0]-cam.position.x,CLOCK.p[1]-cam.position.z);if(d>.95)return null;
-  cam.getWorldDirection(tmpV2);if((tmpV2.x*(CLOCK.p[0]-cam.position.x)+tmpV2.z*(CLOCK.p[1]-cam.position.z))/Math.max(d,.01)<.6)return null;return {label:'Hold to wind the clock',hold:true,go:()=>{}};}
+function clockSpot(){if(CLOCK.done||roomId!=='hall'||!INTRO.done||INTRO.on)return null;const d=Math.hypot(CLOCK.p[0]-cam.position.x,CLOCK.p[1]-cam.position.z);if(d>1.15)return null;
+  cam.getWorldDirection(tmpV2);if((tmpV2.x*(CLOCK.p[0]-cam.position.x)+tmpV2.z*(CLOCK.p[1]-cam.position.z))/Math.max(d,.01)<.05)return null;return {label:'Hold to wind the clock',hold:true,go:()=>{}};}
 function updateClock(dt){if(CLOCK.done)return;const near=current&&current.hold;const held=near&&(keys.KeyE||HOLD.touch||HOLD.pad);
   if(held){CLOCK.hold+=dt;CLOCK.holding=true;windOn();dark01=Math.min(dark01,1-CLOCK.hold/5*.85);if(Math.random()<dt*1.4)whisper(.8,.05+CLOCK.hold*.025);
     $('holdBar').style.display='block';$('holdFill').style.width=Math.min(100,CLOCK.hold/4*100)+'%';
@@ -1314,8 +1373,6 @@ async function retryRoom(){if(!QS.go)return;const room=QS.room,back=room==='lift
   QS.go=false;switching=false;QUI.last='';if(touch)$('tui').classList.add('on');else lock();
   note(room==='lift'?'You are back in the Passage. Leave the door marked STAFF ONLY alone.':'You are back at the start of the '+ROOMS[back].name.replace('The ','')+'\'s trial. Three chances.',5500);}
 $('goRetry').onclick=()=>retryRoom();$('goHelp').onclick=()=>openHelp();
-{let h='';QSEQ.forEach((q,i)=>{const Q=QUESTS[q.room];h+=`<tr><td>${i+1}. ${ROOMS[q.room].name}<br><small>${Q.n}</small></td><td>${Q.d}<br><i>If you fail: ${Q.f}</i></td></tr>`;});
- h+=`<tr><td>Then: the front door</td><td>With all six keys, go back to the front door in the Front Hall and leave.</td></tr>`;$('helpQuests').innerHTML=h;}
 const QUI={t:0,last:''};
 function updateQuest(dt){const el=$('quest');const show=started&&INTRO.done&&!END.on&&!helpOpen&&!QS.go;el.classList.toggle('on',show);if(!show)return;
   QUI.t+=dt;if(QUI.t<.25)return;QUI.t=0;
@@ -1329,9 +1386,15 @@ function updateQuest(dt){const el=$('quest');const show=started&&INTRO.done&&!EN
   const key=[H,N,D,P,C].join('|');if(key===QUI.last)return;QUI.last=key;
   el.classList.toggle('done',done);$('qH').textContent=H;$('qN').textContent=N;$('qD').textContent=D;$('qP').textContent=P;$('qC').innerHTML=C;$('qF').textContent=Fd;}
 let helpOpen=false;
-function openHelp(){if(helpOpen)return;if(QS.go)$('gameover').style.display='none';helpOpen=true;$('help').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;$('helpClose').focus();}
+const HELP={i:0};
+function helpShow(i){const cs=[...document.querySelectorAll('#help .hcard')];HELP.i=Math.max(0,Math.min(cs.length-1,i));cs.forEach((c,k)=>c.classList.toggle('on',k===HELP.i));
+  $('hDots').innerHTML=cs.map((_,k)=>`<i class="${k===HELP.i?'on':''}"></i>`).join('');$('helpPrev').style.visibility=HELP.i?'visible':'hidden';
+  $('helpClose').textContent=HELP.i===cs.length-1?(QS.firstHelp?'Enter the house':'Got it'):'Next';}
+function helpNext(){if(HELP.i>=document.querySelectorAll('#help .hcard').length-1)closeHelp();else helpShow(HELP.i+1);}
+{let sx=null;$('help').addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});$('help').addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(dx<-45)helpNext();else if(dx>45)helpShow(HELP.i-1);});}
+function openHelp(){if(helpOpen)return;if(QS.go)$('gameover').style.display='none';helpOpen=true;helpShow(0);$('help').style.display='flex';try{document.exitPointerLock();}catch(_){}for(const k in keys)keys[k]=false;$('helpClose').focus();}
 function closeHelp(){if(!helpOpen)return;helpOpen=false;$('help').style.display='none';if(QS.go){$('gameover').style.display='flex';return;}if(QS.firstHelp){QS.firstHelp=false;setTimeout(startIntro,700);}if(started&&!touch&&!QS.go&&!END.on)lock();}
-$('bHelp').onclick=()=>helpOpen?closeHelp():openHelp();$('helpClose').onclick=()=>closeHelp();$('titleHelp').onclick=()=>openHelp();
+$('bHelp').onclick=()=>helpOpen?closeHelp():openHelp();$('helpClose').onclick=()=>helpNext();$('helpPrev').onclick=()=>helpShow(HELP.i-1);$('helpX').onclick=()=>closeHelp();$('titleHelp').onclick=()=>openHelp();
 /* ================= distances: radar + map ================= */
 const ROOMNAME={hall:'Front Hall',doll:'Doll Room',passage:'The Passage',parlour:'Card Parlour',study:'Antiquities Study',gallery:'Portrait Gallery',lift:'Restricted',cage:'The lift',chair:'Edgar\'s chair'};
 function exitsOf(id){const R=ROOMS[id];if(!R)return[];const ex=(R.doors||[]).map(d=>({to:d.to,p:d.p,spawn:d.spawn}));
@@ -1347,6 +1410,8 @@ function routeTo(T,from,x,z,seen){seen=seen||new Set([from]);let best=null;
   return best;}
 const fmtM=d=>d<.95?'right here':d.toFixed(1)+' m';
 const RADAR={c:null,g:null,t:0,txt:''};
+{const go=e=>{const d=e.target.closest('#radarT div');if(!d)return;e.preventDefault();e.stopPropagation();const x=+d.dataset.x,z=+d.dataset.z;walkTo(x,z,[x,z]);};
+ $('radarT').addEventListener('click',go);$('radarT').addEventListener('touchend',go,{passive:false});}
 function drawRadar(dt){const el=$('radar');const show=started&&INTRO.done&&!END.on&&!mapOpen&&roomId&&roomId!=='nine'&&!switching&&!CAM.up&&!INSPECT.visible;
   el.classList.toggle('on',!!show);if(!show)return;RADAR.t+=dt;
   if(!RADAR.c){RADAR.c=$('radarC');RADAR.g=RADAR.c.getContext('2d');}
@@ -1374,7 +1439,7 @@ function drawRadar(dt){const el=$('radar');const show=started&&INTRO.done&&!END.
   /* the list under the radar: every door, nearest first, with an arrow pointing the way */
   if(RADAR.t-(RADAR.last||0)>.2){RADAR.last=RADAR.t;const AR=['↑','↗','→','↘','↓','↙','←','↖'];
     const txt=ex.map(e=>{const dx=e.p[0]-px,dz=e.p[1]-pz,ang=Math.atan2(dx*cy-dz*sy,-(dx*sy+dz*cy));const a=AR[((Math.round(ang/(Math.PI/4))%8)+8)%8];
-      const near=e.d<1.0,lk=!roomOpen(e.to),nx=(QSEQ[stage()]&&QSEQ[stage()].room===e.to)||e.to==='chair';return `<div class="${near?'near':''}" style="${lk?'opacity:.55':''}">${nx?'▶ ':''}${ROOMNAME[e.to]}${lk?' (locked)':''} · ${near?'here':e.d.toFixed(1)+' m'} <span class="ar">${near?'◆':a}</span></div>`;}).join('');
+      const near=e.d<1.0,lk=!roomOpen(e.to),nx=(QSEQ[stage()]&&QSEQ[stage()].room===e.to)||e.to==='chair';return `<div data-x="${e.p[0]}" data-z="${e.p[1]}" class="${near?'near':''}" style="${lk?'opacity:.55':''}">${nx?'▶ ':''}${ROOMNAME[e.to]}${lk?' (locked)':''} · ${near?'here':e.d.toFixed(1)+' m'} <span class="ar">${near?'◆':a}</span></div>`;}).join('');
     if(txt!==RADAR.txt){RADAR.txt=txt;$('radarT').innerHTML=txt;}}}
 /* ================= game controller ================= */
 const PAD={prev:[],on:false};
@@ -1384,7 +1449,7 @@ function padInput(dt){const gp=[...(navigator.getGamepads?navigator.getGamepads(
   const out={f:-ax(1),s:ax(0)};
   if(started&&!mapOpen){yaw-=ax(2)*2.6*dt;pitch=Math.max(-1.2,Math.min(1.2,pitch-ax(3)*1.8*dt));}
   HOLD.pad=b(0);
-  if(helpOpen){if(hit(1)||hit(9)||hit(0))closeHelp();PAD.prev=gp.buttons.map(x=>x.pressed);return out;}
+  if(helpOpen){if(hit(1)||hit(9))closeHelp();else if(hit(0)||hit(15))helpNext();else if(hit(14))helpShow(HELP.i-1);PAD.prev=gp.buttons.map(x=>x.pressed);return out;}
   if(started){
     if(hit(9)&&!INTRO.on){openHelp();}
     else if(hit(3)||hit(8))mapOpen?closeMap():openMap();
@@ -1438,7 +1503,7 @@ let yaw=0,pitch=-.05,started=false,locked=false;const keys={};
 const canvas=$('c');
 const S={lan:true,dark:true,snd:true};
 function toggle(id,k){S[k]=!S[k];$(id).classList.toggle('on',S[k]);}
-addEventListener('keydown',e=>{keys[e.code]=true;if(helpOpen){if(e.code==='KeyH'||e.code==='Escape'||e.code==='Enter')closeHelp();keys[e.code]=false;return;}if(!started)return;
+addEventListener('keydown',e=>{keys[e.code]=true;if(helpOpen){if(e.code==='KeyH'||e.code==='Escape')closeHelp();else if(e.code==='Enter'||e.code==='ArrowRight'||e.code==='Space')helpNext();else if(e.code==='ArrowLeft')helpShow(HELP.i-1);keys[e.code]=false;return;}if(!started)return;
   if(e.code==='KeyH'&&!mapOpen){openHelp();return;}
   if(e.code==='KeyM'){mapOpen?closeMap():openMap();}
   if(e.code==='Escape'&&mapOpen)closeMap();
@@ -1454,29 +1519,58 @@ addEventListener('keyup',e=>{keys[e.code]=false;});addEventListener('blur',()=>{
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;});
 let drag=false,lx=0,ly=0;
 function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(_){}}
-canvas.addEventListener('mousedown',e=>{if(!started||mapOpen||quizOpen||HL.open)return;if(INTRO.on&&locked){advance();return;}if(CAM.up&&(locked||touch)){takePhoto();return;}if(locked&&current){interact();return;}drag=true;lx=e.clientX;ly=e.clientY;lock();});
+canvas.addEventListener('mousedown',e=>{if(!started||mapOpen||quizOpen||HL.open||touch)return;if(INTRO.on&&locked){advance();return;}if(CAM.up&&locked){takePhoto();return;}if(locked&&current){interact();return;}
+  if(locked){const r=canvas.getBoundingClientRect();walkToScreen(r.left+r.width/2,r.top+r.height/2);return;}
+  if(INTRO.done)walkToScreen(e.clientX,e.clientY);drag=true;lx=e.clientX;ly=e.clientY;lock();});
 addEventListener('mouseup',()=>{drag=false;});
 addEventListener('mousemove',e=>{if(!started||mapOpen)return;if(locked){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}else if(drag){yaw+=(e.clientX-lx)*.004;pitch+=(e.clientY-ly)*.004;lx=e.clientX;ly=e.clientY;}pitch=Math.max(-1.2,Math.min(1.2,pitch));});
 let tMove=null,tLook=null,tv={x:0,y:0};
+const VEL={x:0,z:0};
+/* ---------- walking to a point: click or tap the floor, or a door in the radar list ---------- */
+const WALK={path:[],face:null,marker:null};
+{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.strokeStyle='rgba(255,200,150,1)';g.lineWidth=5;g.beginPath();g.arc(32,32,24,0,Math.PI*2);g.stroke();
+ WALK.marker=new THREE.Mesh(new THREE.PlaneGeometry(.38,.38),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));WALK.marker.rotation.x=-Math.PI/2;WALK.marker.visible=false;WALK.marker.renderOrder=6;scene.add(WALK.marker);}
+function walkable(x,z){const R=ROOMS[roomId];if(!R)return false;if(!R.rects.some(r=>x>=r.x0-.01&&x<=r.x1+.01&&z>=r.z0-.01&&z<=r.z1+.01))return false;if(roomId==='hall'&&CUR.present&&curator.visible&&!CUR.leaving&&Math.hypot(x-curator.position.x,z-curator.position.z)<.68)return false;return !(R.obstacles||[]).some(o=>Math.hypot(x-o.x,z-o.z)<o.r);}
+function segOK(a,b){const L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/.08));for(let i=1;i<=n;i++){const k=i/n;if(!walkable(a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k))return false;}return true;}
+function planPath(a,b){if(segOK(a,b))return [b];const R=ROOMS[roomId],C=[];
+  for(const r of R.rects){C.push([(r.x0+r.x1)/2,(r.z0+r.z1)/2]);for(const x of [r.x0+.15,r.x1-.15])for(const z of [r.z0+.15,r.z1-.15])C.push([x,z]);}
+  const obs=[...(R.obstacles||[])];if(roomId==='hall'&&CUR.present&&curator.visible)obs.push({x:curator.position.x,z:curator.position.z,r:.68});
+  for(const o of obs)for(let k=0;k<8;k++){const t=k/8*Math.PI*2;C.push([o.x+Math.cos(t)*(o.r+.25),o.z+Math.sin(t)*(o.r+.25)]);}
+  const ok=C.filter(c=>walkable(c[0],c[1])),D=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1]);let best=null;
+  for(const c of ok)if(segOK(a,c)&&segOK(c,b)){const l=D(a,c)+D(c,b);if(!best||l<best.l)best={l,p:[c,b]};}
+  if(!best)for(const c of ok)if(segOK(a,c))for(const e of ok)if(segOK(c,e)&&segOK(e,b)){const l=D(a,c)+D(c,e)+D(e,b);if(!best||l<best.l)best={l,p:[c,e,b]};}
+  return best?best.p:[b];}
+function walkTo(x,z,face){if(!started||!INTRO.done||switching||QS.go||END.on||HL.open||quizOpen||mapOpen)return false;
+  const t=walkable(x,z)?[x,z]:clampToRoom(x,z);let tt=t;for(const o of (ROOMS[roomId].obstacles||[])){const dx=tt[0]-o.x,dz=tt[1]-o.z,d=Math.hypot(dx,dz);if(d<o.r+.05)tt=[o.x+dx/d*(o.r+.08),o.z+dz/d*(o.r+.08)];}
+  WALK.path=planPath([cam.position.x,cam.position.z],tt);WALK.face=face||null;WALK.marker.position.set(tt[0],.02,tt[1]);WALK.marker.visible=true;return true;}
+/* where on the floor a screen point lands */
+const rayc=new THREE.Raycaster(),flr=new THREE.Plane(new THREE.Vector3(0,1,0),0),hitV=new THREE.Vector3();
+function pickFloor(cx,cy){const r=canvas.getBoundingClientRect();rayc.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-((cy-r.top)/r.height)*2+1),cam);
+  if(!rayc.ray.intersectPlane(flr,hitV))return null;if(hitV.distanceTo(cam.position)>9)return null;
+  /* a tap near a door walks you to that door and turns you towards it */
+  for(const e of exitsOf(roomId))if(Math.hypot(hitV.x-e.p[0],hitV.z-e.p[1])<.7)return {x:e.p[0],z:e.p[1],face:e.p};
+  return {x:hitV.x,z:hitV.z};}
+function walkToScreen(cx,cy){const h=pickFloor(cx,cy);if(!h)return false;return walkTo(h.x,h.z,h.face);}
 const SB=()=>$('stickBase'),SK=()=>$('stickKnob');
 function stickHome(){const b=SB();b.style.left=(Math.max(90,innerWidth*.14))+'px';b.style.top=(innerHeight-Math.max(110,innerHeight*.24))+'px';SK().style.transform='translate(0,0)';b.style.opacity=.55;}
 canvas.addEventListener('touchstart',e=>{for(const t of e.changedTouches){
-    if(t.clientX<innerWidth*.45&&!tMove){tMove={id:t.identifier,x:t.clientX,y:t.clientY};const b=SB();b.style.left=t.clientX+'px';b.style.top=t.clientY+'px';b.style.opacity=1;$('stickHint').style.display='none';}
+    if(t.clientX<innerWidth*.45&&!tMove){tMove={id:t.identifier,x:t.clientX,y:t.clientY,sx:t.clientX,sy:t.clientY,t0:performance.now()};const b=SB();b.style.left=t.clientX+'px';b.style.top=t.clientY+'px';b.style.opacity=1;$('stickHint').style.display='none';}
     else if(!tLook){tLook={id:t.identifier,x:t.clientX,y:t.clientY,sx:t.clientX,sy:t.clientY,t0:performance.now()};}}e.preventDefault();},{passive:false});
 canvas.addEventListener('touchmove',e=>{for(const t of e.changedTouches){
-    if(tMove&&t.identifier===tMove.id){let dx=t.clientX-tMove.x,dy=t.clientY-tMove.y;const L=Math.hypot(dx,dy),m=50;if(L>m){dx*=m/L;dy*=m/L;}SK().style.transform=`translate(${dx}px,${dy}px)`;tv.x=dx/m;tv.y=dy/m;}
-    if(tLook&&t.identifier===tLook.id){yaw+=(t.clientX-tLook.x)*.006;pitch+=(t.clientY-tLook.y)*.006;pitch=Math.max(-1.2,Math.min(1.2,pitch));tLook.x=t.clientX;tLook.y=t.clientY;}}e.preventDefault();},{passive:false});
+    if(tMove&&t.identifier===tMove.id){let dx=t.clientX-tMove.x,dy=t.clientY-tMove.y;const L=Math.hypot(dx,dy),m=62;if(L>m){dx*=m/L;dy*=m/L;}SK().style.transform=`translate(${dx}px,${dy}px)`;
+      const r=Math.min(1,L/m),k=r<.12?0:Math.pow((r-.12)/.88,1.4)/Math.max(r,1e-3);tv.x=dx/m*k;tv.y=dy/m*k;}
+    if(tLook&&t.identifier===tLook.id){yaw+=(t.clientX-tLook.x)*.0048;pitch+=(t.clientY-tLook.y)*.0042;pitch=Math.max(-1.2,Math.min(1.2,pitch));tLook.x=t.clientX;tLook.y=t.clientY;}}e.preventDefault();},{passive:false});
 function touchEnd(e){for(const t of e.changedTouches){
-    if(tMove&&t.identifier===tMove.id){tMove=null;tv.x=tv.y=0;stickHome();}
-    if(tLook&&t.identifier===tLook.id){const tap=performance.now()-tLook.t0<280&&Math.hypot(t.clientX-tLook.sx,t.clientY-tLook.sy)<12;tLook=null;if(tap&&started)tapAction();}}}
+    if(tMove&&t.identifier===tMove.id){const tap=performance.now()-tMove.t0<280&&Math.hypot(t.clientX-tMove.sx,t.clientY-tMove.sy)<12;tMove=null;tv.x=tv.y=0;stickHome();if(tap&&started)tapAction(t.clientX,t.clientY);}
+    if(tLook&&t.identifier===tLook.id){const tap=performance.now()-tLook.t0<280&&Math.hypot(t.clientX-tLook.sx,t.clientY-tLook.sy)<12;tLook=null;if(tap&&started)tapAction(t.clientX,t.clientY);}}}
 canvas.addEventListener('touchend',touchEnd);canvas.addEventListener('touchcancel',touchEnd);
 /* a tap on the right half does the obvious thing: move the curator along, take a photo, or use what is in front of you */
-function tapAction(){if(mapOpen)return;if(INTRO.on){advance();return;}if(CAM.up){takePhoto();return;}if(current)interact();}
+function tapAction(x,y){if(mapOpen)return;if(INTRO.on){advance();return;}if(CAM.up){takePhoto();return;}if(x!=null&&walkToScreen(x,y))return;if(current)interact();}
 function bindT(id,fn){const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();fn();},{passive:false});b.addEventListener('click',fn);}
 bindT('tAct',()=>interact());$('tAct').addEventListener('touchstart',()=>{HOLD.touch=true;},{passive:true});$('tAct').addEventListener('touchend',()=>{HOLD.touch=false;});$('tAct').addEventListener('touchcancel',()=>{HOLD.touch=false;});bindT('tShot',()=>takePhoto());bindT('tCam',()=>raiseCam());bindT('tMap',()=>mapOpen?closeMap():openMap());
 function updateTouchUI(){if(!touch||!started)return;const sh=(id,v)=>$(id).classList.toggle('show',!!v);
   sh('tAct',current&&!CAM.up);if(current)$('tAct').textContent=current.label.toUpperCase();sh('tShot',CAM.up&&!CAM.broken);sh('tCam',CAM.has&&!CAM.broken&&INTRO.done);sh('tMap',INTRO.done&&roomId!=='nine');
-  $('lookHint').innerHTML=INTRO.on?'DRAG TO LOOK<br>TAP TO CONTINUE':'DRAG TO LOOK';}
+  $('lookHint').innerHTML=INTRO.on?'DRAG TO LOOK<br>TAP TO CONTINUE':'DRAG TO LOOK<br>TAP THE FLOOR TO WALK';}
 $('bCam').onclick=()=>{raiseCam();};$('bLan').onclick=()=>toggle('bLan','lan');$('bDark').onclick=()=>toggle('bDark','dark');
 $('bSnd').onclick=()=>{toggle('bSnd','snd');if(master)master.gain.value=S.snd?1:0;if(!S.snd)try{speechSynthesis.cancel();}catch(_){}};
 const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;if(touch)document.body.classList.add('touch');addEventListener('resize',()=>{if(touch&&!tMove)stickHome();});
@@ -1487,7 +1581,7 @@ let current=null;
 function findInteract(){if(QS.go||helpOpen||HL.open||INSPECT.visible||END.on||!started||!INTRO.done||switching||mapOpen||casesOpen||quizOpen||E.phase!=='idle'||CAM.up||SPELL)return null;
   {const cs=clueSpot()||seekSpot()||knockSpot()||clockSpot()||hlSpot();if(cs)return cs;}
   for(const d of ROOMS[roomId].doors){if(Math.hypot(cam.position.x-d.p[0],cam.position.z-d.p[1])<d.r)return roomOpen(d.to)?{label:d.label,go:()=>travel(d.to,d.spawn)}:{label:'Locked: '+ROOMNAME[d.to],go:()=>lockedMsg(d.to)};}
-  {let best=null,bs=-1;cam.getWorldDirection(tmpV2);for(const sp of (ROOMS[roomId].spots||[])){const dx=sp.p[0]-cam.position.x,dz=sp.p[1]-cam.position.z,d=Math.hypot(dx,dz);if(d<sp.r){const f=(tmpV2.x*dx+tmpV2.z*dz)/Math.max(d,.01);if(f>.55&&f>bs){bs=f;best=sp;}}}if(best)return {label:best.label,go:best.act};}
+  {let best=null,bs=-9;cam.getWorldDirection(tmpV2);for(const sp of (ROOMS[roomId].spots||[])){const dx=sp.p[0]-cam.position.x,dz=sp.p[1]-cam.position.z,d=Math.hypot(dx,dz);if(d<sp.r){const f=(tmpV2.x*dx+tmpV2.z*dz)/Math.max(d,.01);const sc=f-d/sp.r*.6;if(f>-.25&&sc>bs){bs=sc;best=sp;}}}if(best)return {label:best.label,go:best.act};}
   if(roomId==='doll'&&canTouch())return {label:'Touch the cabinet',go:startTouch};
   return null;}
 function interact(){if(current&&!current.hold)current.go();}
@@ -1511,9 +1605,21 @@ renderer.setAnimationLoop(()=>{
   const frozen=helpOpen||END.on||E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||quizOpen||HL.open||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
   let mv=0;const pad=padInput(dt);
   if(started&&!frozen){
-    let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y+pad.f,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+tv.x+pad.s;
-    const L=Math.hypot(f,s);if(L>1){f/=L;s/=L;}mv=L>.1?1:0;const sp=(keys.ShiftLeft?2.6:1.5)*(CAM.up?.5:1)*dt,sy=Math.sin(yaw),cy=Math.cos(yaw);
-    let nx=cam.position.x+(-sy*f+cy*s)*sp,nz=cam.position.z+(-cy*f-sy*s)*sp;
+    const turn=(keys.ArrowLeft?1:0)-(keys.ArrowRight?1:0);if(turn)yaw+=turn*2.1*dt;
+    let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-tv.y+pad.f,s=(keys.KeyD?1:0)-(keys.KeyA?1:0)+tv.x+pad.s;
+    const L=Math.hypot(f,s);if(L>1){f/=L;s/=L;}
+    const sp=(keys.ShiftLeft?2.6:touch?1.85:1.5)*(CAM.up?.5:1),sy=Math.sin(yaw),cy=Math.cos(yaw);
+    let wx=(-sy*f+cy*s)*sp,wz=(-cy*f-sy*s)*sp;
+    if(L>.1||turn){WALK.path=[];WALK.face=null;}            /* any manual input takes over from a walk */
+    else if(WALK.path.length){const t0=WALK.path[0],dx=t0[0]-cam.position.x,dz=t0[1]-cam.position.z,d=Math.hypot(dx,dz);
+      WALK.stuck=(WALK.lastD!=null&&WALK.lastD-d<.004)?(WALK.stuck||0)+dt:0;WALK.lastD=d;if(WALK.stuck>1.2){WALK.path=[];WALK.lastD=null;WALK.stuck=0;WALK.marker.visible=false;}
+      if(d<.07){WALK.path.shift();WALK.lastD=null;}else{const v=Math.min(1.6,d*4+.4);wx=dx/d*v;wz=dz/d*v;
+        let want=Math.atan2(-dx,-dz),dy=Math.atan2(Math.sin(want-yaw),Math.cos(want-yaw));yaw+=dy*Math.min(1,dt*3.2);}
+      if(!WALK.path.length)WALK.marker.visible=false;}
+    else if(WALK.face){const dx=WALK.face[0]-cam.position.x,dz=WALK.face[1]-cam.position.z;let want=Math.atan2(-dx,-dz),dy=Math.atan2(Math.sin(want-yaw),Math.cos(want-yaw));yaw+=dy*Math.min(1,dt*4);if(Math.abs(dy)<.03)WALK.face=null;}
+    /* velocity eases in and out, so starting and stopping feel smooth rather than jerky */
+    const ek=Math.min(1,dt*(touch?9:12));VEL.x+=(wx-VEL.x)*ek;VEL.z+=(wz-VEL.z)*ek;mv=Math.hypot(VEL.x,VEL.z)>.15?1:0;
+    let nx=cam.position.x+VEL.x*dt,nz=cam.position.z+VEL.z*dt;
     if(roomId==='hall'&&CUR.present&&curator.visible&&!CUR.leaving){const dx=nx-curator.position.x,dz=nz-curator.position.z,d=Math.hypot(dx,dz);if(d<.6){nx=curator.position.x+dx/d*.6;nz=curator.position.z+dz/d*.6;}}
     for(const o of (ROOMS[roomId].obstacles||[])){const dx=nx-o.x,dz=nz-o.z,d=Math.hypot(dx,dz);if(d<o.r&&d>1e-4){nx=o.x+dx/d*o.r;nz=o.z+dz/d*o.r;}}
     const c=clampToRoom(nx,nz);cam.position.x=c[0];cam.position.z=c[1];
@@ -1548,7 +1654,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={cableGroan,gateSlam,QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={walkTo,walkToScreen,WALK,KS,keepsakeCanvas,helpShow,helpNext,HELP:()=>HELP,cableGroan,gateSlam,QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
