@@ -1360,15 +1360,21 @@ function startIntro(){if(INTRO.done||INTRO.on)return;INTRO.on=true;INTRO.i=0;sho
 /* he turns away and walks off down the hall, into the dark */
 function finishIntro(){if(INTRO.done)return;INTRO.on=false;INTRO.done=true;$('sub').style.opacity=0;$('skip').style.display='none';
   $('bMap').style.display='';$('keys').style.display='flex';
-  if(curator.visible&&CUR.loaded){CUR.leaving=true;CUR.leaveT=0;play('walk',.4);setTimeout(()=>whisper(2.2,.09),900);}else{CUR.present=false;curator.visible=false;}
+  if(curator.visible&&CUR.loaded){CUR.leaving=true;CUR.leaveT=0;play('walk',.4);setTimeout(()=>whisper(2.2,.09),900);
+    /* safety net: whatever the frame rate, he is gone a few seconds after his last line */
+    setTimeout(()=>{if(CUR.leaving&&!END.on){CUR.present=false;curator.visible=false;CUR.leaving=false;}},6500);}else{CUR.present=false;curator.visible=false;}
   setTimeout(()=>note('Trial 1 of 6: wind the clock. The panel on the left tells you how.',6000),1800);
   setTimeout(()=>{CAM.has=true;$('bCam').style.display='';note('Something heavy is in your coat pocket. An old camera. Press C.',6000);},14000);}
 function endIntro(){try{speechSynthesis.cancel();}catch(_){}finishIntro();}
-function updateIntro(dt){if(!INTRO.on)return;INTRO.t+=dt;
-  const done=INTRO.spoke?(INTRO.ended||INTRO.t>INTRO.dur*2.2):INTRO.t>=INTRO.dur;
+function updateIntro(dt){if(!INTRO.on)return;
+  /* real seconds, so a slow device does not stall the welcome; paused while the guide is open */
+  const now=performance.now(),rdt=Math.max(window.__DT?dt:0,INTRO.lastNow?Math.min(1,(now-INTRO.lastNow)/1000):0);INTRO.lastNow=now;if(helpOpen)return;INTRO.t+=rdt;
+  /* if the browser's voice never started, or stopped without saying so, stop waiting for it */
+  if(INTRO.spoke&&!INTRO.ended&&INTRO.t>1.5){try{if(!speechSynthesis.speaking&&!speechSynthesis.pending)INTRO.spoke=false;}catch(_){INTRO.spoke=false;}}
+  const done=INTRO.spoke?(INTRO.ended||INTRO.t>INTRO.dur*1.35+1):INTRO.t>=INTRO.dur;
   if(!done){INTRO.after=0;return;}
   if(CUR.cur===CUR.act.talk)play('idle',.5);
-  INTRO.after=(INTRO.after||0)+dt;if(INTRO.after>.45&&INTRO.t>1.2)nextLine();}
+  INTRO.after=(INTRO.after||0)+rdt;if(INTRO.after>.45&&INTRO.t>1.2)nextLine();}
 $('skip').onclick=()=>{endIntro();};
 function advance(){if(INTRO.on){try{speechSynthesis.cancel();}catch(_){}nextLine();}}
 
@@ -1655,7 +1661,8 @@ let awayFor=0,ready=false;
 {const gc=$('grain'),gg=gc.getContext('2d');gc.width=gc.height=256;const id=gg.createImageData(256,256);for(let i=0;i<id.data.length;i+=4){const v=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}gg.putImageData(id,0,0);gc.style.background='url('+gc.toDataURL()+')';gc.width=gc.height=1;}
 
 renderer.setAnimationLoop(()=>{
-  const dt=Math.max(window.__DT||0,Math.min(clock.getDelta(),.05)),t=clock.elapsedTime;
+  /* game time follows real time down to 5 frames a second, so a slow device never plays the house in slow motion */
+  const dt=Math.max(window.__DT||0,Math.min(clock.getDelta(),.2)),t=clock.elapsedTime;
   if(!roomId){renderer.render(scene,cam);return;}
   const frozen=helpOpen||END.on||E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||quizOpen||HL.open||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
   let mv=0;const pad=padInput(dt);
@@ -1709,7 +1716,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={tick,hideSeekT,TR,setLang,LANG,walkTo,walkToScreen,WALK,KS,keepsakeCanvas,helpShow,helpNext,HELP:()=>HELP,cableGroan,gateSlam,QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={CURS:()=>({vis:curator.visible,present:CUR.present,leaving:CUR.leaving,x:+curator.position.x.toFixed(2),fade:+CUR.fade.toFixed(2)}),tick,hideSeekT,TR,setLang,LANG,walkTo,walkToScreen,WALK,KS,keepsakeCanvas,helpShow,helpNext,HELP:()=>HELP,cableGroan,gateSlam,QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
