@@ -8,7 +8,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 
 **Play it:** https://occult-house-nine.vercel.app · **Project report:** [Occult_House_Report.pdf](docs/Occult_House_Report.pdf) · **How the assets were made:** [docs/GENERATION.md](docs/GENERATION.md)
 
-**Team:** Helen ([@helenn-szn](https://github.com/helenn-szn)) and lammylex
+**Made by:** Helen ([@helenn-szn](https://github.com/helenn-szn))
 
 ## Screenshots
 
@@ -156,4 +156,4 @@ All characters, objects and names are invented.
 
 ## License
 
-The code is released under the [MIT License](LICENSE). The generated rooms, models, portraits and the report are © 2026 Helen and lammylex.
+The code is released under the [MIT License](LICENSE). The generated rooms, models, portraits and the report are © 2026 Helen.
