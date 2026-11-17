@@ -1245,7 +1245,7 @@ const buttonDoll=new THREE.Group();buttonDoll.visible=false;scene.add(buttonDoll
  [-1,1].forEach(s=>{const a=new THREE.Mesh(new THREE.CapsuleGeometry(.018,.07,3,6),cloth);a.position.set(s*.075,.13,0);a.rotation.z=s*.5;buttonDoll.add(a);});}
 function updateSeek(gdt){/* real seconds, not frame time: a slow frame rate must not slow the countdown (frame time is capped at 0.05 s) */
   const now=performance.now(),dt=Math.max(gdt*(window.__DT?1:0),SEEK.lastNow?Math.min(1.5,(now-SEEK.lastNow)/1000):0);SEEK.lastNow=now;
-  if(roomId!=='doll'||!INTRO_SEEN.doll||(E.phase!=='idle'&&E.phase!=='gone')||switching||helpOpen||mapOpen||QS.go){if(SEEK.state==='hunt'&&roomId!=='doll'){SEEK.state='wait';buttonDoll.visible=false;hideSeekT();}return;}
+  if(roomId!=='doll'||!INTRO_SEEN.doll||(E.phase!=='idle'&&E.phase!=='gone')||switching||helpOpen||mapOpen||QS.go){if(SEEK.state==='hunt'&&roomId!=='doll'){SEEK.state='wait';buttonDoll.visible=false;hideSeekT();}if(roomId!=='doll'&&$('listener').style.display!=='none')$('listener').style.display='none';return;}
   if(KEY.have.doll)return;
   if(SEEK.state==='wait'){SEEK.t+=dt;if(SEEK.t>(SEEK.tries?6:9)){SEEK.state='hunt';SEEK.t=0;SEEK.giggleT=0;const sp=SEEK_SPOTS[Math.floor(Math.random()*SEEK_SPOTS.length)];SEEK.spot=sp;
       buttonDoll.position.set(sp[0],0,sp[1]);buttonDoll.rotation.y=Math.random()*6;buttonDoll.visible=true;
