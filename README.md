@@ -4,6 +4,25 @@ A first-person haunted museum that runs in the browser. You are locked in an old
 
 Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 
+![Occult House title screen](docs/screens/title.jpg)
+
+**Play it:** https://occult-house-nine.vercel.app
+
+## Screenshots
+
+| | |
+|---|---|
+| ![The curator welcomes you](docs/screens/curator.jpg) | ![The Doll Room](docs/screens/doll_room.jpg) |
+| Mr. Ambrose Vane, the curator, welcomes you in | The Doll Room: find Button before the countdown ends |
+| ![The Card Parlour](docs/screens/card_parlour.jpg) | ![The Antiquities Study](docs/screens/study.jpg) |
+| The Card Parlour: beat Edgar at higher or lower | The Antiquities Study: examine the relics, then answer the ledger |
+| ![The Portrait Gallery](docs/screens/gallery.jpg) | ![The Passage](docs/screens/passage.jpg) |
+| The Portrait Gallery: catch the portrait that changed | The Passage: knock back what door II knocks |
+| ![The Lift Landing](docs/screens/lift.jpg) | ![The map](docs/screens/map.jpg) |
+| Behind STAFF ONLY: the lift that only goes down | The map, with each room's Aholo panorama |
+| ![You died](docs/screens/death.jpg) | ![Keepsakes](docs/screens/keepsake_idol.jpg) |
+| Fail three times and you die, then retry that room | Escape and the house gives you a random keepsake |
+
 ## Built with Manycore Aholo
 
 | Part | Tool |
