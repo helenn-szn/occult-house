@@ -6,7 +6,9 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 
 ![Occult House title screen](docs/screens/title.jpg)
 
-**Play it:** https://occult-house-nine.vercel.app
+**Play it:** https://occult-house-nine.vercel.app · **Project report:** [Occult_House_Report.pdf](docs/Occult_House_Report.pdf) · **How the assets were made:** [docs/GENERATION.md](docs/GENERATION.md)
+
+**Team:** Helen ([@helenn-szn](https://github.com/helenn-szn)) and lammylex
 
 ## Screenshots
 
@@ -22,6 +24,37 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 | Behind STAFF ONLY: the lift that only goes down | The map, with each room's Aholo panorama |
 | ![You died](docs/screens/death.jpg) | ![Keepsakes](docs/screens/keepsakes.jpg) |
 | Fail three times and you die, then retry that room | Escape and the house gives you a random keepsake |
+
+## What's new here
+
+- **You walk inside AI-generated worlds, not past them.** Every room is a full Aholo World API splat you can explore on foot, and the game logic, doors and trials are built around the space the world gave us.
+- **Atmosphere added after generation.** Aholo lit the rooms for daytime, so the night, the red lamps, your own light and the light spilling under unlocked doors are all splat edits made live in the browser.
+- **One rule, and the tool to break it in your pocket.** The camera shows you what the house hides, and every photo makes it worse. The game remembers, and it changes your ending.
+- **AI assets as gameplay, not decoration.** The Lux3D relics hold the answers to the Study's ledger, the portraits change while you look away, and the rigged curator walks you through the house.
+- **A reason to come back.** Escape and the house gives you one of 12 keepsakes, rendered live from the Lux3D models and portraits. It remembers what you took.
+- **Plays anywhere.** No install and no account: mouse and keyboard, touch, or a game controller, in English or Chinese.
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  subgraph Aholo["Manycore Aholo"]
+    W["World API<br/>7 rooms"]
+    L["Lux3D text to 3D<br/>11 models"]
+    R["Lux3D auto-rig +<br/>animation retarget"]
+    M["Lux3D multimodal to image<br/>panoramas + 12 portraits"]
+  end
+  M --> W
+  L --> R
+  W -->|SPZ splats| S["Spark<br/>splat renderer"]
+  L -->|GLB| T["three.js<br/>scene"]
+  R -->|rigged GLB| T
+  M -->|JPG| T
+  S --> T
+  T --> G["Game logic<br/>trials · movement · radar · camera · endings"]
+  A["24 recorded sounds +<br/>Web Audio synth"] --> G
+  G --> B["Browser<br/>desktop · phone · controller"]
+```
 
 ## Built with Manycore Aholo
 
@@ -42,7 +75,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 | The Vesper Deck, the spirit board and its pointer | Lux3D text to 3D (G1) |
 | Mr. Ambrose Vane, the curator | Lux3D text to 3D (G1), humanoid auto-rig, and animation retarget (idle, talking, walk) |
 
-Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) for the Gaussian-splat rooms.
+Rendering uses [three.js](https://threejs.org) and [Spark](https://sparkjs.dev) for the Gaussian-splat rooms. The prompts, tools, timings and credits for every asset are in [docs/GENERATION.md](docs/GENERATION.md).
 
 ## How it plays
 
@@ -82,6 +115,10 @@ You are the only guest tonight, and the front door locks behind you. It has six 
 
 Headphones recommended. The house ambience, whispers, door creaks, footsteps, thuds, knocks, scratching, the clock's bell, winding and spring, cards, creaking canvas, breaking glass, Button's giggle, the curator's keys, locked-door rattles, door II's pounding, the camera's shutter and glitch, the jump-scare stingers, the lift's gate and cable, the death scream and the Game Over sting are royalty-free recordings (in `assets/sfx/`); the rest of the sound is synthesised in the page, and any recording that fails to load falls back to its synthesised version.
 
+## Testing
+
+An automated playthrough (Playwright) plays the whole game from the title screen: all six trials in order, a death and retry, the STAFF ONLY lift trap and the ending. It passes 48 of 48 checks. A second run plays it as a phone in landscape with touch, the joystick and tap-to-walk. Both runs use Chromium. The game needs a browser with WebGL 2.
+
 ## Run locally
 
 It is a static site with no build step. Serve the folder with any web server, for example:
@@ -116,3 +153,7 @@ assets/relic_*.glb    the study's relics, shown up close when examined
 ```
 
 All characters, objects and names are invented.
+
+## License
+
+The code is released under the [MIT License](LICENSE). The generated rooms, models, portraits and the report are © 2026 Helen and lammylex.
