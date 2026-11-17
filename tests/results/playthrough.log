@@ -1,0 +1,56 @@
+PASS house loads :: 10s
+PASS how to play opens before the welcome, as 6 cards :: 7
+PASS how to play explains three chances and death
+PASS welcome waits while the page is open
+PASS closing it starts the curator welcome
+PASS welcome finishes
+PASS trial panel shows trial 1: the clock, with 3 chances :: TRIAL 1 OF 6 · THE FRONT HALL | Wind the clock | Find the grandfather clock beside the Card Parlour door. Face it and hold E (or hold the button) until it strikes. It takes a few seconds. | Not wound yet | CHANCES ●●●
+PASS map shows the 5 later rooms locked :: 5
+PASS radar marks locked doors :: Doll Room (locked) · here ◆ | The Passage (locked) · 1.1 m ← | Card Parlour (locked) · 1.2 m ↖ | Antiquities Study (locked) · 2.1 m ↑ | Portrait Gallery (locked) · 2.6 m ↗
+PASS Doll Room door is locked before the clock :: Locked: Doll Room
+PASS front door shows 0 of 6 keys :: The front door (0 of 6 keys)
+PASS letting go of the clock too soon costs a chance :: CHANCES ●●○
+PASS wind the clock -> key 1
+PASS Doll Room unlocked, Parlour still locked
+PASS panel points to the Doll Room :: TRIAL PASSED · THE FRONT HALL | Next: Doll Room | Follow the radar to the Doll Room door.
+PASS camera use is noticed
+PASS walk through door hall -> doll :: prompt was "Enter the Doll Room"
+PASS Button hides
+PASS find Button -> key 2 :: Pick up Button
+PASS walk through door doll -> hall :: prompt was "Return to the Front Hall"
+PASS walk through door hall -> parlour :: prompt was "Enter the Card Parlour"
+PASS Edgar's chair prompt :: Sit in Edgar's chair and play
+PASS sitting in Edgar's chair opens his game
+PASS three lost hands -> you die (game over) :: {'t': 'YOU DIED', 'w': 'The lamp swung, and there was a man in the chair across from you, smiling. Edgar Hollowmere never loses. Tonight, you were the stake.', 'where': 'THE CARD PARLOUR · DEATHS SO FAR: 1 · KEYS KEPT: 2 OF 6'}
+PASS Try again -> back in the parlour, chances reset, keys kept
+   guess {"streak":1,"losses":0,"open":true,"go":false,"sw":false,"cam":false,"stage":2}
+   guess {"streak":2,"losses":0,"open":true,"go":false,"sw":false,"cam":false,"stage":2}
+   guess {"streak":3,"losses":0,"open":true,"go":false,"sw":false,"cam":false,"stage":2}
+   guess {"streak":4,"losses":0,"open":false,"go":false,"sw":false,"cam":false,"stage":3}
+PASS beat Edgar -> key 3
+PASS walk through door parlour -> hall :: prompt was "Return to the Front Hall"
+PASS walk through door hall -> study :: prompt was "Enter the Antiquities Study"
+PASS wrong appraisal costs a chance
+PASS Appraisal -> key 4
+PASS walk through door study -> hall :: prompt was "Return to the Front Hall"
+PASS stairs open now -> Portrait Gallery :: Go up the stairs to the Portrait Gallery
+PASS The Sitting -> key 5
+PASS walk through door gallery -> hall :: prompt was "Go back down to the Front Hall"
+PASS walk through door hall -> passage :: prompt was "Go down to the Passage"
+PASS knock prompt straight away :: Knock on door II
+PASS knock back [3, 2, 2] -> key 6
+PASS panel: every trial passed, leave the house :: EVERY TRIAL PASSED | Leave the house | You have all six keys. Go back to the front door in the Front Hall and unlock it.
+PASS STAFF ONLY warns first :: Try the door marked STAFF ONLY
+PASS second press -> Lift Landing
+PASS stepping into the lift -> TRAPPED game over
+PASS Try again -> back in the Passage, keys kept
+PASS walk through door passage -> hall :: prompt was "Go back up to the Front Hall"
+PASS front door opens with 6 keys :: Unlock the front door and leave
+PASS ending: The Visitor (camera used) :: ENDING A′: THE VISITOR | Trials passed: 6 of 6 | Deaths: 2 | Photographs taken: 0 | Time in the house: 26 minutes
+PASS all 24 recorded sounds loaded :: 24
+PASS keepsake parcel opens with a picture :: Inside: The Hollow Idol
+--- errors ---
+CONSOLE Failed to load resource: the server responded with a status of 404 (File not found)
+CONSOLE Failed to load resource: the server responded with a status of 404 (File not found)
+PASS no page errors / failed requests :: 2
+=== 48/48 passed in 1634s

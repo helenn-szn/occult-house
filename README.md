@@ -117,7 +117,7 @@ Headphones recommended. The house ambience, whispers, door creaks, footsteps, th
 
 ## Testing
 
-An automated playthrough (Playwright) plays the whole game from the title screen: all six trials in order, a death and retry, the STAFF ONLY lift trap and the ending. It passes 48 of 48 checks. A second run plays it as a phone in landscape with touch, the joystick and tap-to-walk. Both runs use Chromium. The game needs a browser with WebGL 2.
+An automated playthrough ([`tests/playthrough.py`](tests/playthrough.py), Playwright) plays the whole game from the title screen: all six trials in order, a death and retry, the STAFF ONLY lift trap and the ending. It passes 48 of 48 checks: see the full log in [`tests/results/playthrough.log`](tests/results/playthrough.log). Two more runs ([`tests/phone_touch.py`](tests/phone_touch.py), [`tests/phone_ledger.py`](tests/phone_ledger.py)) play it as a phone in landscape with touch, the joystick and tap-to-walk. All runs use Chromium. How to run them: [`tests/README.md`](tests/README.md). The game needs a browser with WebGL 2.
 
 ## Run locally
 

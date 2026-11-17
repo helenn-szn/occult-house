@@ -1,0 +1,8 @@
+touch mode: True
+joystick moved 3.2 m
+tap-to-walk path: []
+after tap walk pos [-1.2, 0.1, -1.57]
+ledger draw: mirror: Which object came into the collection in | idol: Which object did no one ask the house to | bell: Which object was taken from the Ashby ho  [buttons: Bell o,Old To,Brine ,Ledger,Hollow]
+ledger draw: skull: Which object arrived at the house in 197 | idol: Which object did Edgar Hollowmere buy in | mirror: Which object has a salt-crusted silver f  [buttons: Ledger,Bell o,Brine ,Old To,Hollow]
+ledger draw: bell: Which object was taken from the Ashby ho | skull: Which object relights its own candle? | mirror: Which object came into the collection in  [buttons: Brine ,Bell o,Ledger,Old To,Hollow]
+errors: []
