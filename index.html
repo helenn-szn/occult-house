@@ -1611,7 +1611,7 @@ canvas.addEventListener('mousedown',e=>{if(!started||mapOpen||quizOpen||HL.open|
   if(locked){const r=canvas.getBoundingClientRect();walkToScreen(r.left+r.width/2,r.top+r.height/2);return;}
   if(INTRO.done)walkToScreen(e.clientX,e.clientY);drag=true;lx=e.clientX;ly=e.clientY;lock();});
 addEventListener('mouseup',()=>{drag=false;});
-addEventListener('mousemove',e=>{if(!started||mapOpen)return;if(locked){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}else if(drag){yaw+=(e.clientX-lx)*.004;pitch+=(e.clientY-ly)*.004;lx=e.clientX;ly=e.clientY;}pitch=Math.max(-1.2,Math.min(1.2,pitch));});
+addEventListener('mousemove',e=>{if(!started||mapOpen)return;if(locked){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}else if(drag){yaw-=(e.clientX-lx)*.004;pitch-=(e.clientY-ly)*.004;lx=e.clientX;ly=e.clientY;}pitch=Math.max(-1.2,Math.min(1.2,pitch));});
 let tMove=null,tLook=null,tv={x:0,y:0};
 const VEL={x:0,z:0};
 /* ---------- walking to a point: click or tap the floor, or a door in the radar list ---------- */
@@ -1669,7 +1669,7 @@ canvas.addEventListener('touchstart',e=>{for(const t of e.changedTouches){
 canvas.addEventListener('touchmove',e=>{for(const t of e.changedTouches){
     if(tMove&&t.identifier===tMove.id){let dx=t.clientX-tMove.x,dy=t.clientY-tMove.y;const L=Math.hypot(dx,dy),m=62;if(L>m){dx*=m/L;dy*=m/L;}SK().style.transform=`translate(${dx}px,${dy}px)`;
       const r=Math.min(1,L/m),k=r<.12?0:Math.pow((r-.12)/.88,1.4)/Math.max(r,1e-3);tv.x=dx/m*k;tv.y=dy/m*k;}
-    if(tLook&&t.identifier===tLook.id){yaw+=(t.clientX-tLook.x)*.0048;pitch+=(t.clientY-tLook.y)*.0042;pitch=Math.max(-1.2,Math.min(1.2,pitch));tLook.x=t.clientX;tLook.y=t.clientY;}}e.preventDefault();},{passive:false});
+    if(tLook&&t.identifier===tLook.id){yaw-=(t.clientX-tLook.x)*.0048;pitch-=(t.clientY-tLook.y)*.0042;pitch=Math.max(-1.2,Math.min(1.2,pitch));tLook.x=t.clientX;tLook.y=t.clientY;}}e.preventDefault();},{passive:false});
 function touchEnd(e){for(const t of e.changedTouches){
     if(tMove&&t.identifier===tMove.id){const tap=e.timeStamp-tMove.t0<350&&Math.hypot(t.clientX-tMove.sx,t.clientY-tMove.sy)<12;tMove=null;tv.x=tv.y=0;stickHome();if(tap&&started)tapAction(t.clientX,t.clientY);}
     if(tLook&&t.identifier===tLook.id){const tap=e.timeStamp-tLook.t0<350&&Math.hypot(t.clientX-tLook.sx,t.clientY-tLook.sy)<12;tLook=null;if(tap&&started)tapAction(t.clientX,t.clientY);}}}
