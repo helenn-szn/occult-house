@@ -39,7 +39,7 @@ You are the only guest tonight, and the front door locks behind you. It has six 
   | 1 | Front Hall | Wind the clock: face it and hold E until it strikes | the spring tears loose and the clock strikes for you |
   | 2 | Doll Room | Find Button before her 60 seconds run out | the dolls come for you |
   | 3 | Card Parlour | Sit in Edgar's chair (marked by a gold light on the floor and on the radar) and beat him at higher or lower: win four hands before you lose three | you are the stake |
-  | 4 | Antiquities Study | The Appraisal: examine five relics, then answer the ledger | the idol comes out of its case |
+  | 4 | Antiquities Study | The Appraisal: examine five relics, then answer the ledger's three questions, drawn at random from 18 (all answered on the relic cards) | the idol comes out of its case |
   | 5 | Portrait Gallery | The Sitting: catch three portraits changing | you become a portrait by the door |
   | 6 | The Passage | Knock door II's pattern back | door II opens |
 
