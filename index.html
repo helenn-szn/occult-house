@@ -103,7 +103,6 @@
   #bar #bGuide{border-color:#e0b050;color:#ffe2a8}
   #tMap{right:max(24px,env(safe-area-inset-right));bottom:calc(40px + env(safe-area-inset-bottom))}
   #turn{display:none;position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);z-index:9;background:rgba(3,2,2,.92);border:1px solid #5c1a1a;padding:14px 18px;font-family:'Special Elite',monospace;font-size:.85rem;letter-spacing:.06em;text-align:center;pointer-events:none;max-width:80vw}
-  @media (orientation:portrait){body.touch.playing #turn{display:block}}
   body.touch #bar button{font-size:.62rem;padding:.4em .6em}
   body.touch #rules{font-size:.68rem;top:56px}
   body.touch #prompt{display:none!important}
@@ -240,7 +239,6 @@
   <button class="tbtn" id="tMap">MAP</button>
   <button class="tbtn" id="tGuide">GUIDE<br>ME</button>
 </div>
-<div id="turn">Turn your phone sideways<br>for the best view.</div>
 <button id="skip">Skip</button>
 <div id="rules" aria-label="The rules" style="display:none!important"><div id="r1">I. Touch nothing.</div><div id="r2">II. Open no door that asks you not to.</div><div id="r3">III. No cameras.</div></div>
 <div id="top"><b>OCCULT HOUSE</b><div id="roomName"></div></div>
