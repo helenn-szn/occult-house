@@ -20,7 +20,7 @@ Built for the Manycore Aholo Global 3D AI Hackathon (#Manycorehackathon).
 | The Portrait Gallery: catch the portrait that changed | The Passage: knock back what door II knocks |
 | ![The Lift Landing](docs/screens/lift.jpg) | ![The map](docs/screens/map.jpg) |
 | Behind STAFF ONLY: the lift that only goes down | The map, with each room's Aholo panorama |
-| ![You died](docs/screens/death.jpg) | ![Keepsakes](docs/screens/keepsake_idol.jpg) |
+| ![You died](docs/screens/death.jpg) | ![Keepsakes](docs/screens/keepsakes.jpg) |
 | Fail three times and you die, then retry that room | Escape and the house gives you a random keepsake |
 
 ## Built with Manycore Aholo
