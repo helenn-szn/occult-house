@@ -42,6 +42,20 @@ async def main():
         await asyncio.sleep(1)
         log('tap-to-walk path:', await E("JSON.stringify(__t.WALK.path.map(p=>p.map(v=>+v.toFixed(2))))"))
         await wait("!__t.WALK.path.length", 60); log('after tap walk pos', await E("__t.pos().map(v=>+v.toFixed(2))"))
+        # swipe right on the right half: the view should turn right (yaw goes down)
+        await E("__t.set(-1.2,0.1,0,0)"); await asyncio.sleep(2); y0 = (await E("__t.pos()"))[2]
+        await touch('touchStart', [(2, (560, 200))]); await asyncio.sleep(.3)
+        for k in range(1, 6):
+            await touch('touchMove', [(2, (560 + k * 30, 200))]); await asyncio.sleep(.2)
+        await touch('touchEnd', []); await asyncio.sleep(1); y1 = (await E("__t.pos()"))[2]
+        log('swipe right turns right:', y1 < y0 - .3, round(y0, 2), '->', round(y1, 2))
+        # GUIDE ME button
+        log('guide button shown:', await E("getComputedStyle(document.getElementById('tGuide')).display!=='none'"))
+        await E("__t.KEY.have.clock=false"); await E("__t.set(1.2,0.1,0,0)"); await asyncio.sleep(2)
+        bb = await E("(()=>{const r=document.getElementById('tGuide').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()")
+        await touch('touchStart', [(3, (bb[0], bb[1]))]); await asyncio.sleep(.08); await touch('touchEnd', []); await asyncio.sleep(1.5)
+        log('guide walking:', await E("__t.GUIDE.on||__t.WALK.path.length>0"), await E("JSON.stringify(__t.WALK.path.map(p=>p.map(v=>+v.toFixed(2))))"))
+        await wait("!__t.WALK.path.length", 120); log('guide stopped at clock:', await E("__t.find()&&__t.find().label"))
         # the Doll Room countdown at phone size
         await E("__t.KEY.have.clock=true;__t.travel('doll')"); await wait("__t.room()==='doll'&&!__t.sw()", 90)
         await E("__t.INTRO_SEEN.doll=true;__t.SEEK.t=99"); await wait("__t.SEEK.state==='hunt'", 120)

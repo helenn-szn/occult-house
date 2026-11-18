@@ -1,7 +1,8 @@
 touch mode: True
-joystick moved 3.16 m
+joystick moved 3.2 m
 tap-to-walk path: []
 after tap walk pos [-1.2, 0.1, -1.57]
-retry ok True
-marigold keepsake True Inside: Marigold You have taken all 12 things the house will part with.
-errors: []
+swipe right turns right: True 0 -> -0.72
+guide button shown: True
+guide walking: True [[-1.25,0.7]]
+guide stopped at clock: Hold to wind the clock
