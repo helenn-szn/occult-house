@@ -609,7 +609,7 @@ new GLTFLoader().load('assets/marigold.glb',g=>{
 
 
 /* ================= the Curator: Lux3D model, auto-rigged, with idle / talk / walk animations ================= */
-const CUR_HOME=new THREE.Vector3(-1.15,0,.95);
+const CUR_HOME=new THREE.Vector3(-.8,0,.95);
 const curator=new THREE.Group();curator.position.copy(CUR_HOME);scene.add(curator);curator.visible=false;
 const CUR={present:true,loaded:false,fade:0,mats:[],mixer:null,act:{},cur:null,leaving:false,leaveT:0};
 const curL=new THREE.PointLight(0xff6a50,.6,2.2,2);curL.position.set(.55,1.95,.75);curator.add(curL);
