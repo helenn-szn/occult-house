@@ -622,7 +622,7 @@ new GLTFLoader().load('assets/curator.glb',g=>{const m=g.scene;m.position.y=.9;
     CUR.act[c.name]=CUR.mixer.clipAction(c);}
   makeGhost(g,'hall',new THREE.Vector3(-1.15,0,.95));makeGhost(g,'doll',new THREE.Vector3(-1.9,0,.15));makeFollower(g);makeTallGhost(g);{const nineMat=ghostMat.clone();nineMat.opacity=.1;nineMat.side=THREE.FrontSide;nineMat.color.set(0xb08c8c);const ng=SkeletonUtils.clone(g.scene);ng.position.y=.9;ng.traverse(o=>{if(o.isMesh){o.material=nineMat;o.frustumCulled=false;o.renderOrder=999;}});const h=new THREE.Group();h.position.set(1.15,0,.95);h.rotation.y=Math.atan2(-1.15,-.95);h.add(ng);nineGroup.add(h);const mx=new THREE.AnimationMixer(ng);const c=g.animations.find(c=>c.name==='idle');if(c)mx.clipAction(c).play();ghostMixers.push(mx);}
   play('idle',0);CUR.loaded=true;curator.visible=roomId==='hall'&&CUR.present;},undefined,()=>{CUR.loaded=true;});
-function play(name,fade=.35){const a=CUR.act[name];if(!a||CUR.cur===a)return;a.reset().setEffectiveWeight(1).play();if(CUR.cur)CUR.cur.crossFadeTo(a,fade,false);CUR.cur=a;}
+function play(name,fade=.35){const a=CUR.act[name];if(!a||CUR.cur===a)return;if(name==='walk')a.timeScale=1.6;a.reset().setEffectiveWeight(1).play();if(CUR.cur)CUR.cur.crossFadeTo(a,fade,false);CUR.cur=a;}
 
 /* ================= the player's hand (Lux3D) ================= */
 const handR=new THREE.Group();cam.add(handR);
@@ -678,7 +678,7 @@ function footsteps(){if(!AC)return;if(playBuf('footsteps',.7,{rate:1.12+Math.ran
 function doorCreak(){if(!AC)return;if(playBuf('door_creak',.85,{rate:.9+Math.random()*.2}))return;const t=AC.currentTime,o=AC.createOscillator(),bp=AC.createBiquadFilter(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(140,t);o.frequency.linearRampToValueAtTime(210,t+.5);o.frequency.linearRampToValueAtTime(120,t+.9);
   lfo.frequency.value=23;lg.gain.value=40;lfo.connect(lg);lg.connect(o.frequency);bp.type='bandpass';bp.frequency.value=900;bp.Q.value=4;o.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.09,t+.12);g.gain.linearRampToValueAtTime(.06,t+.7);g.gain.linearRampToValueAtTime(0,t+.95);o.start(t);lfo.start(t);o.stop(t+1);lfo.stop(t+1);}
 function say(text,onend){try{if(!S.snd||!('speechSynthesis' in window))return false;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(TR(text));const v=speechSynthesis.getVoices().filter(v=>LANG.zh?/^zh/i.test(v.lang):/^en/i.test(v.lang));
-  const pick=LANG.zh?(v.find(v=>/CN|Hans/i.test(v.lang+v.name))||v[0]):(v.find(v=>/male|daniel|george|arthur|fred|alex/i.test(v.name))||v[0]);if(pick)u.voice=pick;if(LANG.zh)u.lang='zh-CN';u.rate=LANG.zh?1:1.02;u.pitch=.7;u.volume=.95;if(onend)u.onend=onend;speechSynthesis.speak(u);return true;}catch(_){return false;}}
+  const pick=LANG.zh?(v.find(v=>/CN|Hans/i.test(v.lang+v.name))||v[0]):(v.find(v=>/male|daniel|george|arthur|fred|alex/i.test(v.name))||v[0]);if(pick)u.voice=pick;if(LANG.zh)u.lang='zh-CN';u.rate=LANG.zh?1.15:1.2;u.pitch=.7;u.volume=.95;if(onend)u.onend=onend;speechSynthesis.speak(u);return true;}catch(_){return false;}}
 
 /* ================= the rule: do not touch the exhibits ================= */
 const E={phase:'idle',t:0,broken:0,next:0,lost:0};
@@ -1035,7 +1035,7 @@ async function startEnding(){if(END.on||LIFT.in)return;END.on=true;closeMap();if
     F.style.transition='opacity 2s';F.style.opacity=1;await sleep(2100);endCard(kind);}
   else{await speakSeq(['So. You know what I am now, and what she lost, and why.','No one has followed the dead this far in ninety years. You have earned these.','The house needs a curator. I have waited a very long time to leave.']);
     jingle();note('Mr. Vane presses a heavy ring of keys into your hand.',4500);await sleep(1500);
-    CUR.leaving=true;CUR.leaveT=0;play('walk',.4);await sleep(4500);
+    CUR.leaving=true;CUR.leaveT=0;play('walk',.4);await sleep(2800);
     F.style.transition='opacity 1.2s';F.style.opacity=1;await sleep(1400);knock();await sleep(1500);
     await showRoom('hall',{x:-1.15,z:.95,yaw:Math.atan2(-(-2.95+1.15),-(0-.95))});F.style.transition='opacity 1.6s';F.style.opacity=0;await sleep(1600);
     $('sub').innerHTML='<i>YOU</i>Good evening. You are our only guest tonight. The house prefers it that way.';$('sub').style.opacity=1;await sleep(6000);$('sub').style.opacity=0;
@@ -1375,7 +1375,7 @@ const LINES=[
   ["One rule. No cameras. The house doesn't like to be looked at twice."],
   ["Your first trial is here in the hall: the clock. I won't be far.",'leave']];
 const INTRO={on:false,i:-1,t:0,dur:0,done:false,spoke:false,ended:false};
-function lineDur(t){return Math.max(1.8,t.split(/\s+/).length*.3+.6);}
+function lineDur(t){return Math.max(1.4,t.split(/\s+/).length*.25+.4);}
 function showLine(k){const L=LINES[k];$('sub').innerHTML='<i>MR. AMBROSE VANE</i>'+L[0];$('sub').style.opacity=1;INTRO.t=0;INTRO.ended=false;INTRO.after=0;
   INTRO.spoke=say(L[0],()=>{INTRO.ended=true;});INTRO.dur=lineDur(L[0]);play('talk');
   if(L[1]&&L[1][0]==='r')$(L[1]).classList.add('show');
@@ -1387,7 +1387,7 @@ function finishIntro(){if(INTRO.done)return;INTRO.on=false;INTRO.done=true;$('su
   $('bMap').style.display='';$('bGuide').style.display='';$('keys').style.display='flex';
   if(curator.visible&&CUR.loaded){CUR.leaving=true;CUR.leaveT=0;play('walk',.4);setTimeout(()=>whisper(2.2,.09),900);
     /* safety net: whatever the frame rate, he is gone a few seconds after his last line */
-    setTimeout(()=>{if(CUR.leaving&&!END.on){CUR.present=false;curator.visible=false;CUR.leaving=false;}},6500);}else{CUR.present=false;curator.visible=false;}
+    setTimeout(()=>{if(CUR.leaving&&!END.on){CUR.present=false;curator.visible=false;CUR.leaving=false;}},4000);}else{CUR.present=false;curator.visible=false;}
   setTimeout(()=>note('Trial 1 of 6: wind the clock. The panel on the left tells you how.',6000),1800);
   setTimeout(()=>{CAM.has=true;$('bCam').style.display='';note('Something heavy is in your coat pocket. An old camera. Press C.',6000);},14000);}
 function endIntro(){try{speechSynthesis.cancel();}catch(_){}finishIntro();}
@@ -1399,7 +1399,7 @@ function updateIntro(dt){if(!INTRO.on)return;
   const done=INTRO.spoke?(INTRO.ended||INTRO.t>INTRO.dur*1.35+1):INTRO.t>=INTRO.dur;
   if(!done){INTRO.after=0;return;}
   if(CUR.cur===CUR.act.talk)play('idle',.5);
-  INTRO.after=(INTRO.after||0)+rdt;if(INTRO.after>.45&&INTRO.t>1.2)nextLine();}
+  INTRO.after=(INTRO.after||0)+rdt;if(INTRO.after>.2&&INTRO.t>.8)nextLine();}
 $('skip').onclick=()=>{endIntro();};
 function advance(){if(INTRO.on){try{speechSynthesis.cancel();}catch(_){}nextLine();}}
 
@@ -1762,7 +1762,7 @@ renderer.setAnimationLoop(()=>{
   /* curator: faces you while he talks, then walks off down the hall and is gone */
   if(curator.visible&&CUR.mixer){CUR.mixer.update(dt);
     let want=Math.atan2(cam.position.x-curator.position.x,cam.position.z-curator.position.z);
-    if(CUR.leaving){CUR.leaveT+=dt;want=-Math.PI/2;if(CUR.leaveT>.5)curator.position.x-=.92*dt;if(CUR.leaveT>1.8)CUR.fade=Math.min(1,CUR.fade+dt*.6);
+    if(CUR.leaving){CUR.leaveT+=dt;want=-Math.PI/2;if(CUR.leaveT>.2)curator.position.x-=1.5*dt;if(CUR.leaveT>1.1)CUR.fade=Math.min(1,CUR.fade+dt*1.1);
       if(CUR.fade>=1){CUR.present=false;curator.visible=false;CUR.leaving=false;}}
     let d=want-curator.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));curator.rotation.y+=d*Math.min(1,dt*(CUR.leaving?3:2.2));
     const a=1-CUR.fade;CUR.mats.forEach(m=>{m.opacity=a;m.depthWrite=a>.98;});curL.intensity=.6*a*fl*dark01;curKey.intensity=.5*a*dark01;}
