@@ -508,7 +508,7 @@ const VISITED={lift:false,hall:true,doll:false,passage:false,nine:false,parlour:
 let roomId=null,switching=false;const MESH={};
 function clampToRoom(x,z){let best=null,bd=1e9;for(const r of ROOMS[roomId].rects){const cx=Math.max(r.x0,Math.min(r.x1,x)),cz=Math.max(r.z0,Math.min(r.z1,z)),d=Math.hypot(cx-x,cz-z);if(d<bd){bd=d;best=[cx,cz];}}return best;}
 function waitInit(m){return new Promise(res=>{const t0=performance.now();(function chk(){if(m.isInitialized||performance.now()-t0>45000)res();else setTimeout(chk,100);})();});}
-function preload(id){if(MESH[id])return MESH[id].ready;const R=ROOMS[id];const m=new SplatMesh({url:R.url});m.rotation.x=-Math.PI/2;m.position.y=-R.floorZ;if(R.mirror)m.scale.set(-1,1,1);m.visible=false;scene.add(m);
+function preload(id){if(MESH[id])return MESH[id].ready;const R=ROOMS[id];const m=new SplatMesh({url:R.url});m.rotation.x=-Math.PI/2;m.position.y=-R.floorZ;if(R.mirror)m.scale.set(-1,1,1);m.visible=false;
   MESH[id]={m,ready:waitInit(m)};return MESH[id].ready;}
 function glowExits(id){const R=ROOMS[id];const ex=(R.doors||[]).map(d=>({to:d.to,p:d.p}));
   if(id==='hall'){ex.push({to:'gallery',p:[-2.35,-1.15]});ex.push({to:'out',p:[-3.4,0]});}
@@ -540,7 +540,8 @@ function updateDoorGlows(dt,t){if(!DOORGLOW.list.length)return;const st=stage(),
     d.q.sdf.color.setRGB(c[0],c[1],c[2]);d.q.e.visible=k>.01;}}
 async function showRoom(id,spawn){if(E.phase!=='idle'&&id!=='doll'&&doll){homeDoll();door.rotation.y=doorClosed;E.phase='idle';E.t=0;shake=0;}WALK.path=[];WALK.face=null;if(WALK.marker)WALK.marker.visible=false;VEL.x=VEL.z=0;
   await preload(id);
-  for(const k in MESH)MESH[k].m.visible=(k===id);roomId=id;VISITED[id]=true;try{spark.setDirty();await spark.update({scene,camera:cam});}catch(_){}
+  /* only the room you are in stays in the scene: hidden rooms would still be re-lit by every splat edit, every frame */
+  for(const k in MESH){const m=MESH[k].m;m.visible=(k===id);if(k===id){if(!m.parent)scene.add(m);}else if(m.parent)scene.remove(m);}roomId=id;VISITED[id]=true;try{spark.setDirty();await spark.update({scene,camera:cam});}catch(_){}
   const R=ROOMS[id];glowSdf.position.set(...R.glow.p);glowSdf.radius=R.glow.r;glowBase=R.glow.c;
   if(R.kill){killSdf.position.set(...R.kill.p);killSdf.radius=R.kill.r;}
   const sp=spawn||R.spawn;cam.position.set(sp.x,1.2,sp.z);yaw=sp.yaw;pitch=-.05;
@@ -1702,6 +1703,12 @@ $('accept').onclick=()=>{$('waiver').style.display='none';started=true;if(touch)
   curator.visible=CUR.loaded;QS.firstHelp=true;openHelp();};
 
 /* ================= loop ================= */
+const EDT={t:0};
+/* resolution follows the frame rate: a laptop that cannot keep up drops to fewer pixels instead of stuttering */
+const PR={max:Math.min(devicePixelRatio||1,1.5),cur:Math.min(devicePixelRatio||1,1.5),acc:0,n:0,cool:0};
+function adaptRes(rawDt){if(document.hidden||switching)return;PR.acc+=rawDt;PR.n++;PR.cool-=rawDt;if(PR.acc<1.5)return;const ms=PR.acc/PR.n*1000;PR.acc=0;PR.n=0;if(PR.cool>0)return;
+  let nx=PR.cur;if(ms>26&&PR.cur>.6)nx=Math.max(.6,PR.cur-.2);else if(ms<14&&PR.cur<PR.max)nx=Math.min(PR.max,PR.cur+.1);
+  if(nx!==PR.cur){PR.cur=+nx.toFixed(2);renderer.setPixelRatio(PR.cur);renderer.setSize(innerWidth,innerHeight,false);PR.cool=2;}}
 const clock=new THREE.Clock(),fwd=new THREE.Vector3(),toDoll=new THREE.Vector3(),dp=new THREE.Vector3();
 let awayFor=0,ready=false;
 (async()=>{try{await showRoom('hall');preload('doll');}catch(e){fail('The house could not be loaded. Reload the page to try again.');return;}
@@ -1712,7 +1719,7 @@ let awayFor=0,ready=false;
 
 renderer.setAnimationLoop(()=>{
   /* game time follows real time down to 5 frames a second, so a slow device never plays the house in slow motion */
-  const dt=Math.max(window.__DT||0,Math.min(clock.getDelta(),.2)),t=clock.elapsedTime;
+  const rawDt=Math.min(clock.getDelta(),.2),dt=Math.max(window.__DT||0,rawDt),t=clock.elapsedTime;if(started)adaptRes(rawDt);
   if(!roomId){renderer.render(scene,cam);return;}
   const SCARE=()=>E.phase!=='idle'&&E.phase!=='gone';
   const frozen=helpOpen||END.on||E.phase==='lunge'||E.phase==='reset'||E.phase==='black'||switching||mapOpen||casesOpen||quizOpen||HL.open||CAM.seq||(INTRO.on&&INTRO.i<LINES.length-1);
@@ -1748,7 +1755,8 @@ renderer.setAnimationLoop(()=>{
   glow.visible=S.dark;lamp.visible=S.dark&&S.lan&&dark01>.05;kill.visible=S.dark&&!!ROOMS[roomId].kill;
   glowSdf.color.setRGB(glowBase[0]*fl*(E.phase==='shake'?spark_:1),glowBase[1],glowBase[2]);
   const lanFl=(E.phase==='gone'?(Math.random()>.93?.3:1):1)*(1+Math.sin(t*13)*.05+Math.sin(t*31)*.03);
-  lampSdf.position.copy(cam.position);lampSdf.color.setRGB(1+2.3*lanFl,1+1.7*lanFl,1+1.1*lanFl);
+  /* the lamp re-lights every splat in the room when it changes, so it changes at most 20 times a second, or when you move */
+  EDT.t+=dt;if(EDT.t>.05||lampSdf.position.distanceToSquared(cam.position)>.0009){EDT.t=0;lampSdf.position.copy(cam.position);lampSdf.color.setRGB(1+2.3*lanFl,1+1.7*lanFl,1+1.1*lanFl);}
   cam.localToWorld(lanternL.position.set(0,-.08,-.9));lanternL.intensity=S.lan?.5*lanFl*dark01:0;
   red.intensity=.8*fl*spark_*dark01;spill.intensity=.1*fl*dark01;faceL.intensity=.35*dark01;hemi.intensity=(S.dark?.35:1.6)*dark01;bulb.visible=dark01>.5;
   /* curator: faces you while he talks, then walks off down the hall and is gone */
@@ -1768,7 +1776,7 @@ renderer.setAnimationLoop(()=>{
   current=findInteract();updateTouchUI();drawRadar(dt);updateQuest(dt);updateDoorGlows(dt,t);chairMark.visible=!KEY.have.cards&&!HL.open;chairMark.material.opacity=.55+Math.sin(t*3)*.25;const pr=$('prompt');if(current){pr.textContent=(touch?'':(current.hold?'Hold E · ':'E · '))+current.label;pr.style.display='block';}else pr.style.display='none';
   renderer.render(scene,cam);
 });
-window.__t={guideMe,GUIDE,WALK,CURS:()=>({vis:curator.visible,present:CUR.present,leaving:CUR.leaving,x:+curator.position.x.toFixed(2),fade:+CUR.fade.toFixed(2)}),tick,hideSeekT,TR,setLang,LANG,walkTo,walkToScreen,WALK,KS,keepsakeCanvas,helpShow,helpNext,HELP:()=>HELP,cableGroan,gateSlam,QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
+window.__t={PR,MESH,scene,guideMe,GUIDE,WALK,CURS:()=>({vis:curator.visible,present:CUR.present,leaving:CUR.leaving,x:+curator.position.x.toFixed(2),fade:+CUR.fade.toFixed(2)}),tick,hideSeekT,TR,setLang,LANG,walkTo,walkToScreen,WALK,KS,keepsakeCanvas,helpShow,helpNext,HELP:()=>HELP,cableGroan,gateSlam,QS,stinger,shutter,glitchSound,windOn,windOff,slide,canvasCreak,scratch,jingle,playPattern,knock,bell,shatter,giggle,knockTap,SFX,whisper,doorCreak,ac:()=>AC&&AC.state,stage,roomOpen,gameOver,retryRoom,strike,openHelp,closeHelp,help:()=>helpOpen,ROOMS,spell:()=>SPELL,quiz:()=>quizOpen,sw:()=>switching,SIT,keys,interact,QUIZ,VISITED,RELICS,openMap,closeMap,isMap:()=>mapOpen,openStaffDoor,checkCalled,find:()=>findInteract(),pos:()=>[cam.position.x,cam.position.z,yaw],liftGate,LIFT,cur:()=>current,enterElevator,elevatorDoor,KEY,giveKey,CLOCK,SEEK,KNOCK,HL,hlGuess,openHL,startKnock,knockTap,PT,setPortrait,examinePortrait,INTRO_SEEN,roomIntro,STUDY,openLedger,answer,examineRelic,END,startEnding,endingKind,INV,CASES,examine,toggleCases,OMEN,drawCard,useBoard,RB,tapAction,E,INTRO,CUR,CAM,HAUNT,PASS,MESH,GHOST,NINE,openDoorIII,leaveNine,raiseCam,takePhoto,advance,travel,touch:()=>{E.phase='reach';E.t=0;},set:(x,z,y,p)=>{cam.position.x=x;cam.position.z=z;yaw=y;pitch=p;},S,ready:()=>ready,go:()=>{$('enter').click();$('accept').click();},skip:()=>endIntro(),room:()=>roomId};
 </script>
 
 </body></html>
