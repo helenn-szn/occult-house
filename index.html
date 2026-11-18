@@ -609,7 +609,7 @@ new GLTFLoader().load('assets/marigold.glb',g=>{
 
 
 /* ================= the Curator: Lux3D model, auto-rigged, with idle / talk / walk animations ================= */
-const CUR_HOME=new THREE.Vector3(-1.15,0,.95);
+const CUR_HOME=new THREE.Vector3(-.85,0,.5);
 const curator=new THREE.Group();curator.position.copy(CUR_HOME);scene.add(curator);curator.visible=false;
 const CUR={present:true,loaded:false,fade:0,mats:[],mixer:null,act:{},cur:null,leaving:false,leaveT:0};
 const curL=new THREE.PointLight(0xff6a50,.6,2.2,2);curL.position.set(.55,1.95,.75);curator.add(curL);
@@ -677,6 +677,17 @@ function stinger(v=.42){if(!AC)return;if(playBuf('stinger',Math.min(1.1,.35+v*1.
 function footsteps(){if(!AC)return;if(playBuf('footsteps',.7,{rate:1.12+Math.random()*.1}))return;const t=AC.currentTime;[0,.32,.62].forEach(d=>{const n=noise(),lp=AC.createBiquadFilter(),g=AC.createGain();lp.type='lowpass';lp.frequency.value=320;n.connect(lp);lp.connect(g);g.connect(master);env(g,t+d,.006,.7,.14);n.start(t+d);n.stop(t+d+.25);});}
 function doorCreak(){if(!AC)return;if(playBuf('door_creak',.85,{rate:.9+Math.random()*.2}))return;const t=AC.currentTime,o=AC.createOscillator(),bp=AC.createBiquadFilter(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(140,t);o.frequency.linearRampToValueAtTime(210,t+.5);o.frequency.linearRampToValueAtTime(120,t+.9);
   lfo.frequency.value=23;lg.gain.value=40;lfo.connect(lg);lg.connect(o.frequency);bp.type='bandpass';bp.frequency.value=900;bp.Q.value=4;o.connect(bp);bp.connect(g);g.connect(master);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.09,t+.12);g.gain.linearRampToValueAtTime(.06,t+.7);g.gain.linearRampToValueAtTime(0,t+.95);o.start(t);lfo.start(t);o.stop(t+1);lfo.stop(t+1);}
+/* the welcome is spoken one sentence at a time: Chrome cuts off long utterances, and speaking straight after cancel() can fail silently */
+let SAYID=0;
+function pickVoice(u){const v=speechSynthesis.getVoices().filter(v=>LANG.zh?/^zh/i.test(v.lang):/^en/i.test(v.lang));
+  const pick=LANG.zh?(v.find(v=>/CN|Hans/i.test(v.lang+v.name))||v[0]):(v.find(v=>/male|daniel|george|arthur|fred|alex/i.test(v.name))||v[0]);if(pick)u.voice=pick;if(LANG.zh)u.lang='zh-CN';u.rate=LANG.zh?1:1.02;u.pitch=.7;u.volume=.95;}
+function chunksOf(T){const parts=T.match(LANG.zh?/[^。！？；]+[。！？；]*/g:/[^.!?;:]+[.!?;:]*["”’)]*\s*/g)||[T];const out=[];
+  for(const p of parts){if(!p.trim())continue;if(!LANG.zh&&p.split(/\s+/).length>22){const sub=p.match(/[^,—]+[,—]*\s*/g)||[p];let acc='';for(const q of sub){acc+=q;if(acc.split(/\s+/).length>=12){out.push(acc);acc='';}}if(acc)out.push(acc);}else out.push(p);}
+  return out.length?out:[T];}
+function sayChunks(T,h){try{if(!S.snd||!('speechSynthesis' in window))return false;const id=++SAYID;speechSynthesis.cancel();const ch=chunksOf(T);let off=0;const at=ch.map(c=>{const o=off;off+=c.length;return o;});
+  setTimeout(()=>{if(id!==SAYID)return;ch.forEach((c,i)=>{const u=new SpeechSynthesisUtterance(c.trim());pickVoice(u);
+    u.onstart=()=>{if(id===SAYID)h.start(i,at[i],c.length);};u.onend=()=>{if(id===SAYID)h.end(i,at[i]+c.length,i===ch.length-1);};u.onerror=u.onend;
+    u.onboundary=e=>{if(id===SAYID)h.bnd(at[i]+e.charIndex);};speechSynthesis.speak(u);});},90);return true;}catch(_){return false;}}
 function say(text,onend,onb,onst){try{if(!S.snd||!('speechSynthesis' in window))return false;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(TR(text));const v=speechSynthesis.getVoices().filter(v=>LANG.zh?/^zh/i.test(v.lang):/^en/i.test(v.lang));
   const pick=LANG.zh?(v.find(v=>/CN|Hans/i.test(v.lang+v.name))||v[0]):(v.find(v=>/male|daniel|george|arthur|fred|alex/i.test(v.name))||v[0]);if(pick)u.voice=pick;if(LANG.zh)u.lang='zh-CN';u.rate=LANG.zh?1:1.02;u.pitch=.7;u.volume=.95;if(onend)u.onend=onend;if(onb)u.onboundary=e=>{try{onb(e.charIndex);}catch(_){}};if(onst)u.onstart=onst;speechSynthesis.speak(u);return true;}catch(_){return false;}}
 
@@ -765,7 +776,7 @@ async function breakCam(){CAM.broken=true;CAM.seq=true;CAM.lunge=true;CAM.lastRo
   CAM.up=false;CAM.lunge=false;CAM.brokenShow=false;$('vf').classList.remove('dead');camUI();if(f)f.holder.position.copy(f.home);
   switching=true;await sleep(900);whisper(2.6,.2);await sleep(1500);
   CUR.present=true;CUR.fade=0;CUR.leaving=false;curator.position.copy(CUR_HOME);
-  await showRoom('hall',{x:-.15,z:.05,yaw:Math.atan2(-(CUR_HOME.x+.15),-(CUR_HOME.z-.05))});pitch=-.12;
+  await showRoom('hall',{x:.15,z:-.15,yaw:Math.atan2(-(CUR_HOME.x-.15),-(CUR_HOME.z+.15))});pitch=-.12;
   curator.rotation.y=Math.atan2(cam.position.x-CUR_HOME.x,cam.position.z-CUR_HOME.z);play('idle',0);
   await sleep(500);
   F.style.transition='opacity 1.4s ease-out';F.style.opacity=0;await sleep(1500);
@@ -1380,7 +1391,11 @@ function lineDur(t){return Math.max(1.8,t.split(/\s+/).length*.3+.6);}
 function subReveal(n){const T=INTRO.txt||'';n=Math.max(INTRO.shown||0,Math.min(T.length,n));if(n===INTRO.shown)return;INTRO.shown=n;const a=$('subS'),b=$('subR');if(a&&b){a.textContent=T.slice(0,n);b.textContent=T.slice(n);}}
 function showLine(k){const L=LINES[k];const T=TR(L[0]);INTRO.txt=T;INTRO.shown=-1;INTRO.bnd=false;INTRO.started=false;INTRO.st=0;
   $('sub').innerHTML='<i>MR. AMBROSE VANE</i><span id="subS"></span><span id="subR" style="opacity:0"></span>';$('subS').textContent='';$('subR').textContent=T;INTRO.shown=0;$('sub').style.opacity=1;INTRO.t=0;INTRO.ended=false;INTRO.after=0;
-  INTRO.spoke=say(L[0],()=>{INTRO.ended=true;subReveal(1e9);},ci=>{INTRO.bnd=true;const m=T.slice(ci).search(/[\s，。、！？,.!?]/);subReveal(m<0?T.length:ci+m+1);},()=>{INTRO.started=true;INTRO.st=INTRO.t;});INTRO.dur=lineDur(L[0]);play('talk');
+  INTRO.ch=null;INTRO.last=0;
+  INTRO.spoke=sayChunks(T,{start:(i,o,n)=>{INTRO.started=true;INTRO.last=INTRO.t;subReveal(o);INTRO.ch={o,n,t:INTRO.t,b:false};},
+    end:(i,e,last)=>{INTRO.last=INTRO.t;subReveal(e);INTRO.ch=null;if(last){INTRO.ended=true;subReveal(1e9);}},
+    bnd:ci=>{INTRO.last=INTRO.t;if(INTRO.ch)INTRO.ch.b=true;const m=T.slice(ci).search(/[\s，。、！？,.!?]/);subReveal(m<0?T.length:ci+m+1);}});
+  INTRO.dur=lineDur(L[0]);play('talk');
   if(L[1]&&L[1][0]==='r')$(L[1]).classList.add('show');
   if(L[1]==='leave'){$('bMap').style.display='';}}
 function nextLine(){if(!INTRO.on)return;INTRO.i++;if(INTRO.i>=LINES.length){finishIntro();return;}showLine(INTRO.i);}
@@ -1393,19 +1408,22 @@ function finishIntro(){if(INTRO.done)return;INTRO.on=false;INTRO.done=true;$('su
     setTimeout(()=>{if(CUR.leaving&&!END.on){CUR.present=false;curator.visible=false;CUR.leaving=false;}},6500);}else{CUR.present=false;curator.visible=false;}
   setTimeout(()=>note('Trial 1 of 6: wind the clock. The panel on the left tells you how.',6000),1800);
   setTimeout(()=>{CAM.has=true;$('bCam').style.display='';note('Something heavy is in your coat pocket. An old camera. Press C.',6000);},14000);}
-function endIntro(){try{speechSynthesis.cancel();}catch(_){}finishIntro();}
+function endIntro(){SAYID++;try{speechSynthesis.cancel();}catch(_){}finishIntro();}
 function updateIntro(dt){if(!INTRO.on)return;
   /* real seconds, so a slow device does not stall the welcome; paused while the guide is open */
   const now=performance.now(),rdt=Math.max(window.__DT?dt:0,INTRO.lastNow?Math.min(1,(now-INTRO.lastNow)/1000):0);INTRO.lastNow=now;if(helpOpen)return;INTRO.t+=rdt;
   /* if the browser's voice never started, or stopped without saying so, stop waiting for it */
-  if(INTRO.spoke&&!INTRO.ended&&!INTRO.started&&INTRO.t>3){try{if(!speechSynthesis.speaking&&!speechSynthesis.pending)INTRO.spoke=false;}catch(_){INTRO.spoke=false;}}
-  if(!INTRO.bnd){const T=INTRO.txt||'',est=INTRO.spoke?(LANG.zh?T.length*.24:T.split(/\s+/).length*.37+.3):INTRO.dur*.85,t0=INTRO.spoke?(INTRO.started?INTRO.st:INTRO.t+1):0;subReveal(Math.ceil(T.length*Math.min(1,Math.max(0,INTRO.t-t0)/est)));}
-  const done=INTRO.spoke?(INTRO.ended||INTRO.t>INTRO.dur*1.6+2):INTRO.t>=INTRO.dur;
+  /* the voice never started: carry on with the subtitles alone. Once he has spoken, he is never cut off; only 12 s of total silence from the voice ends the line */
+  if(INTRO.spoke&&!INTRO.ended&&!INTRO.started&&INTRO.t>4){try{if(!speechSynthesis.speaking&&!speechSynthesis.pending){INTRO.spoke=false;INTRO.t=0;}}catch(_){INTRO.spoke=false;}}
+  if(INTRO.spoke&&INTRO.started&&!INTRO.ended&&INTRO.t-INTRO.last>12){INTRO.ended=true;}
+  {const T=INTRO.txt||'';if(!INTRO.spoke)subReveal(Math.ceil(T.length*Math.min(1,INTRO.t/(INTRO.dur*.85))));
+   else if(INTRO.ch&&!INTRO.ch.b){const c=INTRO.ch,est=LANG.zh?c.n*.22:Math.max(.6,T.slice(c.o,c.o+c.n).split(/\s+/).length*.36);subReveal(c.o+Math.floor(c.n*Math.min(.97,(INTRO.t-c.t)/est)));}}
+  const done=INTRO.spoke?INTRO.ended:INTRO.t>=INTRO.dur;
   if(!done){INTRO.after=0;return;}subReveal(1e9);
   if(CUR.cur===CUR.act.talk)play('idle',.5);
   INTRO.after=(INTRO.after||0)+rdt;if(INTRO.after>.45&&INTRO.t>1.2)nextLine();}
 $('skip').onclick=()=>{endIntro();};
-function advance(){if(INTRO.on){try{speechSynthesis.cancel();}catch(_){}nextLine();}}
+function advance(){if(INTRO.on){SAYID++;try{speechSynthesis.cancel();}catch(_){}nextLine();}}
 
 /* ================= map ================= */
 /* ================= quests: one in every room, with a price for failing ================= */
