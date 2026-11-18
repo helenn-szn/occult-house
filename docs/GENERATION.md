@@ -192,3 +192,8 @@ Every room, model and portrait in Occult House came from Manycore Aholo. This is
 - Credits used: not reported by the World tools
 - Scene type detected: indoor; up axis: Z
 - Look (from a small preview): the viewpoint is outside the elevator, not inside it. The panorama shows a wood-panelled lobby with a marble floor, with a brass lattice cage elevator standing in the middle, lit by one bulb inside. Fairly dark overall. Not tiny or claustrophobic; the floor indicator dial and the scratches could not be confirmed at preview size.
+
+## Mr. Vane's voice
+
+- Script: the 24 English lines he speaks, in play order ([vane_script.txt](vane_script.txt)), each with its file name ([vane_lines.csv](vane_lines.csv)).
+- Method: the whole script was voiced as one recording, then cut at the pauses between lines into 24 clips. Each cut was checked against the line's expected length and its sentence breaks, then the clips were faded at the edges and levelled to the same loudness (`assets/vo/`, 1.9 MB).

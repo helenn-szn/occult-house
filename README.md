@@ -100,7 +100,7 @@ You are the only guest tonight, and the front door locks behind you. It has six 
 - **The one rule**: no cameras, but there is one in your pocket. Through its lens you see figures and writing on the walls. Every photo cracks the lens and brings them closer; on the eighth the figure comes through, you wake in the Front Hall with the curator standing over you, and from then on the figure follows you.
 - **STAFF ONLY**: a door in the Passage that is never locked. Open it anyway and it locks behind you. On the Lift Landing, a real Aholo room, a brass cage lift waits. Step in, the gate runs shut, and the lift falls past every floor on the dial: TRAPPED. You try again from the Passage.
 - **Light under the doors**: every unlocked door has warm light spilling under it, and the door to your next trial is the brightest. Locked doors stay dark. When a door unlocks, its light flickers on. STAFF ONLY shows a thin red line, and once you hold all six keys, daylight shows under the front door.
-- **Easy to get around**: press G (or tap GUIDE ME, or LB on a controller) and you are walked to your next trial, through every door on the way. click or tap the floor to walk there (walks route around furniture), or click/tap a door in the radar list to walk to it. Arrow keys turn. On phones the joystick is bigger, with a dead zone and smoother movement. You no longer have to face things exactly to use them.
+- **Easy to get around**: press G (or tap GUIDE ME, or LB on a controller) and you are walked to your next trial, through every door on the way. Click or tap the floor to walk there (walks route around furniture), or click/tap a door in the radar list to walk to it. Arrow keys turn. On phones the joystick is bigger, with a dead zone and smoother movement. You no longer have to face things exactly to use them.
 - **中文 / English**: a button on the title screen and in the top bar switches the whole game to Chinese, including the how-to-play cards, every trial, note and prompt, the map, radar, endings and keepsake. The curator speaks Chinese where the device has a Chinese voice. The choice is remembered.
 - **A keepsake**: when you get out, the house gives you one artifact at random (a relic, Marigold or a portrait) as a framed picture to download or share. It remembers what you have taken and offers something new on your next visit, 12 in all.
 - **Finding your way**: the radar in the top corner shows the room you are in (turned so you always face up), a diamond for every door, and a list of the doors, nearest first, with distances, arrows and which ones are still locked. The next trial's door is marked with ▶. The map (M) shows every room with a picture of it, its place in the order, whether it is locked, and whether its key is taken.
@@ -109,15 +109,20 @@ You are the only guest tonight, and the front door locks behind you. It has six 
 ## Controls
 
 - W A S D to walk, mouse to look (click to capture the mouse, Esc to release)
-- E to interact (hold E when the prompt says hold), C to raise the camera (click or Space takes a photo), M for the map, H for How to play, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
-- With a game controller: left stick to walk, right stick to look, A to use things (hold A for the clock), B to close, X to raise the camera, RT or RB to take a photo, Y or View for the map, Start for How to play, D-pad up and down for Edgar's game
-- On a phone or tablet (best held sideways): a joystick appears under your left thumb to walk, drag on the right to look, tap to continue or take a photo, and on-screen buttons for using things, the camera and the map
+- G to be walked to your next trial, E to interact (hold E when the prompt says hold), C to raise the camera (click or Space takes a photo), M for the map, H for How to play, Space or click to move the curator's welcome along, L to switch your light, N to switch night mode
+- With a game controller: left stick to walk, right stick to look, A to use things (hold A for the clock), B to close, X to raise the camera, RT or RB to take a photo, Y or View for the map, Start for How to play, LB to be walked to your next trial, D-pad up and down for Edgar's game
+- On a phone or tablet: a joystick appears under your left thumb to walk, swipe on the right to look (the view turns the way you swipe), tap to continue or take a photo, and on-screen buttons for using things, the camera, the map and GUIDE ME
 
-Headphones recommended. The house ambience, whispers, door creaks, footsteps, thuds, knocks, scratching, the clock's bell, winding and spring, cards, creaking canvas, breaking glass, Button's giggle, the curator's keys, locked-door rattles, door II's pounding, the camera's shutter and glitch, the jump-scare stingers, the lift's gate and cable, the death scream and the Game Over sting are royalty-free recordings (in `assets/sfx/`); the rest of the sound is synthesised in the page, and any recording that fails to load falls back to its synthesised version.
+Headphones recommended. Mr. Vane's voice is a recording: 24 clips, one for each English line he speaks, played from the page so screen recorders capture it, with the subtitles written out in time with each clip (in Chinese, and if a clip fails to load, the browser's own voice reads the line instead). The house ambience, whispers, door creaks, footsteps, thuds, knocks, scratching, the clock's bell, winding and spring, cards, creaking canvas, breaking glass, Button's giggle, the curator's keys, locked-door rattles, door II's pounding, the camera's shutter and glitch, the jump-scare stingers, the lift's gate and cable, the death scream and the Game Over sting are royalty-free recordings (in `assets/sfx/`); the rest of the sound is synthesised in the page, and any recording that fails to load falls back to its synthesised version.
+
+## Performance
+
+- **Fast start**: the 11 Lux3D models are compressed (meshopt geometry, WebP textures at 1024 px), from 18 MB to 5.5 MB. The Enter button appears as soon as the Front Hall, the curator and the hand are ready, about 7 MB; the other rooms download one at a time, in the order you will play them.
+- **Smooth on laptops**: only the room you are in is kept in the scene; the lamp re-lights the room at most 20 times a second; and the resolution drops automatically if the frame rate falls, then rises again when there is room.
 
 ## Testing
 
-An automated playthrough ([`tests/playthrough.py`](tests/playthrough.py), Playwright) plays the whole game from the title screen: all six trials in order, a death and retry, the STAFF ONLY lift trap and the ending. It passes 48 of 48 checks: see the full log in [`tests/results/playthrough.log`](tests/results/playthrough.log). Two more runs ([`tests/phone_touch.py`](tests/phone_touch.py), [`tests/phone_ledger.py`](tests/phone_ledger.py)) play it as a phone in landscape with touch, the joystick and tap-to-walk. All runs use Chromium. How to run them: [`tests/README.md`](tests/README.md). The game needs a browser with WebGL 2.
+An automated playthrough ([`tests/playthrough.py`](tests/playthrough.py), Playwright) plays the whole game from the title screen: all six trials in order, a death and retry, the STAFF ONLY lift trap and the ending. It passes 48 of 48 checks on the current build: see the full log in [`tests/results/playthrough.log`](tests/results/playthrough.log). Two more runs ([`tests/phone_touch.py`](tests/phone_touch.py), [`tests/phone_ledger.py`](tests/phone_ledger.py)) play it as a phone with touch: the joystick, tap-to-walk, swipe to look, GUIDE ME and the Study's random questions. All runs use Chromium. How to run them: [`tests/README.md`](tests/README.md). The game needs a browser with WebGL 2.
 
 ## Run locally
 
@@ -142,6 +147,7 @@ assets/gallery.spz    the Portrait Gallery (compressed Gaussian splats)
 assets/lift.spz       the Lift Landing, behind the STAFF ONLY door (compressed Gaussian splats)
 assets/portrait_*.jpg the gallery's paintings, two versions of each
 assets/map_*.jpg      the map's pictures of each room, cropped from the room panoramas
+assets/vo/*.mp3       Mr. Vane's recorded voice (24 lines)
 assets/sfx/*.mp3      recorded sounds (24): the house ambience and the lift's cable groan (seamless loops) and the game's effects
 assets/marigold.glb   Marigold
 assets/hand_right.glb the player's right hand
@@ -150,6 +156,8 @@ assets/deck.glb       the Vesper Deck
 assets/board.glb      the spirit board
 assets/planchette.glb the board's pointer
 assets/relic_*.glb    the study's relics, shown up close when examined
+tests/                automated playthroughs (Playwright) and their latest results
+docs/                 the project report (PDF), how every asset was made, screenshots
 ```
 
 All characters, objects and names are invented.
