@@ -1,4 +1,4 @@
-PASS house loads :: 10s
+PASS house loads :: 8s
 PASS how to play opens before the welcome, as 6 cards :: 7
 PASS how to play explains three chances and death
 PASS welcome waits while the page is open
@@ -38,7 +38,7 @@ PASS The Sitting -> key 5
 PASS walk through door gallery -> hall :: prompt was "Go back down to the Front Hall"
 PASS walk through door hall -> passage :: prompt was "Go down to the Passage"
 PASS knock prompt straight away :: Knock on door II
-PASS knock back [3, 2, 2] -> key 6
+PASS knock back [3, 3, 1] -> key 6
 PASS panel: every trial passed, leave the house :: EVERY TRIAL PASSED | Leave the house | You have all six keys. Go back to the front door in the Front Hall and unlock it.
 PASS STAFF ONLY warns first :: Try the door marked STAFF ONLY
 PASS second press -> Lift Landing
@@ -53,4 +53,4 @@ PASS keepsake parcel opens with a picture :: Inside: The Hollow Idol
 CONSOLE Failed to load resource: the server responded with a status of 404 (File not found)
 CONSOLE Failed to load resource: the server responded with a status of 404 (File not found)
 PASS no page errors / failed requests :: 2
-=== 48/48 passed in 1634s
+=== 48/48 passed in 1651s
